@@ -1,0 +1,31 @@
+---
+import type { Habit }
+from "../types/habit";
+
+interface Props{
+ habits:Habit[]
+}
+
+const {habits}=Astro.props;
+
+const totalHabits=
+habits.length;
+---
+
+<div class="stats-panel">
+
+<div class="card">
+<h3>Total hábitos</h3>
+<p>{totalHabits}</p>
+</div>
+
+</div>
+
+<style>
+.card{
+padding:20px;
+border-radius:16px;
+border:1px solid #333;
+margin-bottom:20px;
+}
+</style>

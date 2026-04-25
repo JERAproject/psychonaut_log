@@ -1,46 +1,43 @@
-# Astro Starter Kit: Basics
+# Psychonaut Log
 
-```sh
-npm create astro@latest -- --template basics
-```
+Una aplicación web simple para rastrear hábitos, construida con Astro. Permite visualizar una cuadrícula de hábitos cargados desde un servicio local.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 🚀 Estructura del Proyecto
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
+Dentro de tu proyecto Astro, encontrarás las siguientes carpetas y archivos:
 
 ```text
 /
 ├── public/
 │   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+├── src/
+│   ├── components/
+│   │   └── HabitGrid.tsx  # Componente React para mostrar la cuadrícula de hábitos
+│   ├── lib/
+│   │   └── habits.service.ts  # Servicio para obtener hábitos
+│   ├── pages/
+│   │   └── Habits.astro  # Página principal para mostrar la cuadrícula de hábitos
+│   └── types.ts  # (Opcional) Definiciones de tipos como Habit
+├── astro.config.mjs  # Configuración de Astro con integración de React
+├── package.json
+└── tsconfig.json
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+Para más información sobre la estructura de proyectos en Astro, consulta [nuestra guía](https://docs.astro.build/en/basics/project-structure/).
 
-## 🧞 Commands
+## 🧞 Comandos
 
-All commands are run from the root of the project, from a terminal:
+Todos los comandos se ejecutan desde la raíz del proyecto, en una terminal:
 
-| Command                   | Action                                           |
+| Comando                   | Acción                                           |
 | :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+| `npm install`             | Instala dependencias                            |
+| `npm run dev`             | Inicia el servidor de desarrollo local en `localhost:4321` |
+| `npm run build`           | Construye el sitio de producción en `./dist/`   |
+| `npm run preview`         | Previsualiza la construcción localmente antes de desplegar |
+| `npm run astro ...`       | Ejecuta comandos CLI como `astro add`, `astro check` |
+| `npm run astro -- --help` | Obtén ayuda con el CLI de Astro                 |
 
-## 👀 Want to learn more?
+## 👀 ¿Quieres aprender más?
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Consulta [nuestra documentación](https://docs.astro.build) o únete a nuestro [servidor de Discord](https://astro.build/chat).

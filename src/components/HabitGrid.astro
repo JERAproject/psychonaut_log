@@ -1,0 +1,83 @@
+---
+import type {
+Habit
+}
+from "../types/habit";
+
+interface Props{
+habits:Habit[]
+}
+
+const {
+habits
+}=Astro.props;
+---
+
+<div class="habits">
+
+{
+habits.map(h=>(
+<button
+class="habit-btn"
+data-id={h.id}
+style={`border-color:${h.color}`}
+>
+{h.name}
+</button>
+))
+}
+
+</div>
+
+<script>
+
+document
+.querySelectorAll(
+".habit-btn"
+)
+.forEach(btn=>{
+
+btn.addEventListener(
+"click",
+()=>{
+
+document
+.querySelectorAll(
+".habit-btn"
+)
+.forEach(
+b=>b.classList.remove(
+"active"
+)
+)
+
+btn.classList.add(
+"active"
+)
+
+})
+
+})
+
+</script>
+
+<style>
+.habits{
+display:flex;
+gap:1rem;
+flex-wrap:wrap;
+}
+
+.habit-btn{
+padding:12px 20px;
+border:2px solid;
+background:none;
+cursor:pointer;
+border-radius:16px;
+}
+
+.active{
+background:#222;
+color:white;
+}
+</style>

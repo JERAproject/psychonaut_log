@@ -1,0 +1,29 @@
+---
+import HabitGrid from "../components/HabitGrid.astro";
+import StatsPanel from "../components/StatsPanel.astro";
+
+import { getHabits }
+from "../lib/habits.service";
+
+const habits = getHabits();
+---
+
+<html lang="es">
+<head>
+  <title>Stats</title>
+</head>
+
+<body>
+
+<h1>Dashboard de hábitos</h1>
+
+<StatsPanel
+ habits={habits}
+/>
+
+<HabitGrid
+ habits={habits}
+/>
+
+</body>
+</html>

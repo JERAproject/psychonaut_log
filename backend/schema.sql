@@ -1,0 +1,20 @@
+CREATE TABLE habits(
+ id INTEGER PRIMARY KEY,
+ name TEXT NOT NULL,
+ color TEXT NOT NULL,
+ max_per_day INTEGER DEFAULT 1,
+ created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE habit_logs(
+ id INTEGER PRIMARY KEY,
+ habit_id INTEGER NOT NULL,
+ log_date DATE NOT NULL,
+ count INTEGER DEFAULT 0,
+
+ UNIQUE(habit_id, log_date),
+
+ FOREIGN KEY(habit_id)
+ REFERENCES habits(id)
+ ON DELETE CASCADE
+);

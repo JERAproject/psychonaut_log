@@ -1,15 +1,28 @@
+---
+import '../styles/global.css'
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Hero from '../components/Hero.astro';
+---
 <!doctype html>
-<html lang="en">
+<html lang="es">
 	<head>
-		<meta charset="UTF-8" />
+		<meta charset="UTF-8" />	
 		<meta name="viewport" content="width=device-width" />
+		<title>Psychonaut Log - Bitacora de un psiconauta</title>
+		
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<meta name="description" content="Herramienta de registro y analisis de practicas psiconauticas" />
+		<meta name="twitter:card" content="summary_large_image"
 	</head>
 	<body>
-		<slot />
+		<Header />
+		<main>
+			<slot />
+			<Hero />
+		</main>
+		<Footer />
 	</body>
 </html>
 
@@ -19,5 +32,10 @@
 		margin: 0;
 		width: 100%;
 		height: 100%;
+		background: #010207;
+		color: #fefefe;
+	}
+	main {
+		min-height: 100vh;
 	}
 </style>

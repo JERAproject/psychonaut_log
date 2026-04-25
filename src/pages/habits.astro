@@ -1,0 +1,28 @@
+---
+import HabitGrid
+from "../components/HabitGrid.astro";
+
+import {
+getHabits
+}
+from "../lib/habits.service";
+
+const habits=
+getHabits();
+---
+
+<html lang="es">
+<head>
+<title>Psychonaut Log</title>
+</head>
+
+<body>
+
+<h1>Habit Grid</h1>
+
+<HabitGrid
+ habits={habits}
+/>
+
+</body>
+</html>

@@ -6,3 +6,26 @@
     font-weight: 300;
     font-display: swap;
 } */
+
+.graph-overlay-text {
+    /* Posicionamiento */
+    position: absolute;
+    top: 25vh;       /* Distancia desde arriba */
+    right: 3rem;     /* Distancia desde la derecha */
+    z-index: 10;     /* Asegura que esté por encima del SVG */
+    
+    /* Dimensiones y alineación */
+    max-width: 50vw;    /* Limitamos el ancho para que el justificado se note */
+    text-align: justify; /* Justifica el texto */
+    
+    /* Estética */
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    gap: 2.5rem;
+    color: #fefefe;
+    margin: 0;
+    margin-top: 3rem;
+    padding: 1rem;
+    border-radius: 8px;
+  }

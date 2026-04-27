@@ -1,0 +1,238 @@
+---
+// Aquí podrías recibir props si quieres dinamizar los datos
+interface Props {
+  centerNodeColor?: string;
+}
+
+const { centerNodeColor = "black" } = Astro.props;
+---
+
+<div class="graph-container">
+  <svg id="network-graph"></svg>
+</div>
+
+<script>
+//   import * as d3 from 'd3';
+
+//   const initGraph = () => {
+//     // 1. Obtener el elemento SVG y sus dimensiones reales
+//     const svgElement = d3.select<SVGSVGElement, unknown>("#network-graph");
+//     if (!svgElement.node()) return;
+
+//     // Obtiene el ancho y alto del contenedor calculado por el navegador
+//     const { width, height } = svgElement.node().getBoundingClientRect();
+
+//     // Actualiza el viewBox para que coincida
+//     svgElement.attr("viewBox", [0, 0, width, height]);
+
+//     // Limpiamos por si acaso
+//     svgElement.selectAll("*").remove();
+
+//     // --- 2. Generación de Datos de Muestra (Aquí es donde van tus datos reales) ---
+//     const nodes = [
+//       { id: 'center', r: 28, group: 0, color: '#f8f9fa' }, // Centro claro
+//       { id: 'mindfulness', r: 12, group: 1, color: '#ff922b' }, // Naranja
+//       { id: 'trataka', r: 12, group: 1, color: '#51cf66' },    // Verde
+//       { id: 'visualización', r: 12, group: 1, color: '#74c0fc' }, // Azul
+//       { id: 'thirdeye', r: 12, group: 1, color: '#e03131' },    // Rojo
+//       { id: 'escritura', r: 12, group: 1, color: '#fcc419' }     // Amarillo
+//     ];
+//     const links = [
+//       { source: 'center', target: 'mindfulness' },
+//       { source: 'center', target: 'trataka' },
+//       { source: 'center', target: 'visualización' },
+//       { source: 'center', target: 'thirdeye' },
+//       { source: 'center', target: 'escritura' }
+//     ];
+
+//     // --- 3. Simulación de Fuerza (La clave del centrado) ---
+//     const simulation = d3.forceSimulation(nodes)
+//       .force("charge", d3.forceManyBody().strength(-150)) // Repulsión
+//       .force("link", d3.forceLink(links).id((d: any) => d.id).distance(50)) // Enlaces
+//       // *** ESTA LÍNEA ES CRUCIAL PARA ARREGLAR EL ERROR ***
+//       // Posiciona la fuerza central en el centro real del SVG calculado
+//       .force("center", d3.forceCenter(width / 2, height / 2));
+
+//     // --- 4. Renderizado SVG (Aquí definimos colores y estilos) ---
+
+//     // Crear grupos para el orden de profundidad
+//     const linkG = svgElement.append("g").attr("class", "links");
+//     const nodeG = svgElement.append("g").attr("class", "nodes");
+
+//     // DIBUJAR VÉRTICES (Enlaces)
+//     const link = linkG.selectAll("line")
+//       .data(links)
+//       .join("line")
+//       // *Personalización de Vértices:*
+//       .attr("stroke", "#ddd") // Un color gris claro por defecto
+//       .attr("stroke-opacity", 0.6)
+//       .attr("stroke-width", 0.3); // Enlaces muy finos
+
+//     // DIBUJAR NODOS
+//     const node = nodeG.selectAll("g")
+//       .data(nodes)
+//       .join("g")
+//       .attr("class", "node")
+//       .call(d3.drag<any, any>()
+//         .on("start", (event, d) => {
+//           if (!event.active) simulation.alphaTarget(0.3).restart();
+//           d.fx = d.x; d.fy = d.y;
+//         })
+//         .on("drag", (event, d) => { d.fx = event.x; d.fy = event.y; })
+//         .on("end", (event, d) => {
+//           if (!event.active) simulation.alphaTarget(0);
+//           d.fx = null; d.fy = null;
+//         })
+//       );
+
+//     // Añadir círculos a los grupos de nodos
+//     node.append("circle")
+//       .attr("r", d => d.r)
+//       // *Personalización de Nodos:*
+//       .attr("fill", d => d.color) // Usa el color del objeto de datos
+//       .attr("fill-opacity", 0.9);
+
+//     // Actualizar posiciones en cada tic
+//     simulation.on("tick", () => {
+//       link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+//           .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+//       node.attr("transform", d => `translate(${d.x},${d.y})`);
+//     });
+//   };
+
+//   // Ejecutar al cargar la página y al redimensionar
+//   initGraph();
+//   window.addEventListener('resize', initGraph);
+
+import * as d3 from 'd3';
+
+  // 1. Definición de tipos para TypeScript
+  interface CustomNode extends d3.SimulationNodeDatum {
+    id: string;
+    r: number;
+    color: string;
+    opacity: number;
+  }
+
+  interface CustomLink extends d3.SimulationLinkDatum<CustomNode> {
+    source: string | CustomNode;
+    target: string | CustomNode;
+  }
+
+  const initGraph = () => {
+    const svgElement = d3.select<SVGSVGElement, unknown>("#network-graph");
+    if (!svgElement.node()) return;
+
+    const { width, height } = svgElement.node()!.getBoundingClientRect();
+    svgElement.attr("viewBox", [0, 0, width, height]);
+    svgElement.selectAll("*").remove();
+
+    // --- 2. Generación de Datos Complejos (Topología de "Islas") ---
+    const nodes: CustomNode[] = [];
+    const links: CustomLink[] = [];
+    let nodeCount = 0;
+    const genId = (p: string) => `${p}_${nodeCount++}`;
+
+    // A. Núcleo Central (El "Continente")
+    const hub = { id: genId('hub'), r: 25, color: '#000', opacity: 1 };
+    nodes.push(hub);
+
+    // Nodos internos del núcleo (grandes)
+    const inner = Array.from({ length: 15 }, () => {
+      const n = { id: genId('inner'), r: 12, color: '#333', opacity: 0.8 };
+      nodes.push(n);
+      links.push({ source: hub.id, target: n.id });
+      return n;
+    });
+
+    // Nodos externos del núcleo (pequeños)
+    Array.from({ length: 60 }, () => {
+      const n = { id: genId('outer'), r: 6, color: '#666', opacity: 0.6 };
+      nodes.push(n);
+      links.push({ source: inner[Math.floor(Math.random() * inner.length)].id, target: n.id });
+    });
+
+    // B. Islas Periféricas (Clústeres desconectados)
+    const islandCount = 8;
+    for (let i = 0; i < islandCount; i++) {
+      const islandSize = 4 + Math.floor(Math.random() * 13);
+      const islandNodes = Array.from({ length: islandSize }, () => {
+        const n = { id: genId('island'), r: 4, color: '#aaa', opacity: 0.4 };
+        nodes.push(n);
+        return n;
+      });
+
+      // Conectar nodos dentro de la isla (geometría simple)
+      islandNodes.forEach((n, idx) => {
+        if (idx < islandNodes.length - 1) {
+          links.push({ source: n.id, target: islandNodes[idx + 1].id });
+        }
+      });
+    }
+
+    // --- 3. Simulación de Fuerza ---
+    const simulation = d3.forceSimulation<CustomNode>(nodes)
+      .force("charge", d3.forceManyBody().strength(-180))
+      .force("link", d3.forceLink<CustomNode, CustomLink>(links).id(d => d.id).distance(25))
+      .force("collide", d3.forceCollide().radius(d => (d as CustomNode).r + 2))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
+    // --- 4. Renderizado ---
+    const linkG = svgElement.append("g").attr("class", "links");
+    const nodeG = svgElement.append("g").attr("class", "nodes");
+
+    const link = linkG.selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("stroke", "#ddd")
+      .attr("stroke-opacity", 0.6)
+      .attr("stroke-width", 0.4);
+
+    const node = nodeG.selectAll<SVGGElement, CustomNode>("g")
+      .data(nodes)
+      .join("g")
+      .call(d3.drag<any, any>()
+        .on("start", (e, d) => {
+          if (!e.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x; d.fy = d.y;
+        })
+        .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+        .on("end", (e, d) => {
+          if (!e.active) simulation.alphaTarget(0);
+          d.fx = null; d.fy = null;
+        })
+      );
+
+    node.append("circle")
+      .attr("r", d => d.r)
+      .attr("fill", d => d.color)
+      .attr("fill-opacity", d => d.opacity);
+
+    simulation.on("tick", () => {
+      link.attr("x1", (d: any) => d.source.x)
+          .attr("y1", (d: any) => d.source.y)
+          .attr("x2", (d: any) => d.target.x)
+          .attr("y2", (d: any) => d.target.y);
+      node.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+  };
+
+  // Inicialización
+  initGraph();
+  window.addEventListener('resize', initGraph);
+</script>
+
+<style>
+  .graph-container {
+    width: 100%;
+    height: 80vh;
+    background: #010207;
+    overflow: hidden;
+    position: relative;
+  }
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>

@@ -1,0 +1,155 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Aquí podrías añadir lógica para procesar el formulario en el servidor (Astro Actions)
+---
+
+<Layout title="Registrar Sesión | PsychonautLog">
+  <main class="container">
+    <header>
+      <h1>Nueva Entrada de Bitácora</h1>
+      <p>Registra los parámetros de tu exploración fenomenológica.</p>
+    </header>
+
+    <form method="POST" class="data-form">
+      <fieldset>
+        <legend>Metadatos de la Sesión</legend>
+        <div class="grid">
+          <label>
+            Fecha
+            <input type="date" name="fecha" required />
+          </label>
+          <label>
+            Hora
+            <input type="time" name="hora" required />
+          </label>
+          <label>
+            Duración (min)
+            <input type="number" name="duracion" min="1" placeholder="Ej: 20" required />
+          </label>
+        </div>
+
+        <label>
+          Tipo de Práctica
+          <select name="tipo_practica" required>
+            <option value="mindfulness">Mindfulness</option>
+            <option value="trataka">Trataka</option>
+            <option value="visualizacion">Visualización Guiada</option>
+            <option value="shambhavi">Third Eye Gazing (Shambhavi)</option>
+            <option value="escritura">Escritura Reflectiva</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Fenomenología y Estado</legend>
+        <label>
+          Estado Previo
+          <input type="text" name="estado_previo" placeholder="Ej: Dispersión analítica, fatiga..." required />
+        </label>
+        <label>
+          Fenomenología (Observación directa)
+          <input type="text" name="fenomenologia" placeholder="Ej: Fosfenos, presión en entrecejo..." required />
+        </label>
+        <label>
+          Descripción Detallada (Cuerpo)
+          <textarea name="cuerpo" rows="6" placeholder="Describe el flujo de la experiencia..."></textarea>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Análisis e Integración</legend>
+        <label>
+          Insight Principal
+          <input type="text" name="insight" placeholder="¿Qué descubriste hoy?" />
+        </label>
+        <label>
+          Plan de Integración
+          <input type="text" name="integracion" placeholder="Acción concreta para el día..." />
+        </label>
+        <label>
+          Estado Post-Práctica
+          <input type="text" name="estado_post" placeholder="Ej: Ecuanimidad, vitalidad..." required />
+        </label>
+      </fieldset>
+
+      <button type="submit" class="submit-btn">Guardar en Bitácora</button>
+    </form>
+  </main>
+</Layout>
+
+<style>
+  .container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  header {
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 1rem;
+  }
+
+  .data-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  fieldset {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: #fafafa;
+  }
+
+  legend {
+    font-weight: bold;
+    padding: 0 0.5rem;
+    color: #333;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 0.6rem;
+    margin-top: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  .submit-btn {
+    background-color: #1a1a1a;
+    color: white;
+    padding: 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .submit-btn:hover {
+    background-color: #333;
+  }
+</style>

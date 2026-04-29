@@ -1,44 +1,11 @@
 ---
 import type { Habit } from "../types/habit";
-import { getLogs } from "../lib/habits.service";
 
 interface Props {
   habits: Habit[];
 }
 
 const { habits } = Astro.props;
-
-const allLogs = getLogs();
-
-const dailyTotals = new Map<string, { count: number; maxPossible: number }>();
-
-for (const habit of habits) {
-  const habitLogs = allLogs.filter((l) => l.habitId === habit.id);
-  for (const log of habitLogs) {
-    if (!dailyTotals.has(log.logDate)) {
-      dailyTotals.set(log.logDate, { count: 0, maxPossible: 0 });
-    }
-    const entry = dailyTotals.get(log.logDate)!;
-    entry.count += Math.min(log.count, habit.maxPerDay);
-    entry.maxPossible += habit.maxPerDay;
-  }
-}
-
-function getDayIntensity(date: string): number {
-  const entry = dailyTotals.get(date);
-  if (!entry || entry.maxPossible === 0) return 0;
-  return entry.count / entry.maxPossible;
-}
-
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return { r: 91, g: 143, b: 249 };
-  return {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16),
-  };
-}
 
 const today = new Date();
 const months: { name: string; year: number; month: number; weeks: { date: string; day: number }[][] }[] = [];
@@ -56,17 +23,9 @@ for (let i = 2; i >= 0; i--) {
   const month = d.getMonth();
   const name = `${monthNames[month]} ${year}`;
 
-  const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  let startOffset = firstDay.getDay() - 1;
+  let startOffset = new Date(year, month, 1).getDay() - 1;
   if (startOffset < 0) startOffset = 6;
-
-  const days: string[] = [];
-  for (let dd = 1 - startOffset; dd <= lastDay.getDate(); dd++) {
-    const date = new Date(year, month, dd);
-    if (dd < 1) continue;
-    days.push(date.toISOString().split("T")[0]);
-  }
 
   const weeks: { date: string; day: number }[][] = [];
   let week: { date: string; day: number }[] = [];
@@ -92,46 +51,85 @@ for (let i = 2; i >= 0; i--) {
 
   months.push({ name, year, month, weeks });
 }
+
+const maxTotalPerDay = habits.reduce((sum, h) => sum + h.maxPerDay, 0);
 ---
 
 <div class="calendar-view">
-  {months.map((m) => (
-    <div class="calendar-month">
-      <h3 class="month-title">{m.name}</h3>
-      <div class="calendar-grid">
-        {dayNames.map((dn) => (
-          <div class="day-header">{dn}</div>
-        ))}
-        {m.weeks.map((week) =>
-          week.map((d) => {
-            const intensity = d.date ? getDayIntensity(d.date) : 0;
-            const isToday = d.date === today.toISOString().split("T")[0];
-            const blendedColor = intensity > 0
-              ? `rgba(91, 143, 249, ${intensity})`
-              : "rgba(255, 255, 255, 0.02)";
-            return (
-              <div
-                class={`calendar-day ${isToday ? "today" : ""} ${!d.date ? "empty" : ""}`}
-                data-date={d.date}
-                style={`background-color: ${blendedColor};`}
-              >
-                <span class="day-number">{d.day > 0 ? d.day : ""}</span>
-              </div>
-            );
-          })
-        )}
+  <div id="calendar-days" data-max-total={maxTotalPerDay}>
+    {months.map((m) => (
+      <div class="calendar-month">
+        <h3 class="month-title">{m.name}</h3>
+        <div class="calendar-grid">
+          {dayNames.map((dn) => (
+            <div class="day-header">{dn}</div>
+          ))}
+          {m.weeks.map((week) =>
+            week.map((d) => {
+              const isToday = d.date === today.toISOString().split("T")[0];
+              return (
+                <div
+                  class={`calendar-day ${isToday ? "today" : ""} ${!d.date ? "empty" : ""}`}
+                  data-date={d.date}
+                >
+                  <span class="day-number">{d.day > 0 ? d.day : ""}</span>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
-    </div>
-  ))}
+    ))}
+  </div>
 </div>
 
 <script>
+  async function loadCalendarIntensity() {
+    try {
+      const res = await fetch("/api/logs");
+      const logs: { habitId: number; logDate: string; count: number }[] = await res.json();
+
+      const dailyTotals = new Map<string, number>();
+      const dailyMax = new Map<string, number>();
+
+      for (const log of logs) {
+        if (!dailyTotals.has(log.logDate)) {
+          dailyTotals.set(log.logDate, 0);
+        }
+        dailyTotals.set(log.logDate, dailyTotals.get(log.logDate)! + log.count);
+      }
+
+      const maxTotal = Number(document.getElementById("calendar-days")?.getAttribute("data-max-total")) || 1;
+
+      document.querySelectorAll(".calendar-day[data-date]").forEach((day) => {
+        const date = day.getAttribute("data-date");
+        if (!date) return;
+        const total = dailyTotals.get(date) || 0;
+        if (total > 0) {
+          const intensity = Math.min(total / maxTotal, 1);
+          (day as HTMLElement).style.backgroundColor = `rgba(91, 143, 249, ${intensity})`;
+        }
+      });
+    } catch (err) {
+      console.error("Failed to load calendar data:", err);
+    }
+  }
+
+  loadCalendarIntensity();
+
   document.querySelectorAll(".calendar-day[data-date]").forEach((day) => {
     day.addEventListener("click", () => {
       const date = day.getAttribute("data-date");
       if (!date) return;
       const d = new Date(date + "T00:00:00");
-      alert(`Resumen del ${d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}`);
+      alert(
+        `Resumen del ${d.toLocaleDateString("es-ES", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}`
+      );
     });
   });
 </script>

@@ -1,3 +1,5 @@
+DELETE FROM habits;
+
 INSERT INTO habits (name, color, max_per_day) VALUES
   ('Mindfulness', '#ff922b', 2),
   ('Trataka', '#51cf66', 1),

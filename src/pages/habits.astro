@@ -1,10 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import HabitGrid from "../components/HabitGrid.astro";
 import HabitForm from "../components/HabitForm.astro";
-import { getHabits } from "../lib/habits.service";
-
-const habits = getHabits();
 ---
 
 <Layout title="Hábitos">
@@ -13,13 +9,57 @@ const habits = getHabits();
       <h1>Hábitos</h1>
       <HabitForm />
     </header>
-    <HabitGrid habits={habits} />
+    <div id="habits-loading" class="loading">Cargando hábitos...</div>
+    <div id="habits-grid" class="habits-list"></div>
   </main>
 </Layout>
 
+<script>
+  interface Habit {
+    id: number;
+    name: string;
+    color: string;
+    maxPerDay: number;
+  }
+
+  async function loadHabits() {
+    try {
+      const res = await fetch("/api/habits");
+      const habits: Habit[] = await res.json();
+
+      document.getElementById("habits-loading")!.style.display = "none";
+      const container = document.getElementById("habits-grid")!;
+
+      if (habits.length === 0) {
+        container.innerHTML = `<p class="empty-msg">No hay hábitos creados. Crea uno nuevo para empezar.</p>`;
+        return;
+      }
+
+      container.innerHTML = habits
+        .map(
+          (h) => `
+        <div class="habit-item">
+          <div class="habit-color-dot" style="background-color:${h.color};"></div>
+          <div class="habit-info">
+            <span class="habit-name">${h.name}</span>
+            <span class="habit-max">Máx: ${h.maxPerDay}/día</span>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+    } catch (err) {
+      document.getElementById("habits-loading")!.innerHTML = `<p class="error-msg">Error al cargar hábitos.</p>`;
+      console.error(err);
+    }
+  }
+
+  loadHabits();
+</script>
+
 <style>
 .habits-page {
-  max-width: 1400px;
+  max-width: 720px;
   margin: 0 auto;
   padding: 2rem 1rem;
   color: #fefefe;
@@ -37,5 +77,63 @@ const habits = getHabits();
 .habits-header h1 {
   font-size: 1.5rem;
   margin: 0;
+}
+
+.loading {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+}
+
+.empty-msg {
+  text-align: center;
+  color: #888;
+  padding: 2rem;
+}
+
+.error-msg {
+  text-align: center;
+  color: #e03131;
+  padding: 2rem;
+}
+
+.habits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.habit-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #111827;
+  border: 1px solid #2a2a35;
+  border-radius: 12px;
+}
+
+.habit-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.habit-info {
+  display: flex;
+  justify-content: space-between;
+  flex: 1;
+  align-items: center;
+}
+
+.habit-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.habit-max {
+  font-size: 0.8rem;
+  color: #888;
 }
 </style>

@@ -1,7 +1,6 @@
 ---
 import type { Habit } from "../types/habit";
 import { getDatesArray } from "../lib/dates";
-import { getLogsByHabitAndDateRange } from "../lib/habits.service";
 
 interface Props {
   habits: Habit[];
@@ -10,28 +9,6 @@ interface Props {
 const { habits } = Astro.props;
 
 const dates = getDatesArray();
-const startDate = dates[0];
-const endDate = dates[dates.length - 1];
-
-const logMap = new Map<string, Map<string, number>>();
-
-for (const habit of habits) {
-  const logs = getLogsByHabitAndDateRange(habit.id, startDate, endDate);
-  const map = new Map<string, number>();
-  for (const log of logs) {
-    map.set(log.logDate, log.count);
-  }
-  logMap.set(String(habit.id), map);
-}
-
-function getOpacity(habitId: string, date: string): number {
-  const habit = habits.find((h) => String(h.id) === habitId);
-  if (!habit) return 0;
-  const habitLogs = logMap.get(habitId);
-  const count = habitLogs?.get(date) ?? 0;
-  if (count === 0) return 0;
-  return Math.min(count / habit.maxPerDay, 1);
-}
 
 function getMonthLabel(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
@@ -63,19 +40,17 @@ function getMonthLabel(dateStr: string): string {
             <td class="label-col">
               <span class="habit-name" style={`color:${habit.color}`}>{habit.name}</span>
             </td>
-            {dates.map((date) => {
-              const opacity = getOpacity(String(habit.id), date);
-              return (
-                <td>
-                  <div
-                    class="cell"
-                    data-habit={habit.id}
-                    data-date={date}
-                    style={`background-color:${habit.color}; opacity:${opacity};`}
-                  ></div>
-                </td>
-              );
-            })}
+            {dates.map((date) => (
+              <td>
+                <div
+                  class="cell"
+                  data-habit={habit.id}
+                  data-date={date}
+                  data-max={habit.maxPerDay}
+                  style={`background-color:${habit.color};`
+                }></div>
+              </td>
+            ))}
           </tr>
         ))}
       </tbody>
@@ -84,6 +59,33 @@ function getMonthLabel(dateStr: string): string {
 </div>
 
 <script>
+  async function loadLogs() {
+    try {
+      const res = await fetch("/api/logs");
+      const logs: { habitId: number; logDate: string; count: number }[] = await res.json();
+
+      const logMap = new Map<string, number>();
+      for (const log of logs) {
+        logMap.set(`${log.habitId}:${log.logDate}`, log.count);
+      }
+
+      document.querySelectorAll(".cell").forEach((cell) => {
+        const habitId = cell.getAttribute("data-habit");
+        const date = cell.getAttribute("data-date");
+        const max = Number(cell.getAttribute("data-max")) || 1;
+        if (!habitId || !date) return;
+
+        const count = logMap.get(`${habitId}:${date}`) || 0;
+        if (count > 0) {
+          const opacity = Math.min(count / max, 1);
+          cell.style.opacity = String(opacity);
+        }
+      });
+    } catch (err) {
+      console.error("Failed to load logs:", err);
+    }
+  }
+
   document.querySelectorAll(".cell").forEach((cell) => {
     cell.addEventListener("click", async () => {
       const habitId = cell.getAttribute("data-habit");
@@ -94,9 +96,23 @@ function getMonthLabel(dateStr: string): string {
         await fetch("/api/log", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ habitId, date }),
+          body: JSON.stringify({ habitId: Number(habitId), date }),
         });
-        window.location.reload();
+
+        const res = await fetch("/api/logs");
+        const logs: { habitId: number; logDate: string; count: number }[] = await res.json();
+
+        const logMap = new Map<string, number>();
+        for (const log of logs) {
+          logMap.set(`${log.habitId}:${log.logDate}`, log.count);
+        }
+
+        const max = Number(cell.getAttribute("data-max")) || 1;
+        const count = logMap.get(`${habitId}:${date}`) || 0;
+        if (count > 0) {
+          const opacity = Math.min(count / max, 1);
+          cell.style.opacity = String(opacity);
+        }
       } catch (err) {
         console.error("Error logging habit:", err);
       }
@@ -106,10 +122,16 @@ function getMonthLabel(dateStr: string): string {
       const date = cell.getAttribute("data-date");
       if (date) {
         const d = new Date(date + "T00:00:00");
-        cell.title = `${d.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" })}`;
+        cell.title = d.toLocaleDateString("es-ES", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        });
       }
     });
   });
+
+  loadLogs();
 </script>
 
 <style>
@@ -168,6 +190,7 @@ function getMonthLabel(dateStr: string): string {
   width: 14px;
   height: 14px;
   cursor: pointer;
+  opacity: 0;
   transition: transform 0.1s;
   margin: 1px;
 }

@@ -1,0 +1,266 @@
+---
+---
+
+<section class="journal-list">
+  <h2 class="section-title">Entradas Guardadas</h2>
+
+  <div id="journal-entries" class="entries">
+    <div class="loading">Cargando...</div>
+  </div>
+</section>
+
+<script>
+  interface JournalEntry {
+    id: number;
+    fecha: string;
+    hora: string | null;
+    duracion: number | null;
+    tipo_practica: string;
+    estado_previo: string;
+    fenomenologia: string;
+    cuerpo: string | null;
+    insight: string | null;
+    integracion: string | null;
+    estado_post: string;
+    created_at: string;
+  }
+
+  const practiceLabels: Record<string, string> = {
+    mindfulness: "Mindfulness",
+    trataka: "Trataka",
+    visualizacion: "Visualización Guiada",
+    shambhavi: "Third Eye Gazing (Shambhavi)",
+    escritura: "Escritura Reflectiva",
+  };
+
+  function formatDate(dateStr: string): string {
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("es-ES", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  async function loadEntries() {
+    const container = document.getElementById("journal-entries");
+    if (!container) return;
+
+    try {
+      const res = await fetch("/api/journal");
+      const entries: JournalEntry[] = await res.json();
+
+      if (entries.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>No hay entradas en tu bitácora aún.</p>
+            <a href="/enterData" class="empty-link">Crear primera entrada →</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = entries
+        .map(
+          (e) => `
+        <details class="entry-card">
+          <summary class="entry-header">
+            <div class="entry-meta">
+              <span class="entry-date">${formatDate(e.fecha)}</span>
+              <span class="entry-type">${practiceLabels[e.tipo_practica] || e.tipo_practica}</span>
+              ${e.duracion ? `<span class="entry-duration">${e.duracion} min</span>` : ""}
+            </div>
+            <div class="entry-insight">${e.insight || "Sin insight registrado"}</div>
+          </summary>
+          <div class="entry-body">
+            <div class="entry-row">
+              <span class="entry-label">Estado previo</span>
+              <p>${e.estado_previo}</p>
+            </div>
+            <div class="entry-row">
+              <span class="entry-label">Fenomenología</span>
+              <p>${e.fenomenologia}</p>
+            </div>
+            ${e.cuerpo ? `<div class="entry-row"><span class="entry-label">Descripción</span><p class="entry-text">${e.cuerpo}</p></div>` : ""}
+            ${e.integracion ? `<div class="entry-row"><span class="entry-label">Plan de integración</span><p>${e.integracion}</p></div>` : ""}
+            <div class="entry-row">
+              <span class="entry-label">Estado post-práctica</span>
+              <p>${e.estado_post}</p>
+            </div>
+          </div>
+        </details>
+      `
+        )
+        .join("");
+    } catch (err) {
+      container.innerHTML = `<p class="error-msg">Error al cargar las entradas.</p>`;
+      console.error(err);
+    }
+  }
+
+  loadEntries();
+</script>
+
+<style>
+.journal-list {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  color: #fefefe;
+  margin: 0 0 1.5rem;
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.loading {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+}
+
+.error-msg {
+  text-align: center;
+  color: #e03131;
+  padding: 2rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: #111827;
+  border-radius: 16px;
+  border: 1px dashed #333;
+}
+
+.empty-state p {
+  color: #666;
+  margin: 0 0 1rem;
+}
+
+.empty-link {
+  color: #5b8ff9;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.empty-link:hover {
+  color: #4a7de0;
+}
+
+.entry-card {
+  background: #111827;
+  border: 1px solid #2a2a35;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.entry-card:hover {
+  border-color: #3a3a45;
+}
+
+.entry-card[open] {
+  border-color: #5b8ff944;
+}
+
+.entry-header {
+  cursor: pointer;
+  padding: 1rem 1.25rem;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  position: relative;
+  padding-left: 1.75rem;
+}
+
+.entry-header::-webkit-details-marker {
+  display: none;
+}
+
+.entry-header::before {
+  content: "▸";
+  position: absolute;
+  left: 0.5rem;
+  color: #555;
+  transition: transform 0.2s;
+}
+
+.entry-card[open] .entry-header::before {
+  content: "▾";
+}
+
+.entry-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+}
+
+.entry-date {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.entry-type {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  background: #5b8ff922;
+  color: #5b8ff9;
+  border-radius: 6px;
+  text-transform: capitalize;
+}
+
+.entry-duration {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.entry-insight {
+  font-size: 0.9rem;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+.entry-body {
+  padding: 0 1.25rem 1.25rem;
+  padding-left: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-top: 1px solid #1a1a2e;
+  margin: 0 0.75rem;
+  padding-top: 1rem;
+}
+
+.entry-row p {
+  margin: 0.3rem 0 0;
+  color: #bbb;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.entry-text {
+  white-space: pre-wrap;
+}
+
+.entry-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #666;
+  font-weight: 600;
+}
+</style>

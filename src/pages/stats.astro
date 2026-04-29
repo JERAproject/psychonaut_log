@@ -3,9 +3,6 @@ import Layout from "../layouts/Layout.astro";
 import HabitGrid from "../components/HabitGrid.astro";
 import CalendarView from "../components/CalendarView.astro";
 import HabitForm from "../components/HabitForm.astro";
-import { getHabits } from "../lib/habits.service";
-
-const habits = getHabits();
 ---
 
 <Layout title="Tracker de Hábitos">
@@ -22,7 +19,7 @@ const habits = getHabits();
 
     <div class="stats-summary">
       <div class="summary-card">
-        <span class="summary-value">{habits.length}</span>
+        <span id="habit-count" class="summary-value">...</span>
         <span class="summary-label">Hábitos</span>
       </div>
       <div class="summary-card">
@@ -32,16 +29,212 @@ const habits = getHabits();
     </div>
 
     <div id="view-grid" class="view-panel active">
-      <HabitGrid habits={habits} />
+      <div class="loading-msg">Cargando hábitos...</div>
     </div>
 
     <div id="view-calendar" class="view-panel">
-      <CalendarView habits={habits} />
+      <div class="loading-msg">Cargando calendario...</div>
     </div>
   </main>
 </Layout>
 
 <script>
+  interface Habit {
+    id: number;
+    name: string;
+    color: string;
+    maxPerDay: number;
+  }
+
+  async function loadHabits() {
+    try {
+      const res = await fetch("/api/habits");
+      const habits: Habit[] = await res.json();
+
+      document.getElementById("habit-count")!.textContent = String(habits.length);
+
+      const gridHtml = `
+        <div class="grid-wrapper">
+          <div class="grid-scroll">
+            <table class="habit-grid">
+              <thead>
+                <tr>
+                  <th class="label-col"></th>
+                  ${generateDateHeaders()}
+                </tr>
+              </thead>
+              <tbody>
+                ${habits.map((h) => `
+                  <tr>
+                    <td class="label-col">
+                      <span class="habit-name" style="color:${h.color}">${h.name}</span>
+                    </td>
+                    ${generateDates().map((date) => `
+                      <td>
+                        <div class="cell" data-habit="${h.id}" data-date="${date}" data-max="${h.maxPerDay}"
+                             style="background-color:${h.color};"></div>
+                      </td>
+                    `).join("")}
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("view-grid")!.innerHTML = gridHtml;
+
+      const calendarHtml = `
+        <div id="calendar-days" data-max-total="${habits.reduce((s, h) => s + h.maxPerDay, 0)}">
+          ${generateCalendarGrid()}
+        </div>
+      `;
+
+      document.getElementById("view-calendar")!.innerHTML = calendarHtml;
+
+      loadGridLogs(habits);
+      loadCalendarLogs(habits);
+      attachGridEvents();
+      attachCalendarEvents();
+    } catch (err) {
+      console.error("Failed to load habits:", err);
+      document.getElementById("view-grid")!.innerHTML = `<p class="error-msg">Error al cargar hábitos.</p>`;
+    }
+  }
+
+  function generateDates(): string[] {
+    const dates: string[] = [];
+    const today = new Date();
+    for (let i = 89; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      dates.push(d.toISOString().split("T")[0]);
+    }
+    return dates;
+  }
+
+  function generateDateHeaders(): string {
+    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    return generateDates()
+      .map((date, i) => {
+        const d = new Date(date + "T00:00:00");
+        const show = i === 0 || d.getDate() === 1 || d.getDate() === 15;
+        return `<th class="date-col"><span class="date-label">${show ? `${months[d.getMonth()]} ${d.getDate()}` : ""}</span></th>`;
+      })
+      .join("");
+  }
+
+  function generateCalendarGrid(): string {
+    const today = new Date();
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const dayNames = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+    let html = "";
+    for (let mi = 2; mi >= 0; mi--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - mi, 1);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      html += `<div class="calendar-month"><h3 class="month-title">${monthNames[month]} ${year}</h3><div class="calendar-grid">`;
+      dayNames.forEach((dn) => (html += `<div class="day-header">${dn}</div>`));
+
+      const lastDay = new Date(year, month + 1, 0);
+      let startOffset = new Date(year, month, 1).getDay() - 1;
+      if (startOffset < 0) startOffset = 6;
+
+      let week: number[] = [];
+      for (let dd = 1 - startOffset; dd <= lastDay.getDate(); dd++) {
+        if (dd >= 1) {
+          const date = new Date(year, month, dd).toISOString().split("T")[0];
+          const isToday = date === today.toISOString().split("T")[0];
+          week.push(dd);
+          html += `<div class="calendar-day${isToday ? " today" : ""}" data-date="${date}"><span class="day-number">${dd}</span></div>`;
+        } else {
+          html += `<div class="calendar-day empty"><span class="day-number"></span></div>`;
+        }
+        if (week.length + (dd < 1 ? 0 : 0) === 7 && dd >= 1) {
+          week = [];
+        }
+      }
+      html += `</div></div>`;
+    }
+    return html;
+  }
+
+  async function loadGridLogs(habits: Habit[]) {
+    try {
+      const res = await fetch("/api/logs");
+      const logs: { habitId: number; logDate: string; count: number }[] = await res.json();
+      const logMap = new Map<string, number>();
+      for (const log of logs) logMap.set(`${log.habitId}:${log.logDate}`, log.count);
+
+      document.querySelectorAll(".cell").forEach((cell) => {
+        const hId = cell.getAttribute("data-habit");
+        const date = cell.getAttribute("data-date");
+        const max = Number(cell.getAttribute("data-max")) || 1;
+        if (!hId || !date) return;
+        const count = logMap.get(`${hId}:${date}`) || 0;
+        if (count > 0) (cell as HTMLElement).style.opacity = String(Math.min(count / max, 1));
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function loadCalendarLogs(habits: Habit[]) {
+    try {
+      const res = await fetch("/api/logs");
+      const logs: { habitId: number; logDate: string; count: number }[] = await res.json();
+      const dailyTotals = new Map<string, number>();
+      for (const log of logs) {
+        dailyTotals.set(log.logDate, (dailyTotals.get(log.logDate) || 0) + log.count);
+      }
+      const maxTotal = habits.reduce((s, h) => s + h.maxPerDay, 0);
+
+      document.querySelectorAll(".calendar-day[data-date]").forEach((day) => {
+        const date = day.getAttribute("data-date");
+        if (!date) return;
+        const total = dailyTotals.get(date) || 0;
+        if (total > 0) (day as HTMLElement).style.backgroundColor = `rgba(91,143,249,${Math.min(total / maxTotal, 1)})`;
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function attachGridEvents() {
+    document.querySelectorAll(".cell").forEach((cell) => {
+      cell.addEventListener("click", async () => {
+        const habitId = cell.getAttribute("data-habit");
+        const date = cell.getAttribute("data-date");
+        if (!habitId || !date) return;
+        try {
+          await fetch("/api/log", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ habitId: Number(habitId), date }),
+          });
+          loadHabits();
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    });
+  }
+
+  function attachCalendarEvents() {
+    document.querySelectorAll(".calendar-day[data-date]").forEach((day) => {
+      day.addEventListener("click", () => {
+        const date = day.getAttribute("data-date");
+        if (!date) return;
+        const d = new Date(date + "T00:00:00");
+        alert(`Resumen del ${d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}`);
+      });
+    });
+  }
+
+  loadHabits();
+
   const btnGrid = document.getElementById("btn-grid");
   const btnCalendar = document.getElementById("btn-calendar");
   const viewGrid = document.getElementById("view-grid");
@@ -149,12 +342,23 @@ const habits = getHabits();
   display: block;
 }
 
+.loading-msg {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+}
+
+.error-msg {
+  text-align: center;
+  color: #e03131;
+  padding: 2rem;
+}
+
 @media (max-width: 640px) {
   .stats-header {
     flex-direction: column;
     align-items: flex-start;
   }
-
   .stats-summary {
     flex-direction: column;
   }

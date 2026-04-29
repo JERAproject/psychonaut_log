@@ -6,14 +6,59 @@ import NetworkGraph from '../components/NetworkGraph.astro';
 ---
 
 <Layout>
-	<h1 class="text-2xl flex flex-col justify-center items-center text-white"> 
-    PsychonautLog
-    </h1>
-    <h2 class="text-l flex flex-col items-center">Bitácora psiconauta</h2>
-    <NetworkGraph />
-    <p class="graph-overlay-text">Esta bitacora es un registro de las experiencias y descubrimientos de un psiconauta en su viaje de exploración mental. </br></br>
-    Aquí se documentan las prácticas, insights y reflexiones obtenidas a través de diversas técnicas de meditación, visualización y autoindagación. </br></br>
-    El objetivo es observar los pensamientos y emociones a medida que evolucionan en el tiempo, buscar los patrones subyacentes y comprender la naturaleza de nuestra mente, y servir como una herramiente para modificarlos a través de la introspección y la atención plena en estados basales y alterados de conciencia. </p>
-    
+	<div class="hero">
+        <h1 class="text-2xl flex flex-col justify-center items-center text-white"> 
+        PsychonautLog
+        </h1>
+        <h2 class="text-l flex flex-col items-center">Bitácora psiconauta</h2>
+        <NetworkGraph />
+        <p class="graph-overlay-text">Esta bitacora es un registro de las experiencias y descubrimientos de un psiconauta en su viaje de exploración mental. </br></br>
+        Aquí se documentan las prácticas, insights y reflexiones obtenidas a través de diversas técnicas de meditación, visualización y autoindagación. </br></br>
+        El objetivo es observar los pensamientos y emociones a medida que evolucionan en el tiempo, buscar los patrones subyacentes y comprender la naturaleza de nuestra mente, y servir como una herramiente para modificarlos a través de la introspección y la atención plena en estados basales y alterados de conciencia. </p>
+    </div>
+    <div class="bottom actions">
+        <a href="/journal#entradas-guardadas" class="primary-btn">
+        📓 Entradas Guardadas
+        </a>
+    </div>
 
 </Layout>
+<style>
+    .hero{
+        position:relative;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        text-align:center;
+        padding:4rem 2rem;
+    }
+    .bottom{
+        position:fixed;
+        bottom:2rem;
+        left:50%;
+        transform:translateX(-50%);
+        z-index: 10;
+    }
+    .actions{
+text-align:center;
+margin-top:3rem;
+}
+
+.primary-btn{
+display:inline-block;
+padding:1.2rem 2.5rem;
+background:linear-gradient(
+90deg,
+#2563eb,
+#7c3aed
+);
+border-radius:999px;
+color:white;
+text-decoration:none;
+font-size:1.1rem;
+font-weight:700;
+box-shadow:0 0 20px rgba(59,130,246,.25);
+}
+</style>
+</style>

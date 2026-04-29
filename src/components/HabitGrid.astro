@@ -1,83 +1,184 @@
 ---
-import type {
-Habit
-}
-from "../types/habit";
+import type { Habit } from "../types/habit";
+import { getDatesArray } from "../lib/dates";
+import { getLogsByHabitAndDateRange } from "../lib/habits.service";
 
-interface Props{
-habits:Habit[]
+interface Props {
+  habits: Habit[];
 }
 
-const {
-habits
-}=Astro.props;
+const { habits } = Astro.props;
+
+const dates = getDatesArray();
+const startDate = dates[0];
+const endDate = dates[dates.length - 1];
+
+const logMap = new Map<string, Map<string, number>>();
+
+for (const habit of habits) {
+  const logs = getLogsByHabitAndDateRange(habit.id, startDate, endDate);
+  const map = new Map<string, number>();
+  for (const log of logs) {
+    map.set(log.logDate, log.count);
+  }
+  logMap.set(String(habit.id), map);
+}
+
+function getOpacity(habitId: string, date: string): number {
+  const habit = habits.find((h) => String(h.id) === habitId);
+  if (!habit) return 0;
+  const habitLogs = logMap.get(habitId);
+  const count = habitLogs?.get(date) ?? 0;
+  if (count === 0) return 0;
+  return Math.min(count / habit.maxPerDay, 1);
+}
+
+function getMonthLabel(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  return `${months[d.getMonth()]} ${d.getDate()}`;
+}
 ---
 
-<div class="habits">
-
-{
-habits.map(h=>(
-<button
-class="habit-btn"
-data-id={h.id}
-style={`border-color:${h.color}`}
->
-{h.name}
-</button>
-))
-}
-
+<div class="grid-wrapper">
+  <div class="grid-scroll">
+    <table class="habit-grid">
+      <thead>
+        <tr>
+          <th class="label-col"></th>
+          {dates.map((date, i) => {
+            const d = new Date(date + "T00:00:00");
+            const showLabel = i === 0 || d.getDate() === 1 || d.getDate() === 15;
+            return <th class="date-col">
+              <span class="date-label" data-date={date}>
+                {showLabel ? getMonthLabel(date) : ""}
+              </span>
+            </th>;
+          })}
+        </tr>
+      </thead>
+      <tbody>
+        {habits.map((habit) => (
+          <tr>
+            <td class="label-col">
+              <span class="habit-name" style={`color:${habit.color}`}>{habit.name}</span>
+            </td>
+            {dates.map((date) => {
+              const opacity = getOpacity(String(habit.id), date);
+              return (
+                <td>
+                  <div
+                    class="cell"
+                    data-habit={habit.id}
+                    data-date={date}
+                    style={`background-color:${habit.color}; opacity:${opacity};`}
+                  ></div>
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <script>
+  document.querySelectorAll(".cell").forEach((cell) => {
+    cell.addEventListener("click", async () => {
+      const habitId = cell.getAttribute("data-habit");
+      const date = cell.getAttribute("data-date");
+      if (!habitId || !date) return;
 
-document
-.querySelectorAll(
-".habit-btn"
-)
-.forEach(btn=>{
+      try {
+        await fetch("/api/log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ habitId, date }),
+        });
+        window.location.reload();
+      } catch (err) {
+        console.error("Error logging habit:", err);
+      }
+    });
 
-btn.addEventListener(
-"click",
-()=>{
-
-document
-.querySelectorAll(
-".habit-btn"
-)
-.forEach(
-b=>b.classList.remove(
-"active"
-)
-)
-
-btn.classList.add(
-"active"
-)
-
-})
-
-})
-
+    cell.addEventListener("mouseenter", () => {
+      const date = cell.getAttribute("data-date");
+      if (date) {
+        const d = new Date(date + "T00:00:00");
+        cell.title = `${d.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" })}`;
+      }
+    });
+  });
 </script>
 
 <style>
-.habits{
-display:flex;
-gap:1rem;
-flex-wrap:wrap;
+.grid-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #222;
+  background: #0d0d1a;
 }
 
-.habit-btn{
-padding:12px 20px;
-border:2px solid;
-background:none;
-cursor:pointer;
-border-radius:16px;
+.grid-scroll {
+  display: inline-block;
+  min-width: 100%;
 }
 
-.active{
-background:#222;
-color:white;
+.habit-grid {
+  border-collapse: collapse;
+  width: auto;
+}
+
+.habit-grid th,
+.habit-grid td {
+  padding: 0;
+  border: none;
+}
+
+.label-col {
+  position: sticky;
+  left: 0;
+  background: #0d0d1a;
+  z-index: 2;
+  padding: 0.5rem 0.75rem !important;
+  min-width: 120px;
+}
+
+.habit-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.date-col {
+  padding: 0 !important;
+  text-align: center;
+}
+
+.date-label {
+  display: block;
+  font-size: 0.65rem;
+  color: #666;
+  padding: 0.4rem 0;
+  white-space: nowrap;
+}
+
+.cell {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  margin: 1px;
+}
+
+.cell:hover {
+  transform: scale(1.4);
+  outline: 1px solid #fff;
+  outline-offset: -1px;
+}
+
+.habit-grid thead th:first-child {
+  background: #0d0d1a;
 }
 </style>

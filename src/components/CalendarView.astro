@@ -1,0 +1,205 @@
+---
+import type { Habit } from "../types/habit";
+import { getLogs } from "../lib/habits.service";
+
+interface Props {
+  habits: Habit[];
+}
+
+const { habits } = Astro.props;
+
+const allLogs = getLogs();
+
+const dailyTotals = new Map<string, { count: number; maxPossible: number }>();
+
+for (const habit of habits) {
+  const habitLogs = allLogs.filter((l) => l.habitId === habit.id);
+  for (const log of habitLogs) {
+    if (!dailyTotals.has(log.logDate)) {
+      dailyTotals.set(log.logDate, { count: 0, maxPossible: 0 });
+    }
+    const entry = dailyTotals.get(log.logDate)!;
+    entry.count += Math.min(log.count, habit.maxPerDay);
+    entry.maxPossible += habit.maxPerDay;
+  }
+}
+
+function getDayIntensity(date: string): number {
+  const entry = dailyTotals.get(date);
+  if (!entry || entry.maxPossible === 0) return 0;
+  return entry.count / entry.maxPossible;
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return { r: 91, g: 143, b: 249 };
+  return {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16),
+  };
+}
+
+const today = new Date();
+const months: { name: string; year: number; month: number; weeks: { date: string; day: number }[][] }[] = [];
+
+const monthNames = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+];
+
+const dayNames = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+for (let i = 2; i >= 0; i--) {
+  const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+  const year = d.getFullYear();
+  const month = d.getMonth();
+  const name = `${monthNames[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  let startOffset = firstDay.getDay() - 1;
+  if (startOffset < 0) startOffset = 6;
+
+  const days: string[] = [];
+  for (let dd = 1 - startOffset; dd <= lastDay.getDate(); dd++) {
+    const date = new Date(year, month, dd);
+    if (dd < 1) continue;
+    days.push(date.toISOString().split("T")[0]);
+  }
+
+  const weeks: { date: string; day: number }[][] = [];
+  let week: { date: string; day: number }[] = [];
+
+  for (let dd = 1 - startOffset; dd <= lastDay.getDate(); dd++) {
+    if (dd < 1) {
+      week.push({ date: "", day: dd });
+    } else {
+      const date = new Date(year, month, dd);
+      week.push({ date: date.toISOString().split("T")[0], day: dd });
+    }
+    if (week.length === 7) {
+      weeks.push(week);
+      week = [];
+    }
+  }
+  if (week.length > 0) {
+    while (week.length < 7) {
+      week.push({ date: "", day: -1 });
+    }
+    weeks.push(week);
+  }
+
+  months.push({ name, year, month, weeks });
+}
+---
+
+<div class="calendar-view">
+  {months.map((m) => (
+    <div class="calendar-month">
+      <h3 class="month-title">{m.name}</h3>
+      <div class="calendar-grid">
+        {dayNames.map((dn) => (
+          <div class="day-header">{dn}</div>
+        ))}
+        {m.weeks.map((week) =>
+          week.map((d) => {
+            const intensity = d.date ? getDayIntensity(d.date) : 0;
+            const isToday = d.date === today.toISOString().split("T")[0];
+            const blendedColor = intensity > 0
+              ? `rgba(91, 143, 249, ${intensity})`
+              : "rgba(255, 255, 255, 0.02)";
+            return (
+              <div
+                class={`calendar-day ${isToday ? "today" : ""} ${!d.date ? "empty" : ""}`}
+                data-date={d.date}
+                style={`background-color: ${blendedColor};`}
+              >
+                <span class="day-number">{d.day > 0 ? d.day : ""}</span>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  ))}
+</div>
+
+<script>
+  document.querySelectorAll(".calendar-day[data-date]").forEach((day) => {
+    day.addEventListener("click", () => {
+      const date = day.getAttribute("data-date");
+      if (!date) return;
+      const d = new Date(date + "T00:00:00");
+      alert(`Resumen del ${d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}`);
+    });
+  });
+</script>
+
+<style>
+.calendar-view {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.calendar-month {
+  background: #0d0d1a;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.month-title {
+  font-size: 1rem;
+  color: #aaa;
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.day-header {
+  text-align: center;
+  font-size: 0.7rem;
+  color: #555;
+  padding: 0.3rem 0;
+  text-transform: uppercase;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s, outline 0.1s;
+  min-height: 32px;
+}
+
+.calendar-day:not(.empty):hover {
+  transform: scale(1.15);
+  outline: 1px solid rgba(255, 255, 255, 0.3);
+  outline-offset: -1px;
+}
+
+.calendar-day.empty {
+  cursor: default;
+  background: transparent !important;
+}
+
+.calendar-day.today {
+  outline: 1px solid #5b8ff9;
+  outline-offset: -1px;
+}
+
+.day-number {
+  font-size: 0.75rem;
+  color: #888;
+}
+</style>

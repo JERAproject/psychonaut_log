@@ -1,28 +1,41 @@
 ---
-import HabitGrid
-from "../components/HabitGrid.astro";
+import Layout from "../layouts/Layout.astro";
+import HabitGrid from "../components/HabitGrid.astro";
+import HabitForm from "../components/HabitForm.astro";
+import { getHabits } from "../lib/habits.service";
 
-import {
-getHabits
-}
-from "../lib/habits.service";
-
-const habits=
-getHabits();
+const habits = getHabits();
 ---
 
-<html lang="es">
-<head>
-<title>Psychonaut Log</title>
-</head>
+<Layout title="Hábitos">
+  <main class="habits-page">
+    <header class="habits-header">
+      <h1>Hábitos</h1>
+      <HabitForm />
+    </header>
+    <HabitGrid habits={habits} />
+  </main>
+</Layout>
 
-<body>
+<style>
+.habits-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  color: #fefefe;
+}
 
-<h1>Habit Grid</h1>
+.habits-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
 
-<HabitGrid
- habits={habits}
-/>
-
-</body>
-</html>
+.habits-header h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+</style>

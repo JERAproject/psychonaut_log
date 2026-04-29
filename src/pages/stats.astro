@@ -1,29 +1,162 @@
 ---
+import Layout from "../layouts/Layout.astro";
 import HabitGrid from "../components/HabitGrid.astro";
-import StatsPanel from "../components/StatsPanel.astro";
-
-import { getHabits }
-from "../lib/habits.service";
+import CalendarView from "../components/CalendarView.astro";
+import HabitForm from "../components/HabitForm.astro";
+import { getHabits } from "../lib/habits.service";
 
 const habits = getHabits();
 ---
 
-<html lang="es">
-<head>
-  <title>Stats</title>
-</head>
+<Layout title="Tracker de Hábitos">
+  <main class="stats-page">
+    <header class="stats-header">
+      <h1>Tracker de Hábitos</h1>
+      <HabitForm />
+    </header>
 
-<body>
+    <div class="view-toggle">
+      <button id="btn-grid" class="toggle-btn active">Cuadrícula</button>
+      <button id="btn-calendar" class="toggle-btn">Calendario</button>
+    </div>
 
-<h1>Dashboard de hábitos</h1>
+    <div class="stats-summary">
+      <div class="summary-card">
+        <span class="summary-value">{habits.length}</span>
+        <span class="summary-label">Hábitos</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-value">90</span>
+        <span class="summary-label">Días visibles</span>
+      </div>
+    </div>
 
-<StatsPanel
- habits={habits}
-/>
+    <div id="view-grid" class="view-panel active">
+      <HabitGrid habits={habits} />
+    </div>
 
-<HabitGrid
- habits={habits}
-/>
+    <div id="view-calendar" class="view-panel">
+      <CalendarView habits={habits} />
+    </div>
+  </main>
+</Layout>
 
-</body>
-</html>
+<script>
+  const btnGrid = document.getElementById("btn-grid");
+  const btnCalendar = document.getElementById("btn-calendar");
+  const viewGrid = document.getElementById("view-grid");
+  const viewCalendar = document.getElementById("view-calendar");
+
+  btnGrid?.addEventListener("click", () => {
+    btnGrid.classList.add("active");
+    btnCalendar?.classList.remove("active");
+    viewGrid?.classList.add("active");
+    viewCalendar?.classList.remove("active");
+  });
+
+  btnCalendar?.addEventListener("click", () => {
+    btnCalendar.classList.add("active");
+    btnGrid?.classList.remove("active");
+    viewCalendar?.classList.add("active");
+    viewGrid?.classList.remove("active");
+  });
+</script>
+
+<style>
+.stats-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  color: #fefefe;
+}
+
+.stats-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stats-header h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.toggle-btn {
+  padding: 0.5rem 1.2rem;
+  background: #16213e;
+  border: 1px solid #333;
+  color: #888;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active {
+  background: #5b8ff9;
+  color: #fff;
+  border-color: #5b8ff9;
+}
+
+.toggle-btn:hover:not(.active) {
+  border-color: #555;
+  color: #ccc;
+}
+
+.stats-summary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  background: #0d0d1a;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #5b8ff9;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.view-panel {
+  display: none;
+}
+
+.view-panel.active {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .stats-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stats-summary {
+    flex-direction: column;
+  }
+}
+</style>

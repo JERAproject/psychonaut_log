@@ -1,0 +1,219 @@
+<div id="habit-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <button id="close-modal" class="close-btn">&times;</button>
+    <h2>Nuevo hábito</h2>
+    <form id="habit-form">
+      <div class="field">
+        <label for="habit-name">Nombre</label>
+        <input type="text" id="habit-name" name="name" placeholder="Ej: Meditación" required />
+      </div>
+      <div class="field">
+        <label for="habit-color">Color</label>
+        <input type="color" id="habit-color" name="color" value="#5b8ff9" />
+      </div>
+      <div class="field">
+        <label for="habit-max">Máximo por día</label>
+        <input type="number" id="habit-max" name="maxPerDay" min="1" max="99" value="1" required />
+      </div>
+      <div id="habit-msg" class="msg"></div>
+      <button type="submit" class="submit-btn">Crear hábito</button>
+    </form>
+  </div>
+</div>
+
+<button id="open-modal-btn" class="add-habit-btn">+ Nuevo hábito</button>
+
+<script>
+  const modal = document.getElementById("habit-modal");
+  const openBtn = document.getElementById("open-modal-btn");
+  const closeBtn = document.getElementById("close-modal");
+  const form = document.getElementById("habit-form");
+  const msg = document.getElementById("habit-msg");
+
+  openBtn?.addEventListener("click", () => {
+    modal?.classList.remove("hidden");
+  });
+
+  closeBtn?.addEventListener("click", () => {
+    modal?.classList.add("hidden");
+    msg.textContent = "";
+    form?.reset();
+  });
+
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.classList.add("hidden");
+      msg.textContent = "";
+      form?.reset();
+    }
+  });
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = "";
+
+    const formData = new FormData(form);
+    const payload = {
+      name: formData.get("name"),
+      color: formData.get("color"),
+      maxPerDay: Number(formData.get("maxPerDay")),
+    };
+
+    try {
+      const res = await fetch("/api/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        msg.className = "msg success";
+        msg.textContent = "Hábito creado correctamente";
+        setTimeout(() => {
+          modal?.classList.add("hidden");
+          form.reset();
+          msg.textContent = "";
+          window.location.reload();
+        }, 800);
+      } else {
+        msg.className = "msg error";
+        msg.textContent = data.error || "Error al crear";
+      }
+    } catch {
+      msg.className = "msg error";
+      msg.textContent = "Error de conexión";
+    }
+  });
+</script>
+
+<style>
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal {
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  color: #fefefe;
+}
+
+.modal h2 {
+  margin: 0 0 1.5rem;
+  font-size: 1.3rem;
+}
+
+.close-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.field input[type="text"],
+.field input[type="number"] {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #16213e;
+  color: #fefefe;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.field input[type="color"] {
+  width: 60px;
+  height: 40px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 0.7rem;
+  background: #5b8ff9;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+
+.submit-btn:hover {
+  background: #4a7de0;
+}
+
+.add-habit-btn {
+  padding: 0.7rem 1.5rem;
+  background: transparent;
+  border: 2px dashed #555;
+  color: #aaa;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-habit-btn:hover {
+  border-color: #5b8ff9;
+  color: #5b8ff9;
+}
+
+.msg {
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  min-height: 1.2em;
+}
+
+.msg.success {
+  color: #51cf66;
+}
+
+.msg.error {
+  color: #e03131;
+}
+</style>

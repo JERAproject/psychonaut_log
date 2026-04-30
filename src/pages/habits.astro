@@ -1,139 +1,74 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import HabitForm from "../components/HabitForm.astro";
+import HabitDashboard from "../components/HabitDashboard.jsx";
 ---
 
-<Layout title="Hábitos">
+<Layout 
+  title="Hábitos | PsychonautLog" 
+  description="Haz seguimiento de tus hábitos diarios de práctica: meditación, escritura reflexiva, y más."
+>
   <main class="habits-page">
     <header class="habits-header">
-      <h1>Hábitos</h1>
+      <div class="header-content">
+        <h1>Seguimiento de Hábitos</h1>
+        <p class="subtitle">Registra tu práctica diaria</p>
+      </div>
       <HabitForm />
     </header>
-    <div id="habits-loading" class="loading">Cargando hábitos...</div>
-    <div id="habits-grid" class="habits-list"></div>
+    <section class="dashboard-section" aria-label="Panel de hábitos">
+      <HabitDashboard client:load />
+    </section>
   </main>
 </Layout>
 
-<script>
-  interface Habit {
-    id: number;
-    name: string;
-    color: string;
-    maxPerDay: number;
+<style>
+  .habits-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    color: #fefefe;
   }
 
-  async function loadHabits() {
-    try {
-      const res = await fetch("/api/habits");
-      const habits: Habit[] = await res.json();
+  .habits-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
 
-      document.getElementById("habits-loading")!.style.display = "none";
-      const container = document.getElementById("habits-grid")!;
+  .header-content h1 {
+    font-size: 1.75rem;
+    margin: 0 0 0.25rem 0;
+  }
 
-      if (habits.length === 0) {
-        container.innerHTML = `<p class="empty-msg">No hay hábitos creados. Crea uno nuevo para empezar.</p>`;
-        return;
-      }
+  .subtitle {
+    color: #888;
+    margin: 0;
+    font-size: 0.95rem;
+  }
 
-      container.innerHTML = habits
-        .map(
-          (h) => `
-        <div class="habit-item">
-          <div class="habit-color-dot" style="background-color:${h.color};"></div>
-          <div class="habit-info">
-            <span class="habit-name">${h.name}</span>
-            <span class="habit-max">Máx: ${h.maxPerDay}/día</span>
-          </div>
-        </div>
-      `
-        )
-        .join("");
-    } catch (err) {
-      document.getElementById("habits-loading")!.innerHTML = `<p class="error-msg">Error al cargar hábitos.</p>`;
-      console.error(err);
+  .dashboard-section {
+    background: #0d0d1a;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #2a2a35;
+    overflow-x: auto;
+  }
+
+  @media (max-width: 640px) {
+    .habits-header {
+      flex-direction: column;
+    }
+
+    .habits-page {
+      padding: 1rem;
+    }
+
+    .dashboard-section {
+      padding: 1rem;
     }
   }
-
-  loadHabits();
-</script>
-
-<style>
-.habits-page {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-  color: #fefefe;
-}
-
-.habits-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.habits-header h1 {
-  font-size: 1.5rem;
-  margin: 0;
-}
-
-.loading {
-  text-align: center;
-  color: #666;
-  padding: 2rem;
-}
-
-.empty-msg {
-  text-align: center;
-  color: #888;
-  padding: 2rem;
-}
-
-.error-msg {
-  text-align: center;
-  color: #e03131;
-  padding: 2rem;
-}
-
-.habits-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.habit-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  background: #111827;
-  border: 1px solid #2a2a35;
-  border-radius: 12px;
-}
-
-.habit-color-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.habit-info {
-  display: flex;
-  justify-content: space-between;
-  flex: 1;
-  align-items: center;
-}
-
-.habit-name {
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.habit-max {
-  font-size: 0.8rem;
-  color: #888;
-}
 </style>

@@ -3,34 +3,38 @@ import Layout from '../layouts/Layout.astro';
 
 ---
 
-<Layout title="Registrar Sesión | PsychonautLog">
+<Layout 
+  title="Nueva Entrada | PsychonautLog" 
+  description="Registra una nueva sesión de práctica en tu bitácora psiconáutica."
+>
   <main class="container">
     <header>
       <h1>Nueva Entrada de Bitácora</h1>
       <p>Registra los parámetros de tu exploración fenomenológica.</p>
     </header>
     <div class="form-wrapper">
-      <form id="journal-form" class="data-form">
+      <form id="journal-form" class="data-form" aria-label="Formulario de entrada de bitácora">
         <fieldset>
           <legend>Metadatos de la Sesión</legend>
           <div class="grid">
             <label>
               Fecha
-              <input type="date" name="fecha" required />
+              <input type="date" name="fecha" required aria-required="true" />
             </label>
             <label>
               Hora
-              <input type="time" name="hora" required />
+              <input type="time" name="hora" required aria-required="true" />
             </label>
             <label>
               Duración (min)
-              <input type="number" name="duracion" min="1" placeholder="Ej: 20" required />
+              <input type="number" name="duracion" min="1" placeholder="Ej: 20" required aria-required="true" />
             </label>
           </div>
 
           <label>
             Tipo de Práctica
-            <select name="tipo_practica" required>
+            <select name="tipo_practica" required aria-required="true">
+              <option value="">Selecciona una práctica</option>
               <option value="mindfulness">Mindfulness</option>
               <option value="trataka">Trataka</option>
               <option value="visualizacion">Visualización Guiada</option>
@@ -44,11 +48,11 @@ import Layout from '../layouts/Layout.astro';
           <legend>Fenomenología y Estado</legend>
           <label>
             Estado Previo
-            <input type="text" name="estado_previo" placeholder="Ej: Dispersión analítica, fatiga..." required />
+            <input type="text" name="estado_previo" placeholder="Ej: Dispersión analítica, fatiga..." required aria-required="true" />
           </label>
           <label>
             Fenomenología (Observación directa)
-            <input type="text" name="fenomenologia" placeholder="Ej: Fosfenos, presión en entrecejo..." required />
+            <input type="text" name="fenomenologia" placeholder="Ej: Fosfenos, presión en entrecejo..." required aria-required="true" />
           </label>
           <label>
             Descripción Detallada (Cuerpo)
@@ -68,7 +72,7 @@ import Layout from '../layouts/Layout.astro';
           </label>
           <label>
             Estado Post-Práctica
-            <input type="text" name="estado_post" placeholder="Ej: Ecuanimidad, vitalidad..." required />
+            <input type="text" name="estado_post" placeholder="Ej: Ecuanimidad, vitalidad..." required aria-required="true" />
           </label>
         </fieldset>
 
@@ -135,21 +139,12 @@ import Layout from '../layouts/Layout.astro';
 </script>
 
 <style>
-  /* .container {
+  .container {
     max-width: 720px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-    font-family: 'Inter', system-ui, sans-serif;
-  } */
-  .container{
-  max-width:100vw;
-  margin:auto;
-  padding:4rem 2rem;
-
-  display:flex;
-  flex-direction:column; /* clave */
-  align-items:center;
+    margin: 0 auto;
+    padding: 2rem 1rem;
   }
+
   header {
     margin-bottom: 2rem;
     text-align: center;
@@ -168,7 +163,7 @@ import Layout from '../layouts/Layout.astro';
   }
 
   .form-wrapper {
-    padding: 0 0 3rem;
+    padding-bottom: 3rem;
   }
 
   .data-form {
@@ -192,8 +187,14 @@ import Layout from '../layouts/Layout.astro';
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   label {
@@ -279,5 +280,15 @@ import Layout from '../layouts/Layout.astro';
 
   .toast-error {
     background: #c92a2a;
+  }
+
+  @media (max-width: 640px) {
+    .container {
+      padding: 1rem;
+    }
+
+    fieldset {
+      padding: 1rem;
+    }
   }
 </style>

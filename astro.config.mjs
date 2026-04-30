@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
+import react from '@astrojs/react';
 
 export default defineConfig({
   vite: {
@@ -9,5 +10,6 @@ export default defineConfig({
         '/api': 'http://localhost:3001'
       }
     }
-  }
+  },
+  integrations: [react()]
 });

@@ -1,8 +1,31 @@
-<footer class="bg-cover bg-top bg-[url('/images/brain2.webp')] [mask-image:linear-gradient(transparent,black_90%)] w-screen h-[300px] flex flex-col justify-center items-center text-white">
-
-<div class="footer-cont">
-    <p> 2026 creado por juan robledo. </p>
-</div>
-
-
+---
+const year = new Date().getFullYear();
+---
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-cont">
+    <p>&copy; {year} creado por Juan Robledo.</p>
+  </div>
 </footer>
+
+<style>
+  .site-footer {
+    background: linear-gradient(transparent, #010207 90%), url('/images/brain2.webp');
+    background-size: cover;
+    background-position: top;
+    min-height: 200px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .footer-cont {
+    text-align: center;
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .footer-cont p {
+    margin: 0;
+  }
+</style>

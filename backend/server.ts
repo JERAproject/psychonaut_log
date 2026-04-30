@@ -29,6 +29,32 @@ app.post("/api/habits", (req, res) => {
   res.status(201).json({ ok: true });
 });
 
+app.delete("/api/habits/:id", (req, res) => {
+  const id = Number(req.params.id);
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+  db.prepare("DELETE FROM habit_logs WHERE habit_id = ?").run(id);
+  db.prepare("DELETE FROM habits WHERE id = ?").run(id);
+  res.json({ ok: true });
+});
+
+app.put("/api/habits/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const { name, color, maxPerDay } = req.body;
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+  if (!name || !color) {
+    return res.status(400).json({ error: "name and color are required" });
+  }
+  const max = Math.max(1, Math.min(Number(maxPerDay) || 1, 99));
+  db.prepare(
+    "UPDATE habits SET name = ?, color = ?, max_per_day = ? WHERE id = ?"
+  ).run(name, color, max, id);
+  res.json({ ok: true });
+});
+
 // ── Habit Logs ──────────────────────────────────────────
 
 app.get("/api/logs", (req, res) => {
@@ -130,6 +156,43 @@ app.delete("/api/journal/:id", (req, res) => {
   }
   db.prepare("DELETE FROM journal_entries WHERE id = ?").run(id);
   res.json({ ok: true });
+});
+
+app.put("/api/journal/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const { fecha, hora, duracion, tipo_practica, estado_previo, fenomenologia, cuerpo, insight, integracion, estado_post } = req.body;
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+  if (!fecha || !tipo_practica || !estado_previo || !fenomenologia || !estado_post) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    db.prepare(
+      `UPDATE journal_entries SET
+        fecha = ?, hora = ?, duracion = ?, tipo_practica = ?,
+        estado_previo = ?, fenomenologia = ?, cuerpo = ?,
+        insight = ?, integracion = ?, estado_post = ?
+      WHERE id = ?`
+    ).run(
+      fecha,
+      hora || "",
+      Number(duracion) || 0,
+      tipo_practica,
+      estado_previo,
+      fenomenologia,
+      cuerpo || null,
+      insight || null,
+      integracion || null,
+      estado_post,
+      id
+    );
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Database error" });
+  }
 });
 
 // ── Start ───────────────────────────────────────────────

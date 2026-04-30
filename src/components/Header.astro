@@ -2,16 +2,216 @@
 import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
 ---
 
-<header>
-  
-<ul class="flex items-center space-x-4 p-4">
-  <a href="/">
-    <img class="h-10 w-auto" src={psychonautIcon} alt="Psychonaut Log Logo">
-  </a>
-  <li><a href="/">Home</a></li>
-  <li><a href="/journal">Journal</a></li>
-  <li><a href="/stats">Stats</a></li>
-  <li><a href="/about">About</a></li>
-  <li><a href="/contact">Contact</a></li>
-</ul>
+<header class="site-header">
+  <div class="header-container">
+    <a href="/" class="logo" aria-label="Psychonaut Log - Inicio">
+      <img src={psychonautIcon} alt="" width="40" height="40" />
+      <span class="logo-text">PsychonautLog</span>
+    </a>
+    
+    <button 
+      class="menu-toggle" 
+      aria-label="Abrir menú de navegación"
+      aria-expanded="false"
+      aria-controls="main-nav"
+    >
+      <span class="hamburger"></span>
+    </button>
+    
+    <nav id="main-nav" class="main-nav" aria-label="Navegación principal">
+      <ul class="nav-list" role="list">
+        <li><a href="/">Home</a></li>
+        <li><a href="/journal">Journal</a></li>
+        <li><a href="/habits">Hábitos</a></li>
+        <li><a href="/stats">Stats</a></li>
+        <li><a href="/enterData">Nueva Entrada</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
 </header>
+
+<script>
+  const toggle = document.querySelector('.menu-toggle');
+  const nav = document.querySelector('.main-nav');
+  
+  toggle?.addEventListener('click', () => {
+    const isOpen = nav?.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    toggle.classList.toggle('active');
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!nav?.contains(e.target as Node) && !toggle?.contains(e.target as Node)) {
+      nav?.classList.remove('open');
+      toggle?.classList.remove('active');
+      toggle?.setAttribute('aria-expanded', 'false');
+    }
+  });
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(1, 2, 7, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #2a2a35;
+  }
+
+  .header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: #fefefe;
+  }
+
+  .logo img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  .logo-text {
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    z-index: 101;
+  }
+
+  .hamburger {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: #fefefe;
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .hamburger::before,
+  .hamburger::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 2px;
+    background: #fefefe;
+    transition: transform 0.2s;
+  }
+
+  .hamburger::before {
+    top: -8px;
+  }
+
+  .hamburger::after {
+    bottom: -8px;
+  }
+
+  .menu-toggle.active .hamburger {
+    background: transparent;
+  }
+
+  .menu-toggle.active .hamburger::before {
+    transform: rotate(45deg) translate(5px, 6px);
+  }
+
+  .menu-toggle.active .hamburger::after {
+    transform: rotate(-45deg) translate(5px, -6px);
+  }
+
+  .main-nav {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .nav-list {
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .nav-list a {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #aaa;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .nav-list a:hover,
+  .nav-list a:focus {
+    color: #fefefe;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .nav-list a:focus-visible {
+    outline: 2px solid #5b8ff9;
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px) {
+    .menu-toggle {
+      display: block;
+    }
+
+    .main-nav {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 280px;
+      background: #111827;
+      border-left: 1px solid #2a2a35;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      padding-top: 5rem;
+    }
+
+    .main-nav.open {
+      transform: translateX(0);
+    }
+
+    .nav-list {
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem;
+    }
+
+    .nav-list a {
+      padding: 1rem;
+      font-size: 1.1rem;
+      border-radius: 10px;
+    }
+
+    .logo-text {
+      display: none;
+    }
+  }
+</style>

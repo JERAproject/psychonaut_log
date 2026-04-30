@@ -5,63 +5,96 @@ import autohimnosisImg from '../assets/Autohimnosis.png?url';
 import shambhaviImg from '../assets/Shambavi mudra.png?url';
 import escrituraImg from '../assets/Escritura reflexiva.png?url';
 import trackerImg from '../assets/Tracker.png?url';
+
+const tecnicas = [
+  { img: mindfulnessImg, title: "Mindfulness", desc: "Práctica de atención plena en el presente.", link: "/enterData" },
+  { img: tratakaImg, title: "Trataka", desc: "Visualización fija en un punto.", link: "/enterData" },
+  { img: autohimnosisImg, title: "Visualización Guiada", desc: "Imágenes mentales detalladas y específicas.", link: "/enterData" },
+  { img: shambhaviImg, title: "Third Eye Gazing (Shambhavi mudra)", desc: "Observación del punto entre el entrecejo.", link: "/enterData" },
+  { img: escrituraImg, title: "Escritura Reflectiva", desc: "Expresión escrita de experiencias e insights.", link: "/enterData" },
+  { img: trackerImg, title: "Tracker de Hábitos", desc: "Seguimiento y análisis de patrones de comportamiento.", link: "/stats" },
+];
 ---
 
-<div>
-    <div class="container">
-        <a href="/enterData">
-            <div class="card">
-                <img src={mindfulnessImg} alt="Mindfulness" />
-                <div class="card-text">
-                    <h3>Mindfulness</h3>
-                    <p>Práctica de atención plena en el presente.</p>
-                </div>
-            </div>
-        </a>
-        <a href="/enterData">
-            <div class="card">
-                <img src={tratakaImg} alt="Trataka" />
-                <div class="card-text">
-                    <h3>Trataka</h3>
-                    <p>Visualización fija en un punto.</p>
-                </div>
-            </div>
-        </a>
-        <a href="/enterData">
-            <div class="card">
-                <img src={autohimnosisImg} alt="Visualización Guiada" />
-                <div class="card-text">
-                    <h3>Visualización Guiada</h3>
-                    <p>Imagenes mentales detalladas y específicas.</p>
-                </div>
-            </div>
-        </a>
-        <a href="/enterData">
-            <div class="card">
-                <img src={shambhaviImg} alt="Shambhavi" />
-                <div class="card-text">
-                    <h3>Third Eye Gazing (Shambhavi)</h3>
-                    <p>Observación del punto entre el entrecejo.</p>
-                </div>
-            </div>
-        </a>
-        <a href="/enterData">
-            <div class="card">
-                <img src={escrituraImg} alt="Escritura Reflectiva" />
-                <div class="card-text">
-                    <h3>Escritura Reflectiva</h3>
-                    <p>Expresión escrita de experiencias y insights.</p>
-                </div>
-            </div>
-        </a>
-        <a href="/stats">
-            <div class="card">
-                <img src={trackerImg} alt="Tracker de Habitos" />
-                <div class="card-text">
-                    <h3>Tracker de Hábitos</h3>
-                    <p>Seguimiento y análisis de patrones de comportamiento.</p>
-                </div>
-            </div>
-        </a>
-    </div>
-</div>
+<section class="tecnicas-section" aria-label="Técnicas de práctica">
+  <div class="container" role="list">
+    {tecnicas.map((t) => (
+      <a href={t.link} class="card" role="listitem">
+        <img src={t.img} alt="" aria-hidden="true" width="80" height="80" loading="lazy" />
+        <div class="card-text">
+          <h3>{t.title}</h3>
+          <p>{t.desc}</p>
+        </div>
+      </a>
+    ))}
+  </div>
+</section>
+
+<style>
+  .tecnicas-section {
+    margin-bottom: 2rem;
+  }
+  .container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: 600px;
+    width: 100%;
+    transition: transform 0.3s ease, background 0.2s;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .card:hover, .card:focus {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .card:focus-visible {
+    outline: 2px solid #5b8ff9;
+    outline-offset: 2px;
+  }
+
+  .card img {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem;
+    height: 5rem;
+    width: 5rem;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .card h3 {
+    color: #fefefe;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+  }
+
+  .card p {
+    color: #ccc;
+    font-size: 0.85rem;
+    margin: 0;
+    line-height: 1.4;
+  }
+</style>

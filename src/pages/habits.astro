@@ -1,74 +1,469 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import HabitForm from "../components/HabitForm.astro";
 import HabitDashboard from "../components/HabitDashboard.jsx";
+import HabitCalendar from "../components/HabitCalendar.jsx";
+
+// Nota: Asegúrate de que estos componentes existan en tu carpeta /components/
 ---
 
 <Layout 
   title="Hábitos | PsychonautLog" 
-  description="Haz seguimiento de tus hábitos diarios de práctica: meditación, escritura reflexiva, y más."
+  description="Registra y visualiza el progreso de tus hábitos diarios de práctica."
 >
   <main class="habits-page">
-    <header class="habits-header">
-      <div class="header-content">
-        <h1>Seguimiento de Hábitos</h1>
-        <p class="subtitle">Registra tu práctica diaria</p>
-      </div>
-      <HabitForm />
+    <header class="page-header">
+      <h1>Hábitos</h1>
+      <p class="subtitle">Registra y visualiza tu práctica diaria</p>
     </header>
-    <section class="dashboard-section" aria-label="Panel de hábitos">
-      <HabitDashboard client:load />
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="seguimiento">Seguimiento</button>
+      <button class="tab-btn" data-tab="resumen">Resumen</button>
+    </div>
+
+    <section id="seguimiento-tab" class="tab-content active">
+      <div class="seguimiento-container">
+        <div class="weekly-section">
+          <h2 class="section-title">Tu Día a Día</h2>
+          <p class="section-subtitle">Registra tu práctica de esta semana</p>
+          <div class="dashboard-wrapper">
+            <!-- Hidratación del componente React -->
+            <HabitDashboard client:load />
+          </div>
+        </div>
+
+        <div class="grid-section">
+          <h2 class="section-title">Historial</h2>
+          <p class="section-subtitle">Tu progreso en los últimos 90 días</p>
+          <div id="grid-view" class="grid-view">
+            <div class="loading-msg">Cargando historial...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="resumen-tab" class="tab-content">
+      <div class="resumen-container">
+        <div class="calendar-section">
+          <h2 class="section-title">Calendario</h2>
+          <p class="section-subtitle">Vista mensual</p>
+          <div id="calendar-view" class="calendar-view">
+            <!-- Hidratación del componente React para el calendario -->
+            <HabitCalendar client:load />
+          </div>
+        </div>
+
+        <div class="stats-dashboard">
+          <h2 class="section-title">Estadísticas</h2>
+          <div id="stats-cards" class="stats-cards">
+            <div class="stat-card">
+              <span class="stat-value" id="active-habits">...</span>
+              <span class="stat-label">Hábitos activos</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value">90</span>
+              <span class="stat-label">Días visibles</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="today-completed">...</span>
+              <span class="stat-label">Completados hoy</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="current-streak">...</span>
+              <span class="stat-label">Racha actual</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 </Layout>
 
+<script is:inline>
+  // Manejo de Tabs
+  var tabs = document.querySelectorAll(".tab-btn");
+  var contents = document.querySelectorAll(".tab-content");
+
+  tabs.forEach(function(tab) {
+    tab.addEventListener("click", function() {
+      var target = tab.getAttribute("data-tab");
+      tabs.forEach(function(t) { t.classList.remove("active"); });
+      contents.forEach(function(c) { c.classList.remove("active"); });
+      tab.classList.add("active");
+      document.getElementById(target + "-tab").classList.add("active");
+      
+      if (target === "resumen") {
+        loadResumen();
+      }
+    });
+  });
+
+  // Utilidades de Fecha (Configuración para Argentina)
+  function getARGDate() {
+    var now = new Date();
+    var argDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }));
+    return argDate;
+  }
+
+  function getDates() {
+    var dates = [];
+    var today = getARGDate();
+    for (var i = 89; i >= 0; i--) {
+      var d = new Date(today);
+      d.setDate(today.getDate() - i);
+      dates.push(d.toISOString().split("T")[0]);
+    }
+    return dates;
+  }
+
+  // FUNCIÓN CORREGIDA: Genera las cabeceras para la tabla de historial
+  function getDateHeaders() {
+    var dates = getDates();
+    var html = '';
+    dates.forEach(function(date) {
+      var day = date.split("-")[2]; // Extrae el día (DD)
+      html += '<th class="date-header">' + day + '</th>';
+    });
+    return html;
+  }
+
+  // Carga de Estadísticas
+  async function loadResumen() {
+    try {
+      var [habitsRes, logsRes] = await Promise.all([
+        fetch("/api/habits"),
+        fetch("/api/logs")
+      ]);
+      
+      var habits = await habitsRes.json();
+      var logs = await logsRes.json();
+
+      var todayStr = getARGDate().toISOString().split("T")[0];
+      var todayLogs = logs.filter(l => l.logDate === todayStr).reduce((s, l) => s + l.count, 0);
+
+      document.getElementById("active-habits").textContent = String(habits.length);
+      document.getElementById("today-completed").textContent = String(todayLogs);
+      // La racha se calcularía aquí con una lógica similar
+    } catch (err) {
+      console.error("Error cargando resumen:", err);
+    }
+  }
+
+  // Carga del Grid de Historial (Manipulación manual del DOM)
+  async function loadGrid() {
+    try {
+      var [habitsRes, logsRes] = await Promise.all([
+        fetch("/api/habits"),
+        fetch("/api/logs")
+      ]);
+      
+      var habits = await habitsRes.json();
+      var logs = await logsRes.json();
+      
+      var logMap = {};
+      logs.forEach(function(l) { logMap[l.habitId + ":" + l.logDate] = l.count; });
+
+      var dates = getDates();
+      
+      // Construcción del HTML
+      var gridHtml = `
+        <div class="grid-wrapper">
+          <div class="grid-scroll">
+            <table class="habit-grid">
+              <thead>
+                <tr>
+                  <th class="label-col">Hábito</th>
+                  ${getDateHeaders()} 
+                </tr>
+              </thead>
+              <tbody>
+      `;
+      
+      habits.forEach(function(h) {
+        gridHtml += `<tr><td class="label-col"><span style="color:${h.color}">${h.name}</span></td>`;
+        dates.forEach(function(date) {
+          var count = logMap[h.id + ":" + date] || 0;
+          var activeStyle = count > 0 ? `background-color:${h.color}; opacity: 0.8;` : '';
+          gridHtml += `<td><div class="grid-cell" style="${activeStyle}" title="${date}"></div></td>`;
+        });
+        gridHtml += '</tr>';
+      });
+      
+      gridHtml += '</tbody></table></div></div>';
+      document.getElementById("grid-view").innerHTML = gridHtml;
+    } catch (err) {
+      console.error("Error cargando grid:", err);
+      document.getElementById("grid-view").innerHTML = '<p class="error-msg">Error al cargar historial.</p>';
+    }
+  }
+
+  // Inicialización
+  loadGrid();
+</script>
+
+<style>
+  /* Estilos básicos para asegurar el layout horizontal */
+  .habit-grid {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  .grid-scroll {
+    overflow-x: auto;
+    white-space: nowrap;
+    background: #0f172a;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  .grid-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background-color: #1e293b;
+    margin: 2px;
+  }
+  .date-header {
+    font-size: 0.6rem;
+    color: #94a3b8;
+    padding: 2px;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .tab-btn.active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+</style>
+
 <style>
   .habits-page {
-    max-width: 900px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 2rem 1rem;
     color: #fefefe;
   }
 
-  .habits-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1.5rem;
+  .page-header {
+    text-align: center;
     margin-bottom: 2rem;
   }
 
-  .header-content h1 {
-    font-size: 1.75rem;
-    margin: 0 0 0.25rem 0;
+  .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    background: linear-gradient(135deg, #fefefe 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .subtitle {
-    color: #888;
+    color: #6b7280;
+    font-size: 1.1rem;
     margin: 0;
-    font-size: 0.95rem;
   }
 
-  .dashboard-section {
-    background: #0d0d1a;
-    border-radius: 16px;
-    padding: 1.5rem;
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    background: #111827;
+    padding: 0.35rem;
+    border-radius: 12px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 0.75rem 1.25rem;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    color: #9ca3af;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover { color: #d1d5db; }
+  .tab-btn.active { background: #2563eb; color: #fff; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .seguimiento-container {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin: 0 0 0.5rem;
+  }
+
+  .section-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0 0 1.25rem;
+  }
+
+  .dashboard-wrapper {
+    background: linear-gradient(145deg, #16162a 0%, #1a1a2e 100%);
     border: 1px solid #2a2a35;
+    border-radius: 16px;
+    padding: 1.25rem;
+  }
+
+  .grid-view {
+    background: linear-gradient(145deg, #16162a 0%, #1a1a2e 100%);
+    border: 1px solid #2a2a35;
+    border-radius: 16px;
+    padding: 1rem;
     overflow-x: auto;
   }
 
-  @media (max-width: 640px) {
-    .habits-header {
-      flex-direction: column;
-    }
+  .grid-wrapper {
+    min-width: 800px;
+  }
 
-    .habits-page {
-      padding: 1rem;
-    }
+  .grid-scroll {
+    overflow-x: auto;
+  }
 
-    .dashboard-section {
-      padding: 1rem;
-    }
+  .habit-grid {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .habit-grid th {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    border-bottom: 1px solid #2a2a35;
+  }
+
+  .habit-grid td {
+    padding: 0.25rem;
+  }
+
+  .label-col {
+    min-width: 100px;
+    text-align: left;
+  }
+
+  .habit-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .grid-cell {
+    width: 100%;
+    aspect-ratio: 1;
+    min-width: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .grid-cell:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 8px rgba(91, 143, 249, 0.5);
+  }
+
+  .date-col {
+    width: 1%;
+    white-space: nowrap;
+  }
+
+  .date-label {
+    display: block;
+    transform: rotate(-45deg);
+    transform-origin: center;
+    white-space: nowrap;
+  }
+
+  .resumen-container {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .calendar-view {
+    background: linear-gradient(145deg, #16162a 0%, #1a1a2e 100%);
+    border: 1px solid #2a2a35;
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+
+  .calendar-month {
+    margin-bottom: 2rem;
+  }
+
+  .calendar-month:last-child { margin-bottom: 0; }
+
+  .month-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin: 0 0 1rem;
+  }
+
+  .calendar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .stat-card {
+    background: linear-gradient(145deg, #16162a 0%, #1a1a2e 100%);
+    border: 1px solid #2a2a35;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #5b8ff9;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .loading-msg {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+  }
+
+  .error-msg {
+    text-align: center;
+    color: #f87171;
+    padding: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .habits-page { padding: 1rem; }
+    .dashboard-wrapper, .grid-view, .calendar-view { padding: 1rem; }
+    .stats-cards { grid-template-columns: repeat(2, 1fr); }
   }
 </style>

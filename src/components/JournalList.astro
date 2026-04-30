@@ -1,18 +1,35 @@
----
----
-
 <section class="journal-list">
-  <h2 class="section-title">Entradas Guardadas</h2>
-
-  <div id="journal-entries" class="entries">
-    <div class="loading">Cargando...</div>
+  <div class="table-container">
+    <table class="entries-table">
+      <thead>
+        <tr>
+          <th class="col-fecha">Fecha</th>
+          <th class="col-tecnica">Técnica</th>
+          <th class="col-insight">Insight</th>
+          <th class="col-acciones">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="journal-entries">
+        <tr class="loading-row">
+          <td colspan="4">Cargando entradas...</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
-<div id="edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="modal">
-    <button id="close-modal" class="close-btn" aria-label="Cerrar modal">&times;</button>
-    <h2 id="modal-title">Editar Entrada</h2>
+<div id="detail-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+  <div class="modal detail-modal">
+    <button class="close-modal-btn" aria-label="Cerrar">Close</button>
+    <h2 id="detail-title">Detalles de la Entrada</h2>
+    <div id="detail-content" class="detail-content"></div>
+  </div>
+</div>
+
+<div id="edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+  <div class="modal edit-modal">
+    <button id="close-edit-modal" class="close-modal-btn" aria-label="Cerrar">Close</button>
+    <h2 id="edit-modal-title">Editar Entrada</h2>
     <form id="edit-form">
       <input type="hidden" id="edit-id" name="id" />
       <fieldset>
@@ -101,26 +118,95 @@
     mindfulness: "Mindfulness",
     trataka: "Trataka",
     visualizacion: "Visualización Guiada",
-    shambhavi: "Third Eye Gazing (Shambhavi)",
+    shambhavi: "Third Eye Gazing",
     escritura: "Escritura Reflectiva",
   };
 
   function formatDate(dateStr: string): string {
     const d = new Date(dateStr + "T00:00:00");
     return d.toLocaleDateString("es-ES", {
-      weekday: "short",
-      day: "numeric",
+      day: "2-digit",
       month: "short",
       year: "numeric",
     });
   }
 
-  const modal = document.getElementById("edit-modal");
-  const closeBtn = document.getElementById("close-modal");
-  const form = document.getElementById("edit-form") as HTMLFormElement;
-  const msg = document.getElementById("edit-msg");
+  function formatTime(timeStr: string | null): string {
+    if (!timeStr) return "";
+    const [h, m] = timeStr.split(":");
+    return h + ":" + m;
+  }
 
-  function openModal(entry: JournalEntry) {
+  const detailModal = document.getElementById("detail-modal");
+  const editModal = document.getElementById("edit-modal");
+  const closeDetailBtn = detailModal?.querySelector(".close-modal-btn");
+  const closeEditBtn = document.getElementById("close-edit-modal");
+  const editForm = document.getElementById("edit-form") as HTMLFormElement;
+  const editMsg = document.getElementById("edit-msg");
+
+  function openDetailModal(entry: JournalEntry) {
+    const content = document.getElementById("detail-content");
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-meta">
+          <span class="detail-date">${formatDate(entry.fecha)}</span>
+          <span class="detail-time">${formatTime(entry.hora)}</span>
+          <span class="detail-duration">${entry.duracion ? entry.duracion + " min" : ""}</span>
+        </div>
+        
+        <div class="detail-section">
+          <h3>Técnica</h3>
+          <p>${practiceLabels[entry.tipo_practica] || entry.tipo_practica}</p>
+        </div>
+
+        <div class="detail-section">
+          <h3>Estado Previo</h3>
+          <p>${entry.estado_previo}</p>
+        </div>
+
+        <div class="detail-section">
+          <h3>Fenomenología</h3>
+          <p>${entry.fenomenologia}</p>
+        </div>
+
+        ${entry.cuerpo ? `
+          <div class="detail-section">
+            <h3>Descripción Corporal</h3>
+            <p class="text-block">${entry.cuerpo}</p>
+          </div>
+        ` : ""}
+
+        ${entry.insight ? `
+          <div class="detail-section">
+            <h3>Insight Principal</h3>
+            <p>${entry.insight}</p>
+          </div>
+        ` : ""}
+
+        ${entry.integracion ? `
+          <div class="detail-section">
+            <h3>Plan de Integración</h3>
+            <p>${entry.integracion}</p>
+          </div>
+        ` : ""}
+
+        <div class="detail-section">
+          <h3>Estado Post-Práctica</h3>
+          <p>${entry.estado_post}</p>
+        </div>
+      </div>
+    `;
+
+    detailModal?.classList.remove("hidden");
+  }
+
+  function closeDetailModal() {
+    detailModal?.classList.add("hidden");
+  }
+
+  function openEditModal(entry: JournalEntry) {
     (document.getElementById("edit-id") as HTMLInputElement).value = String(entry.id);
     (document.getElementById("edit-fecha") as HTMLInputElement).value = entry.fecha;
     (document.getElementById("edit-hora") as HTMLInputElement).value = entry.hora || "";
@@ -132,33 +218,43 @@
     (document.getElementById("edit-insight") as HTMLInputElement).value = entry.insight || "";
     (document.getElementById("edit-integracion") as HTMLInputElement).value = entry.integracion || "";
     (document.getElementById("edit-estado-post") as HTMLInputElement).value = entry.estado_post;
-    
-    if (msg) msg.textContent = "";
-    modal?.classList.remove("hidden");
+
+    if (editMsg) editMsg.textContent = "";
+    editModal?.classList.remove("hidden");
   }
 
-  function closeModal() {
-    modal?.classList.add("hidden");
-    if (msg) msg.textContent = "";
-    form?.reset();
+  function closeEditModal() {
+    editModal?.classList.add("hidden");
+    if (editMsg) editMsg.textContent = "";
+    editForm?.reset();
   }
 
-  closeBtn?.addEventListener("click", closeModal);
-  modal?.addEventListener("click", (e) => {
-    if (e.target === modal) closeModal();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
+  closeDetailBtn?.addEventListener("click", closeDetailModal);
+  closeEditBtn?.addEventListener("click", closeEditModal);
+
+  detailModal?.addEventListener("click", function(e) {
+    if (e.target === detailModal) closeDetailModal();
   });
 
-  form?.addEventListener("submit", async (e) => {
+  editModal?.addEventListener("click", function(e) {
+    if (e.target === editModal) closeEditModal();
+  });
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      closeDetailModal();
+      closeEditModal();
+    }
+  });
+
+  editForm?.addEventListener("submit", async function(e) {
     e.preventDefault();
-    if (!msg) return;
-    msg.textContent = "";
+    if (!editMsg) return;
+    editMsg.textContent = "";
 
-    const formData = new FormData(form);
-    const id = formData.get("id");
-    const payload = {
+    var formData = new FormData(editForm);
+    var id = formData.get("id");
+    var payload = {
       fecha: formData.get("fecha"),
       hora: formData.get("hora"),
       duracion: formData.get("duracion"),
@@ -172,33 +268,33 @@
     };
 
     try {
-      const res = await fetch(`/api/journal/${id}`, {
+      var res = await fetch("/api/journal/" + id, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      var data = await res.json();
       if (data.ok) {
-        msg.className = "msg success";
-        msg.textContent = "Entrada actualizada correctamente";
-        setTimeout(() => {
-          closeModal();
+        editMsg.className = "msg success";
+        editMsg.textContent = "Entrada actualizada correctamente";
+        setTimeout(function() {
+          closeEditModal();
           loadEntries();
         }, 800);
       } else {
-        msg.className = "msg error";
-        msg.textContent = data.error || "Error al guardar";
+        editMsg.className = "msg error";
+        editMsg.textContent = data.error || "Error al guardar";
       }
     } catch {
-      msg.className = "msg error";
-      msg.textContent = "Error de conexión";
+      editMsg.className = "msg error";
+      editMsg.textContent = "Error de conexión";
     }
   });
 
-  async function deleteEntry(id: number) {
+  async function deleteEntry(id) {
     if (!confirm("¿Eliminar esta entrada?")) return;
     try {
-      const res = await fetch(`/api/journal/${id}`, { method: "DELETE" });
+      var res = await fetch("/api/journal/" + id, { method: "DELETE" });
       if (res.ok) loadEntries();
     } catch (err) {
       console.error("Error deleting:", err);
@@ -206,76 +302,68 @@
   }
 
   async function loadEntries() {
-    const container = document.getElementById("journal-entries");
+    var container = document.getElementById("journal-entries");
     if (!container) return;
 
     try {
-      const res = await fetch("/api/journal");
-      const entries: JournalEntry[] = await res.json();
+      var res = await fetch("/api/journal");
+      var entries = await res.json();
 
       if (entries.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <p>No hay entradas en tu bitácora aún.</p>
-            <a href="/enterData" class="empty-link">Crear primera entrada →</a>
-          </div>
-        `;
+        container.innerHTML = '<tr class="empty-row"><td colspan="4"><div class="empty-state"><p>No hay entradas en tu bitácora aún.</p><a href="/practica" class="empty-link">Crear primera entrada →</a></div></td></tr>';
         return;
       }
 
-      container.innerHTML = entries
-        .map(
-          (e) => `
-        <details class="entry-card">
-          <summary class="entry-header">
-            <div class="entry-meta">
-              <span class="entry-date">${formatDate(e.fecha)}</span>
-              <span class="entry-type">${practiceLabels[e.tipo_practica] || e.tipo_practica}</span>
-              ${e.duracion ? `<span class="entry-duration">${e.duracion} min</span>` : ""}
-            </div>
-            <div class="entry-insight">${e.insight || "Sin insight registrado"}</div>
-          </summary>
-          <div class="entry-body">
-            <div class="entry-row">
-              <span class="entry-label">Estado previo</span>
-              <p>${e.estado_previo}</p>
-            </div>
-            <div class="entry-row">
-              <span class="entry-label">Fenomenología</span>
-              <p>${e.fenomenologia}</p>
-            </div>
-            ${e.cuerpo ? `<div class="entry-row"><span class="entry-label">Descripción</span><p class="entry-text">${e.cuerpo}</p></div>` : ""}
-            ${e.integracion ? `<div class="entry-row"><span class="entry-label">Plan de integración</span><p>${e.integracion}</p></div>` : ""}
-            <div class="entry-row">
-              <span class="entry-label">Estado post-práctica</span>
-              <p>${e.estado_post}</p>
-            </div>
-            <div class="entry-actions">
-              <button class="action-btn edit-btn" data-id="${e.id}" aria-label="Editar entrada">Editar</button>
-              <button class="action-btn delete-btn" data-id="${e.id}" aria-label="Eliminar entrada">Eliminar</button>
-            </div>
-          </div>
-        </details>
-      `
-        )
-        .join("");
+      var sortedEntries = entries.slice().sort(function(a, b) {
+        var dateA = a.fecha + (a.hora || "");
+        var dateB = b.fecha + (b.hora || "");
+        return dateB.localeCompare(dateA);
+      });
 
-      container.querySelectorAll(".edit-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const id = Number((e.target as HTMLElement).dataset.id);
-          const entry = entries.find((ent) => ent.id === id);
-          if (entry) openModal(entry);
+      container.innerHTML = sortedEntries.map(function(e) {
+        return '<tr class="entry-row" data-id="' + e.id + '">' +
+          '<td class="col-fecha"><div class="cell-fecha"><span class="fecha-date">' + formatDate(e.fecha) + '</span>' +
+          (e.hora ? '<span class="fecha-time">' + formatTime(e.hora) + '</span>' : '') +
+          '</div></td>' +
+          '<td class="col-tecnica"><span class="cell-tecnica">' + (practiceLabels[e.tipo_practica] || e.tipo_practica) + '</span></td>' +
+          '<td class="col-insight"><span class="cell-insight">' + (e.insight || "—") + '</span></td>' +
+          '<td class="col-acciones"><div class="cell-acciones">' +
+          '<button class="action-btn view-btn" data-id="' + e.id + '" aria-label="Ver detalles">View</button>' +
+          '<button class="action-btn edit-btn" data-id="' + e.id + '" aria-label="Editar">Edit</button>' +
+          '<button class="action-btn delete-btn" data-id="' + e.id + '" aria-label="Eliminar">Del</button>' +
+          '</div></td></tr>';
+      }).join("");
+
+      container.querySelectorAll(".view-btn").forEach(function(btn) {
+        btn.addEventListener("click", function(e) {
+          var target = e.target as HTMLElement;
+          var btn2 = target.closest("[data-id]") as HTMLElement;
+          var id = Number(btn2.getAttribute("data-id"));
+          var entry = entries.find(function(ent) { return ent.id === id; });
+          if (entry) openDetailModal(entry);
         });
       });
 
-      container.querySelectorAll(".delete-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const id = Number((e.target as HTMLElement).dataset.id);
+      container.querySelectorAll(".edit-btn").forEach(function(btn) {
+        btn.addEventListener("click", function(e) {
+          var target = e.target as HTMLElement;
+          var btn2 = target.closest("[data-id]") as HTMLElement;
+          var id = Number(btn2.getAttribute("data-id"));
+          var entry = entries.find(function(ent) { return ent.id === id; });
+          if (entry) openEditModal(entry);
+        });
+      });
+
+      container.querySelectorAll(".delete-btn").forEach(function(btn) {
+        btn.addEventListener("click", function(e) {
+          var target = e.target as HTMLElement;
+          var btn2 = target.closest("[data-id]") as HTMLElement;
+          var id = Number(btn2.getAttribute("data-id"));
           deleteEntry(id);
         });
       });
     } catch (err) {
-      container.innerHTML = `<p class="error-msg">Error al cargar las entradas.</p>`;
+      container.innerHTML = '<tr class="error-row"><td colspan="4">Error al cargar las entradas.</td></tr>';
       console.error(err);
     }
   }
@@ -284,354 +372,225 @@
 </script>
 
 <style>
-  .journal-list {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 1.5rem 1rem;
-  }
+  .journal-list { width: 100%; }
 
-  .section-title {
-    font-size: 1.2rem;
-    color: #fefefe;
-    margin: 0 0 1.5rem;
-  }
-
-  .entries {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .loading {
-    text-align: center;
-    color: #666;
-    padding: 2rem;
-  }
-
-  .error-msg {
-    text-align: center;
-    color: #e03131;
-    padding: 2rem;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    background: #111827;
+  .table-container {
+    overflow-x: auto;
     border-radius: 16px;
-    border: 1px dashed #333;
-  }
-
-  .empty-state p {
-    color: #666;
-    margin: 0 0 1rem;
-  }
-
-  .empty-link {
-    color: #5b8ff9;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
-  }
-
-  .empty-link:hover {
-    color: #4a7de0;
-  }
-
-  .entry-card {
-    background: #111827;
+    background: linear-gradient(145deg, #16162a 0%, #1a1a2e 100%);
     border: 1px solid #2a2a35;
-    border-radius: 14px;
-    overflow: hidden;
-    transition: border-color 0.2s;
   }
 
-  .entry-card:hover {
-    border-color: #3a3a45;
+  .entries-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
   }
 
-  .entry-card[open] {
-    border-color: #5b8ff944;
-  }
-
-  .entry-header {
-    cursor: pointer;
+  .entries-table th {
+    text-align: left;
     padding: 1rem 1.25rem;
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    position: relative;
-    padding-left: 1.75rem;
-  }
-
-  .entry-header::-webkit-details-marker {
-    display: none;
-  }
-
-  .entry-header::before {
-    content: "▸";
-    position: absolute;
-    left: 0.5rem;
-    color: #555;
-    transition: transform 0.2s;
-  }
-
-  .entry-card[open] .entry-header::before {
-    content: "▾";
-  }
-
-  .entry-meta {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 0.4rem;
-  }
-
-  .entry-date {
-    font-size: 0.8rem;
-    color: #888;
-  }
-
-  .entry-type {
-    font-size: 0.7rem;
-    padding: 0.15rem 0.5rem;
-    background: #5b8ff922;
-    color: #5b8ff9;
-    border-radius: 6px;
-    text-transform: capitalize;
-  }
-
-  .entry-duration {
     font-size: 0.75rem;
-    color: #666;
-  }
-
-  .entry-insight {
-    font-size: 0.9rem;
-    color: #ccc;
-    line-height: 1.4;
-  }
-
-  .entry-body {
-    padding: 0 1.25rem 1.25rem;
-    padding-left: 1.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    border-top: 1px solid #1a1a2e;
-    margin: 0 0.75rem;
-    padding-top: 1rem;
-  }
-
-  .entry-row p {
-    margin: 0.3rem 0 0;
-    color: #bbb;
-    line-height: 1.6;
-    font-size: 0.9rem;
-  }
-
-  .entry-text {
-    white-space: pre-wrap;
-  }
-
-  .entry-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #666;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    background: #0d0d1a;
+    border-bottom: 1px solid #2a2a35;
   }
 
-  .entry-actions {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #2a2a35;
+  .entries-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #252540;
+    vertical-align: middle;
   }
 
-  .action-btn {
-    padding: 0.5rem 1rem;
+  .entries-table tr:last-child td { border-bottom: none; }
+
+  .entry-row { transition: background 0.2s; }
+  .entry-row:hover { background: rgba(255, 255, 255, 0.02); }
+
+  .col-fecha { width: 20%; }
+  .col-tecnica { width: 20%; }
+  .col-insight { width: 40%; }
+  .col-acciones { width: 20%; }
+
+  .cell-fecha { display: flex; flex-direction: column; gap: 0.25rem; }
+  .fecha-date { font-weight: 500; color: #e5e7eb; }
+  .fecha-time { font-size: 0.8rem; color: #6b7280; }
+
+  .cell-tecnica {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    background: linear-gradient(135deg, #5b8ff922, #8b5cf622);
+    color: #a5b4fc;
     border-radius: 8px;
     font-size: 0.85rem;
     font-weight: 500;
+  }
+
+  .cell-insight {
+    color: #9ca3af;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cell-acciones { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
     cursor: pointer;
     transition: all 0.2s;
+    font-size: 0.7rem;
   }
 
-  .edit-btn {
-    background: #2563eb;
-    color: white;
-    border: none;
-  }
+  .view-btn { background: #374151; color: #9ca3af; }
+  .view-btn:hover { background: #4b5563; color: #fefefe; }
 
-  .edit-btn:hover {
-    background: #1d4ed8;
-  }
+  .edit-btn { background: #2563eb; color: #fff; }
+  .edit-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
 
-  .delete-btn {
-    background: transparent;
-    color: #e03131;
-    border: 1px solid #e03131;
-  }
+  .delete-btn { background: transparent; color: #f87171; border: 1px solid #dc2626; }
+  .delete-btn:hover { background: #dc2626; color: #fff; }
 
-  .delete-btn:hover {
-    background: #e03131;
-    color: white;
-  }
+  .loading-row td,
+  .error-row td,
+  .empty-row td { text-align: center; padding: 3rem; color: #6b7280; }
+
+  .empty-state { padding: 1rem; }
+  .empty-state p { margin: 0 0 1rem; }
+  .empty-link { color: #5b8ff9; text-decoration: none; font-weight: 500; }
+  .empty-link:hover { text-decoration: underline; }
 
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    z-index: 200;
-    overflow-y: auto;
-    padding: 2rem 1rem;
+    padding: 1rem;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
   }
 
-  .modal-overlay.hidden {
-    display: none;
-  }
+  .modal-overlay:not(.hidden) { opacity: 1; visibility: visible; }
 
   .modal {
     background: #1a1a2e;
-    border: 1px solid #333;
-    border-radius: 16px;
-    padding: 1.5rem;
+    border: 1px solid #2a2a35;
+    border-radius: 20px;
     width: 100%;
     max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 2rem;
     position: relative;
-    color: #fefefe;
   }
 
-  .modal h2 {
-    margin: 0 0 1.5rem;
-    font-size: 1.3rem;
-  }
-
-  .close-btn {
+  .close-modal-btn {
     position: absolute;
-    top: 0.75rem;
-    right: 1rem;
+    top: 1.25rem;
+    right: 1.25rem;
     background: none;
     border: none;
-    color: #888;
-    font-size: 1.5rem;
+    color: #6b7280;
+    font-size: 1rem;
     cursor: pointer;
-    line-height: 1;
+    transition: color 0.2s;
   }
 
-  .close-btn:hover {
-    color: #fff;
+  .close-modal-btn:hover { color: #fefefe; }
+
+  .modal h2 { color: #fefefe; margin: 0 0 1.5rem; font-size: 1.35rem; }
+
+  .detail-content { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .detail-grid { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .detail-meta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #2a2a35;
   }
 
-  .modal fieldset {
-    border: 1px solid #2a2a35;
-    border-radius: 12px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    background: #111827;
-  }
+  .detail-date { font-weight: 600; color: #fefefe; font-size: 1.1rem; }
+  .detail-time, .detail-duration { color: #6b7280; font-size: 0.9rem; }
 
-  .modal legend {
+  .detail-section h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    margin: 0 0 0.5rem;
     font-weight: 600;
-    padding: 0 0.5rem;
-    color: #fafafa;
   }
 
-  .modal .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.75rem;
-  }
+  .detail-section p { color: #d1d5db; margin: 0; line-height: 1.6; }
+  .text-block { white-space: pre-wrap; }
 
-  .modal label {
-    display: block;
-    margin-bottom: 0.75rem;
-    font-size: 0.85rem;
-    color: #aaa;
-  }
+  .edit-modal fieldset { border: none; padding: 0; margin: 0 0 1.25rem; }
 
-  .modal input,
-  .modal select,
-  .modal textarea {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    margin-top: 0.25rem;
-    border: 1px solid #333;
+  .edit-modal legend { color: #a5b4fc; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.75rem; }
+
+  .edit-modal .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+
+  .edit-modal label { display: flex; flex-direction: column; gap: 0.35rem; color: #9ca3af; font-size: 0.85rem; }
+
+  .edit-modal input,
+  .edit-modal select,
+  .edit-modal textarea {
+    background: #111827;
+    border: 1px solid #2a2a35;
     border-radius: 8px;
-    background: #0d0d1a;
+    padding: 0.65rem 0.75rem;
     color: #fefefe;
     font-size: 0.9rem;
-    box-sizing: border-box;
+    transition: border-color 0.2s;
   }
 
-  .modal input:focus,
-  .modal select:focus,
-  .modal textarea:focus {
-    outline: none;
-    border-color: #5b8ff9;
-  }
+  .edit-modal input:focus,
+  .edit-modal select:focus,
+  .edit-modal textarea:focus { outline: none; border-color: #5b8ff9; }
 
-  .modal textarea {
-    resize: vertical;
-    min-height: 4rem;
-  }
+  .edit-modal textarea { min-height: 80px; resize: vertical; }
 
-  .modal .msg {
-    font-size: 0.85rem;
-    margin-bottom: 0.75rem;
-    min-height: 1.2em;
-  }
+  .msg { padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.9rem; margin-bottom: 1rem; }
+  .msg.success { background: #065f46; color: #6ee7b7; }
+  .msg.error { background: #7f1d1d; color: #fca5a5; }
 
-  .modal .msg.success {
-    color: #51cf66;
-  }
-
-  .modal .msg.error {
-    color: #e03131;
-  }
-
-  .modal .submit-btn {
+  .submit-btn {
     width: 100%;
-    padding: 0.75rem;
-    background: #5b8ff9;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: #fff;
+    padding: 0.9rem 1.25rem;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
   }
 
-  .modal .submit-btn:hover {
-    background: #4a7de0;
-  }
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); }
 
-  @media (max-width: 640px) {
-    .modal {
-      padding: 1rem;
-    }
-
-    .modal fieldset {
-      padding: 0.75rem;
-    }
-
-    .entry-actions {
-      flex-direction: column;
-    }
-
-    .action-btn {
-      width: 100%;
-      text-align: center;
-    }
+  @media (max-width: 768px) {
+    .entries-table { min-width: 500px; }
+    .edit-modal .grid { grid-template-columns: 1fr; }
   }
 </style>

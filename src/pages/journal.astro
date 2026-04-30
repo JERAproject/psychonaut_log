@@ -1,21 +1,18 @@
 ---
-import Tecnicas from "../components/Tecnicas.astro";
 import JournalList from "../components/JournalList.astro";
 import Layout from '../layouts/Layout.astro';
 ---
+
 <Layout 
-  title="Journal | PsychonautLog" 
-  description="Explora tu bitácora de prácticas psiconáuticas. Revisa tus entradas, insights y reflexiones de meditación, visualización y autoindagación."
+  title="Bitácora | PsychonautLog" 
+  description="Explora tu bitácora de prácticas psiconáuticas. Revisa tus entradas, insights y reflexiones."
 >
   <main class="journal-page">
     <header class="page-header">
-      <h1>Journal Psiconáutico</h1>
-      <p>Explora tu registro de prácticas y descubrimientos</p>
+      <h1>Bitácora</h1>
+      <p class="subtitle">Tu registro de prácticas y descubrimientos</p>
     </header>
-    <Tecnicas />
-    <div id="entradas-guardadas">
-      <JournalList />
-    </div>
+    <JournalList />
   </main>
 </Layout>
 
@@ -24,27 +21,37 @@ import Layout from '../layouts/Layout.astro';
     padding: 2rem 1rem;
     max-width: 900px;
     margin: 0 auto;
+    min-height: 100vh;
   }
 
   .page-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
   }
 
   .page-header h1 {
-    font-size: 2rem;
-    margin: 0 0 0.5rem;
-    color: #fefefe;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    background: linear-gradient(135deg, #fefefe 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  .page-header p {
-    color: #888;
+  .subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
     margin: 0;
   }
 
   @media (max-width: 640px) {
+    .page-header h1 {
+      font-size: 2rem;
+    }
+    
     .journal-page {
-      padding: 1rem;
+      padding: 1.5rem 1rem;
     }
   }
 </style>

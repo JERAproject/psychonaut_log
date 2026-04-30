@@ -1,18 +1,24 @@
 ---
+import JournalList from "../components/JournalList.astro";
 import Layout from '../layouts/Layout.astro';
-
 ---
 
 <Layout 
-  title="Nueva Entrada | PsychonautLog" 
-  description="Registra una nueva sesión de práctica en tu bitácora psiconáutica."
+  title="Práctica | PsychonautLog" 
+  description="Registra y explora tus sesiones de práctica psiconáutica."
 >
-  <main class="container">
-    <header>
-      <h1>Nueva Entrada de Bitácora</h1>
-      <p>Registra los parámetros de tu exploración fenomenológica.</p>
+  <main class="practica-page">
+    <header class="page-header">
+      <h1>Práctica</h1>
+      <p class="subtitle">Registra y explora tus sesiones de exploración fenomenológica</p>
     </header>
-    <div class="form-wrapper">
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="nueva">Nueva Entrada</button>
+      <button class="tab-btn" data-tab="bitacora">Bitácora</button>
+    </div>
+
+    <section id="nueva-tab" class="tab-content active">
       <form id="journal-form" class="data-form" aria-label="Formulario de entrada de bitácora">
         <fieldset>
           <legend>Metadatos de la Sesión</legend>
@@ -78,17 +84,35 @@ import Layout from '../layouts/Layout.astro';
 
         <button type="submit" class="submit-btn">Guardar en Bitácora</button>
       </form>
-    </div>
+    </section>
+
+    <section id="bitacora-tab" class="tab-content">
+      <JournalList />
+    </section>
   </main>
 </Layout>
 
 <script>
+  const tabs = document.querySelectorAll(".tab-btn");
+  const contents = document.querySelectorAll(".tab-content");
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const target = (tab as HTMLElement).dataset.tab;
+
+      tabs.forEach((t) => t.classList.remove("active"));
+      contents.forEach((c) => c.classList.remove("active"));
+
+      tab.classList.add("active");
+      document.getElementById(`${target}-tab`)?.classList.add("active");
+    });
+  });
+
   const form = document.getElementById("journal-form") as HTMLFormElement;
   const btn = form?.querySelector(".submit-btn") as HTMLButtonElement;
 
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     btn.textContent = "Guardando...";
     btn.disabled = true;
 
@@ -127,9 +151,7 @@ import Layout from '../layouts/Layout.astro';
     toast.textContent = message;
     document.body.appendChild(toast);
 
-    requestAnimationFrame(() => {
-      toast.classList.add("toast-visible");
-    });
+    requestAnimationFrame(() => toast.classList.add("toast-visible"));
 
     setTimeout(() => {
       toast.classList.remove("toast-visible");
@@ -139,31 +161,71 @@ import Layout from '../layouts/Layout.astro';
 </script>
 
 <style>
-  .container {
-    max-width: 720px;
+  .practica-page {
+    max-width: 800px;
     margin: 0 auto;
     padding: 2rem 1rem;
+    min-height: 100vh;
   }
 
-  header {
-    margin-bottom: 2rem;
+  .page-header {
     text-align: center;
+    margin-bottom: 2rem;
   }
 
-  header h1 {
+  .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    background: linear-gradient(135deg, #fefefe 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
     margin: 0;
-    font-size: clamp(1.5rem, 2.5vw, 2rem);
-    color: #fefefe;
   }
 
-  header p {
-    margin: 0.5rem 0 0;
-    color: #888;
-    line-height: 1.6;
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    background: #111827;
+    padding: 0.35rem;
+    border-radius: 12px;
   }
 
-  .form-wrapper {
-    padding-bottom: 3rem;
+  .tab-btn {
+    flex: 1;
+    padding: 0.75rem 1.25rem;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    color: #9ca3af;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover {
+    color: #d1d5db;
+  }
+
+  .tab-btn.active {
+    background: #2563eb;
+    color: #fff;
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
   }
 
   .data-form {
@@ -176,7 +238,7 @@ import Layout from '../layouts/Layout.astro';
     border: 1px solid #2a2a35;
     border-radius: 16px;
     padding: 1.5rem;
-    background: #111827;
+    background: linear-gradient(145deg, #16162a 0%, #1a1a2e 100%);
   }
 
   legend {
@@ -234,7 +296,7 @@ import Layout from '../layouts/Layout.astro';
 
   .submit-btn {
     width: 100%;
-    background-color: #5b8ff9;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: #fff;
     padding: 0.9rem 1.25rem;
     border: none;
@@ -242,12 +304,12 @@ import Layout from '../layouts/Layout.astro';
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
+    transition: all 0.2s;
   }
 
   .submit-btn:hover:not(:disabled) {
-    background-color: #4a7de0;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
   }
 
   .submit-btn:disabled {
@@ -280,15 +342,5 @@ import Layout from '../layouts/Layout.astro';
 
   .toast-error {
     background: #c92a2a;
-  }
-
-  @media (max-width: 640px) {
-    .container {
-      padding: 1rem;
-    }
-
-    fieldset {
-      padding: 1rem;
-    }
   }
 </style>

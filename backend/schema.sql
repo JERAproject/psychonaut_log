@@ -33,3 +33,11 @@ CREATE TABLE IF NOT EXISTS journal_entries(
   estado_post TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE inferred_states (
+  entry_id INTEGER,
+  somatic TEXT,
+  emotional TEXT,
+  attention TEXT,
+  cognition TEXT
+);

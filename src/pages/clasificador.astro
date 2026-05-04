@@ -1,0 +1,41 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CognitiveClassifier from '../components/CognitiveClassifier.jsx';
+---
+
+<Layout title="Clasificador de Estado Mental">
+  <div class="page-container">
+    <header class="page-header">
+      <h1>Clasificador de Estado Cognitivo</h1>
+      <p class="subtitle">Analiza tu estado mental actual usando inteligencia local</p>
+    </header>
+    
+    <CognitiveClassifier client:load />
+  </div>
+</Layout>
+
+<style>
+  .page-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.95rem;
+    color: #6b7280;
+    margin: 0;
+  }
+</style>

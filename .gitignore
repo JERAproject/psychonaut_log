@@ -39,3 +39,7 @@ Thumbs.db
 *.log
 *.db-wal
 *.db-shm
+
+# Ignore the PFE component, which is a private file that contains sensitive information and should not be committed to version control.
+src/components/PFE.astro
+src/styles/PFE.css

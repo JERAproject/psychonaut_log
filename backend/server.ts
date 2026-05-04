@@ -195,6 +195,73 @@ app.put("/api/journal/:id", (req, res) => {
   }
 });
 
+// ── Cognitive State Classifier ───────────────────────────
+
+const CLASSIFIER_PROMPT = `You are a cognitive state classifier. Classify the following input text into four dimensions.
+
+Somatic (body state): fatigue, low_energy, neutral, alert, high_energy, tension, relaxed, restless
+Emotional (affective state): anxiety, stress, calm, neutral, irritability, contentment
+Attention (focus stability): distracted, scattered, unstable_attention, sustained_attention, focused, hyperfocused
+Cognition (thinking pattern): rumination, overthinking, analytical, mental_fog, clear, insight_oriented
+
+Output ONLY valid JSON in this exact format:
+{
+  "somatic": "value",
+  "emotional": "value",
+  "attention": "value",
+  "cognition": "value"
+}
+
+Input: {{TEXT}}`;
+
+function buildPrompt(text: string) {
+  return CLASSIFIER_PROMPT.replace("{{TEXT}}", text);
+}
+
+app.post("/api/classify", async (req, res) => {
+  const { text } = req.body;
+  if (!text || typeof text !== "string") {
+    return res.status(400).json({ error: "text is required" });
+  }
+
+  try {
+    const ollamaRes = await fetch("http://localhost:11434/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "llama3",
+        prompt: buildPrompt(text),
+        stream: false,
+        format: "json",
+      }),
+    });
+
+    if (!ollamaRes.ok) {
+      const err = await ollamaRes.text();
+      return res.status(502).json({ error: "Ollama error: " + err });
+    }
+
+    const data = await ollamaRes.json() as { response?: string };
+    const response = data.response || "";
+
+    let parsed: Record<string, string>;
+    try {
+      parsed = JSON.parse(response);
+    } catch {
+      return res.status(500).json({ error: "Invalid JSON from model" });
+    }
+
+    res.json({
+      somatic: parsed.somatic || "neutral",
+      emotional: parsed.emotional || "neutral",
+      attention: parsed.attention || "neutral",
+      cognition: parsed.cognition || "neutral",
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Classification failed" });
+  }
+});
+
 // ── Start ───────────────────────────────────────────────
 
 app.listen(PORT, () => {

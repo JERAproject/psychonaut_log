@@ -66,9 +66,29 @@
           Estado Previo
           <input type="text" id="edit-estado-previo" name="estado_previo" required />
         </label>
+
+        <div class="edit-sliders">
+          <div class="edit-slider-group">
+            <label>ENERGY (Pre)</label>
+            <input type="range" id="edit-energy-pre" name="energy_pre" min="-5" max="5" step="1" />
+            <span class="edit-slider-value" id="edit-energy-pre-val">—</span>
+          </div>
+          <div class="edit-slider-group">
+            <label>VALENCE (Pre)</label>
+            <input type="range" id="edit-valence-pre" name="valence_pre" min="-5" max="5" step="1" />
+            <span class="edit-slider-value" id="edit-valence-pre-val">—</span>
+          </div>
+        </div>
+
         <label>
-          Fenomenología
-          <input type="text" id="edit-fenomenologia" name="fenomenologia" required />
+          Fenomenología Somática (Sensaciones corporales)
+          <input type="text" id="edit-fenomenologia-somatica" name="fenomenologia_somatica" required />
+          <span class="helper">Describe lo que observas, no por qué sucede</span>
+        </label>
+        <label>
+          Fenomenología Cognitiva (Pensamientos observados)
+          <textarea id="edit-fenomenologia-cognitiva" name="fenomenologia_cognitiva" rows="3"></textarea>
+          <span class="helper">Describe lo que observas, no por qué sucede</span>
         </label>
         <label>
           Descripción Detallada
@@ -90,6 +110,19 @@
           Estado Post-Práctica
           <input type="text" id="edit-estado-post" name="estado_post" required />
         </label>
+
+        <div class="edit-sliders">
+          <div class="edit-slider-group">
+            <label>ENERGY (Post)</label>
+            <input type="range" id="edit-energy-post" name="energy_post" min="-5" max="5" step="1" />
+            <span class="edit-slider-value" id="edit-energy-post-val">—</span>
+          </div>
+          <div class="edit-slider-group">
+            <label>VALENCE (Post)</label>
+            <input type="range" id="edit-valence-post" name="valence_post" min="-5" max="5" step="1" />
+            <span class="edit-slider-value" id="edit-valence-post-val">—</span>
+          </div>
+        </div>
       </fieldset>
 
       <div id="edit-msg" class="msg"></div>
@@ -106,11 +139,16 @@
     duracion: number | null;
     tipo_practica: string;
     estado_previo: string;
-    fenomenologia: string;
+    fenomenologia_somatica: string;
+    fenomenologia_cognitiva: string | null;
     cuerpo: string | null;
     insight: string | null;
     integracion: string | null;
     estado_post: string;
+    energy_pre: number | null;
+    valence_pre: number | null;
+    energy_post: number | null;
+    valence_post: number | null;
     created_at: string;
   }
 
@@ -167,9 +205,16 @@
         </div>
 
         <div class="detail-section">
-          <h3>Fenomenología</h3>
-          <p>${entry.fenomenologia}</p>
+          <h3>Fenomenología Somática</h3>
+          <p>${entry.fenomenologia_somatica}</p>
         </div>
+
+        ${entry.fenomenologia_cognitiva ? `
+          <div class="detail-section">
+            <h3>Fenomenología Cognitiva</h3>
+            <p>${entry.fenomenologia_cognitiva}</p>
+          </div>
+        ` : ''}
 
         ${entry.cuerpo ? `
           <div class="detail-section">
@@ -196,10 +241,26 @@
           <h3>Estado Post-Práctica</h3>
           <p>${entry.estado_post}</p>
         </div>
+
+        ${(entry.energy_pre != null || entry.valence_pre != null || entry.energy_post != null || entry.valence_post != null) ? `
+          <div class="detail-section">
+            <h3>Medición Continua</h3>
+            <div class="continuous-values">
+              ${entry.energy_pre != null ? `<div class="cv-item"><span class="cv-label">Energy (Pre)</span><span class="cv-value">${formatContinuous(entry.energy_pre)}</span></div>` : ''}
+              ${entry.valence_pre != null ? `<div class="cv-item"><span class="cv-label">Valence (Pre)</span><span class="cv-value">${formatContinuous(entry.valence_pre)}</span></div>` : ''}
+              ${entry.energy_post != null ? `<div class="cv-item"><span class="cv-label">Energy (Post)</span><span class="cv-value">${formatContinuous(entry.energy_post)}</span></div>` : ''}
+              ${entry.valence_post != null ? `<div class="cv-item"><span class="cv-label">Valence (Post)</span><span class="cv-value">${formatContinuous(entry.valence_post)}</span></div>` : ''}
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
 
     detailModal?.classList.remove("hidden");
+  }
+
+  function formatContinuous(value: number): string {
+    return value > 0 ? `+${value}` : String(value);
   }
 
   function closeDetailModal() {
@@ -213,15 +274,44 @@
     (document.getElementById("edit-duracion") as HTMLInputElement).value = String(entry.duracion || "");
     (document.getElementById("edit-tipo") as HTMLSelectElement).value = entry.tipo_practica;
     (document.getElementById("edit-estado-previo") as HTMLInputElement).value = entry.estado_previo;
-    (document.getElementById("edit-fenomenologia") as HTMLInputElement).value = entry.fenomenologia;
+    (document.getElementById("edit-fenomenologia-somatica") as HTMLInputElement).value = entry.fenomenologia_somatica;
+    (document.getElementById("edit-fenomenologia-cognitiva") as HTMLTextAreaElement).value = entry.fenomenologia_cognitiva || "";
     (document.getElementById("edit-cuerpo") as HTMLTextAreaElement).value = entry.cuerpo || "";
     (document.getElementById("edit-insight") as HTMLInputElement).value = entry.insight || "";
     (document.getElementById("edit-integracion") as HTMLInputElement).value = entry.integracion || "";
     (document.getElementById("edit-estado-post") as HTMLInputElement).value = entry.estado_post;
 
+    // Energy/Valence sliders
+    setSliderValue("edit-energy-pre", "edit-energy-pre-val", entry.energy_pre);
+    setSliderValue("edit-valence-pre", "edit-valence-pre-val", entry.valence_pre);
+    setSliderValue("edit-energy-post", "edit-energy-post-val", entry.energy_post);
+    setSliderValue("edit-valence-post", "edit-valence-post-val", entry.valence_post);
+
     if (editMsg) editMsg.textContent = "";
     editModal?.classList.remove("hidden");
   }
+
+  function setSliderValue(sliderId: string, valueId: string, value: number | null) {
+    const slider = document.getElementById(sliderId) as HTMLInputElement;
+    const valueDisplay = document.getElementById(valueId);
+    if (slider && valueDisplay) {
+      slider.value = value !== null ? String(value) : "0";
+      valueDisplay.textContent = value !== null ? (value === 0 ? "—" : (value > 0 ? `+${value}` : String(value))) : "—";
+    }
+  }
+
+  // Slider display update
+  document.querySelectorAll("#edit-form input[type='range']").forEach((slider) => {
+    slider.addEventListener("input", (e) => {
+      const target = e.target as HTMLInputElement;
+      const valueId = target.id.replace("edit-", "edit-") + "-val";
+      const valueDisplay = document.getElementById(target.id + "-val");
+      if (valueDisplay) {
+        const val = parseInt(target.value);
+        valueDisplay.textContent = val === 0 ? "—" : (val > 0 ? `+${val}` : String(val));
+      }
+    });
+  });
 
   function closeEditModal() {
     editModal?.classList.add("hidden");
@@ -254,18 +344,30 @@
 
     var formData = new FormData(editForm);
     var id = formData.get("id");
-    var payload = {
+    var sliderFields = ["energy_pre", "valence_pre", "energy_post", "valence_post"];
+    var payload: Record<string, any> = {
       fecha: formData.get("fecha"),
       hora: formData.get("hora"),
       duracion: formData.get("duracion"),
       tipo_practica: formData.get("tipo_practica"),
       estado_previo: formData.get("estado_previo"),
-      fenomenologia: formData.get("fenomenologia"),
+      fenomenologia_somatica: formData.get("fenomenologia_somatica"),
+      fenomenologia_cognitiva: formData.get("fenomenologia_cognitiva"),
       cuerpo: formData.get("cuerpo"),
       insight: formData.get("insight"),
       integracion: formData.get("integracion"),
       estado_post: formData.get("estado_post"),
     };
+    
+    // Handle slider values - convert default 0 to null if not changed
+    sliderFields.forEach(function(field) {
+      var val = formData.get(field);
+      if (val === "0" || val === "") {
+        payload[field] = null;
+      } else {
+        payload[field] = parseInt(val as string);
+      }
+    });
 
     try {
       var res = await fetch("/api/journal/" + id, {
@@ -588,6 +690,90 @@
   }
 
   .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); }
+
+  .edit-modal label { position: relative; }
+  .edit-modal .helper {
+    display: block;
+    font-size: 0.7rem;
+    color: #6b7280;
+    font-weight: 400;
+    margin-top: 0.2rem;
+    font-style: italic;
+  }
+
+  .edit-sliders {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 0.75rem;
+    background: #0d0d1a;
+    border-radius: 10px;
+  }
+
+  .edit-slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .edit-slider-group label {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .edit-slider-group input[type="range"] {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: #2a2a35;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .edit-slider-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #5b8ff9;
+    cursor: pointer;
+  }
+
+  .edit-slider-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #5b8ff9;
+    text-align: center;
+  }
+
+  .continuous-values {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .cv-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: #0d0d1a;
+    border-radius: 8px;
+  }
+
+  .cv-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .cv-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #5b8ff9;
+  }
 
   @media (max-width: 768px) {
     .entries-table { min-width: 500px; }

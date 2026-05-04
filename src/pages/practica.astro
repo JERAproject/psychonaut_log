@@ -56,9 +56,44 @@ import Layout from '../layouts/Layout.astro';
             Estado Previo
             <input type="text" name="estado_previo" placeholder="Ej: Dispersión analítica, fatiga..." required aria-required="true" />
           </label>
+
+          <div class="sliders-container">
+            <p class="sliders-hint">Opcional pero útil para seguir patrones</p>
+            
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="slider-title">ENERGY (Pre)</span>
+                <span class="slider-value" id="energy-pre-value">—</span>
+              </div>
+              <input type="range" name="energy_pre" min="-5" max="5" step="1" class="slider" />
+              <div class="slider-labels">
+                <span>bajo</span>
+                <span>alto</span>
+              </div>
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="slider-title">VALENCE (Pre)</span>
+                <span class="slider-value" id="valence-pre-value">—</span>
+              </div>
+              <input type="range" name="valence_pre" min="-5" max="5" step="1" class="slider" />
+              <div class="slider-labels">
+                <span>dolor</span>
+                <span>placer</span>
+              </div>
+            </div>
+          </div>
+
           <label>
-            Fenomenología (Observación directa)
-            <input type="text" name="fenomenologia" placeholder="Ej: Fosfenos, presión en entrecejo..." required aria-required="true" />
+            Fenomenología Somática (Sensaciones corporales)
+            <input type="text" name="fenomenologia_somatica" placeholder="Ej: Fosfenos, presión en entrecejo, tensión en hombros..." required aria-required="true" />
+            <span class="helper">Describe lo que observas, no por qué sucede</span>
+          </label>
+          <label>
+            Fenomenología Cognitiva (Pensamientos observados)
+            <textarea name="fenomenologia_cognitiva" rows="4" placeholder="Describe los pensamientos que surgen durante la práctica..."></textarea>
+            <span class="helper">Describe lo que observas, no por qué sucede</span>
           </label>
           <label>
             Descripción Detallada (Cuerpo)
@@ -80,10 +115,48 @@ import Layout from '../layouts/Layout.astro';
             Estado Post-Práctica
             <input type="text" name="estado_post" placeholder="Ej: Ecuanimidad, vitalidad..." required aria-required="true" />
           </label>
+
+          <div class="sliders-container">
+            <p class="sliders-hint">Opcional pero útil para seguir patrones</p>
+            
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="slider-title">ENERGY (Post)</span>
+                <span class="slider-value" id="energy-post-value">—</span>
+              </div>
+              <input type="range" name="energy_post" min="-5" max="5" step="1" class="slider" />
+              <div class="slider-labels">
+                <span>bajo</span>
+                <span>alto</span>
+              </div>
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="slider-title">VALENCE (Post)</span>
+                <span class="slider-value" id="valence-post-value">—</span>
+              </div>
+              <input type="range" name="valence_post" min="-5" max="5" step="1" class="slider" />
+              <div class="slider-labels">
+                <span>dolor</span>
+                <span>placer</span>
+              </div>
+            </div>
+          </div>
         </fieldset>
 
         <button type="submit" class="submit-btn">Guardar en Bitácora</button>
       </form>
+
+      <div class="visualization-section">
+        <h3 class="viz-title">Patrones Energy × Valence</h3>
+        <p class="viz-subtitle">Evolución de tus sesiones</p>
+        <canvas id="energy-valence-chart" width="600" height="300"></canvas>
+        <div class="viz-legend">
+          <span class="legend-item"><span class="dot pre"></span> Pre-práctica</span>
+          <span class="legend-item"><span class="dot post"></span> Post-práctica</span>
+        </div>
+      </div>
     </section>
 
     <section id="bitacora-tab" class="tab-content">
@@ -108,6 +181,19 @@ import Layout from '../layouts/Layout.astro';
     });
   });
 
+  // Slider value display
+  const sliders = document.querySelectorAll('input[type="range"]');
+  sliders.forEach((slider) => {
+    slider.addEventListener("input", (e) => {
+      const target = e.target as HTMLInputElement;
+      const valueDisplay = document.getElementById(`${target.name}-value`);
+      if (valueDisplay) {
+        const val = target.value;
+        valueDisplay.textContent = val === "0" ? "—" : (val.startsWith("-") ? val : `+${val}`);
+      }
+    });
+  });
+
   const form = document.getElementById("journal-form") as HTMLFormElement;
   const btn = form?.querySelector(".submit-btn") as HTMLButtonElement;
 
@@ -117,7 +203,18 @@ import Layout from '../layouts/Layout.astro';
     btn.disabled = true;
 
     const formData = new FormData(form);
-    const payload = Object.fromEntries(formData.entries());
+    
+    // Get slider values - convert empty to null
+    const sliderNames = ["energy_pre", "valence_pre", "energy_post", "valence_post"];
+    const payload: Record<string, any> = {};
+    
+    formData.forEach((value, key) => {
+      if (sliderNames.includes(key as string) && value === "") {
+        payload[key] = null;
+      } else {
+        payload[key] = value;
+      }
+    });
 
     try {
       const res = await fetch("/api/journal", {
@@ -131,6 +228,14 @@ import Layout from '../layouts/Layout.astro';
       if (res.ok && data?.ok) {
         showToast("Entrada guardada correctamente", "success");
         form.reset();
+        // Reset slider displays
+        sliders.forEach((slider) => {
+          const target = slider as HTMLInputElement;
+          const valueDisplay = document.getElementById(`${target.name}-value`);
+          if (valueDisplay) valueDisplay.textContent = "—";
+        });
+        // Refresh visualization
+        loadVisualization();
       } else {
         showToast(data?.error || "Error al guardar", "error");
       }
@@ -158,6 +263,121 @@ import Layout from '../layouts/Layout.astro';
       setTimeout(() => toast.remove(), 300);
     }, 3000);
   }
+
+  // Visualization
+  function loadVisualization() {
+    const canvas = document.getElementById("energy-valence-chart") as HTMLCanvasElement;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    fetch("/api/journal/stats/energy-valence")
+      .then((res) => res.json())
+      .then((data) => drawChart(ctx, canvas.width, canvas.height, data))
+      .catch(() => {});
+  }
+
+  function drawChart(ctx: CanvasRenderingContext2D, width: number, height: number, data: any[]) {
+    const padding = 40;
+    const chartWidth = width - padding * 2;
+    const chartHeight = height - padding * 2;
+
+    // Clear
+    ctx.fillStyle = "#0d0d1a";
+    ctx.fillRect(0, 0, width, height);
+
+    // Grid
+    ctx.strokeStyle = "#2a2a35";
+    ctx.lineWidth = 1;
+
+    // Vertical grid lines (energy: -5 to 5)
+    for (let i = -5; i <= 5; i++) {
+      const x = padding + ((i + 5) / 10) * chartWidth;
+      ctx.beginPath();
+      ctx.moveTo(x, padding);
+      ctx.lineTo(x, height - padding);
+      ctx.stroke();
+    }
+
+    // Horizontal grid lines (valence: -5 to 5)
+    for (let i = -5; i <= 5; i++) {
+      const y = padding + ((i + 5) / 10) * chartHeight;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(width - padding, y);
+      ctx.stroke();
+    }
+
+    // Axes labels
+    ctx.fillStyle = "#6b7280";
+    ctx.font = "10px Inter, sans-serif";
+    ctx.textAlign = "center";
+
+    // X-axis labels
+    ctx.fillText("-5", padding, height - padding + 15);
+    ctx.fillText("0", padding + chartWidth / 2, height - padding + 15);
+    ctx.fillText("+5", width - padding, height - padding + 15);
+    ctx.fillText("ENERGY", width / 2, height - 5);
+
+    // Y-axis labels
+    ctx.textAlign = "right";
+    ctx.fillText("+5", padding - 5, padding + 10);
+    ctx.fillText("0", padding - 5, padding + chartHeight / 2 + 4);
+    ctx.fillText("-5", padding - 5, height - padding + 4);
+
+    ctx.save();
+    ctx.translate(12, height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = "center";
+    ctx.fillText("VALENCE", 0, 0);
+    ctx.restore();
+
+    // Draw center lines
+    ctx.strokeStyle = "#4b5563";
+    ctx.lineWidth = 1;
+    const centerX = padding + chartWidth / 2;
+    const centerY = padding + chartHeight / 2;
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, padding);
+    ctx.lineTo(centerX, height - padding);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(padding, centerY);
+    ctx.lineTo(width - padding, centerY);
+    ctx.stroke();
+
+    // Draw points
+    data.forEach((entry) => {
+      // Pre points (energy_pre, valence_pre)
+      if (entry.energy_pre != null && entry.valence_pre != null) {
+        const x = padding + ((entry.energy_pre + 5) / 10) * chartWidth;
+        const y = padding + ((5 - entry.valence_pre) / 10) * chartHeight;
+        drawPoint(ctx, x, y, "#5b8ff9", "pre");
+      }
+
+      // Post points (energy_post, valence_post)
+      if (entry.energy_post != null && entry.valence_post != null) {
+        const x = padding + ((entry.energy_post + 5) / 10) * chartWidth;
+        const y = padding + ((5 - entry.valence_post) / 10) * chartHeight;
+        drawPoint(ctx, x, y, "#8b5cf6", "post");
+      }
+    });
+  }
+
+  function drawPoint(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, type: "pre" | "post") {
+    ctx.beginPath();
+    ctx.arc(x, y, type === "pre" ? 6 : 8, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Load visualization on page load
+  loadVisualization();
 </script>
 
 <style>
@@ -342,5 +562,153 @@ import Layout from '../layouts/Layout.astro';
 
   .toast-error {
     background: #c92a2a;
+  }
+
+  .helper {
+    display: block;
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 400;
+    margin-top: 0.25rem;
+    font-style: italic;
+  }
+
+  .sliders-container {
+    background: #0d0d1a;
+    border-radius: 12px;
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .sliders-hint {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0 0 1rem;
+    font-style: italic;
+  }
+
+  .slider-group {
+    margin-bottom: 1rem;
+  }
+
+  .slider-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .slider-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #d1d5db;
+  }
+
+  .slider-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #5b8ff9;
+    min-width: 30px;
+    text-align: right;
+  }
+
+  .slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #2a2a35;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #5b8ff9;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #5b8ff9;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+  }
+
+  .visualization-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(145deg, #16162a 0%, #1a1a2e 100%);
+    border-radius: 16px;
+    border: 1px solid #2a2a35;
+    text-align: center;
+  }
+
+  .viz-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin: 0 0 0.25rem;
+  }
+
+  .viz-subtitle {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0 0 1rem;
+  }
+
+  .visualization-section canvas {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+
+  .viz-legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: #9ca3af;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .dot.pre {
+    background: #5b8ff9;
+  }
+
+  .dot.post {
+    background: #8b5cf6;
   }
 </style>

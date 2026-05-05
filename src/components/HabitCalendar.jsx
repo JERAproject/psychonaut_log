@@ -50,7 +50,7 @@ export default function HabitCalendar() {
   const maxTotal = habits.reduce((s, h) => s + h.maxPerDay, 0) || 1;
 
   const months = [];
-  for (let mi = 2; mi >= 0; mi--) {
+  for (let mi = 0; mi <= 2; mi++) {
     const d = new Date(today.getFullYear(), today.getMonth() - mi, 1);
     const year = d.getFullYear();
     const month = d.getMonth();

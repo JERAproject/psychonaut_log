@@ -471,6 +471,10 @@
   }
 
   loadEntries();
+
+  window.addEventListener("journal-updated", () => {
+    loadEntries();
+  });
 </script>
 
 <style>

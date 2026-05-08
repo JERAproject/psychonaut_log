@@ -9,8 +9,7 @@ const today=
 new Date()
 
 for(
-let i=
-DAYS_BACK-1;
+let i=DAYS_BACK-1;
 i>=0;
 i--
 ){

@@ -228,6 +228,7 @@ import Layout from '../layouts/Layout.astro';
       if (res.ok && data?.ok) {
         showToast("Entrada guardada correctamente", "success");
         form.reset();
+        window.dispatchEvent(new CustomEvent("journal-updated"));
         // Reset slider displays
         sliders.forEach((slider) => {
           const target = slider as HTMLInputElement;

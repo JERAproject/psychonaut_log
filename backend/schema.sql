@@ -26,23 +26,35 @@ CREATE TABLE IF NOT EXISTS journal_entries(
   duracion INTEGER,
   tipo_practica TEXT NOT NULL,
   estado_previo TEXT NOT NULL,
-  fenomenologia TEXT NOT NULL,
+  fenomenologia_somatica TEXT NOT NULL,
+  fenomenologia_cognitiva TEXT,
   cuerpo TEXT,
   insight TEXT,
   integracion TEXT,
   estado_post TEXT NOT NULL,
+  energy_pre INTEGER,
+  valence_pre INTEGER,
+  energy_post INTEGER,
+  valence_post INTEGER,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS inferred_states (
+CREATE TABLE IF NOT EXISTS inferred_states(
   entry_id INTEGER PRIMARY KEY,
-
-  somatic_inferred TEXT,
-  emotional_inferred TEXT,
-  attention_inferred TEXT,
-  cognition_inferred TEXT,
+  somatic TEXT,
+  emotional TEXT,
+  attention TEXT,
+  cognition TEXT,
 
   FOREIGN KEY(entry_id)
   REFERENCES journal_entries(id)
   ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS entry_embeddings(
+  entry_id INTEGER NOT NULL,
+  field TEXT NOT NULL,
+  embedding TEXT NOT NULL,
+  PRIMARY KEY(entry_id, field),
+  FOREIGN KEY(entry_id) REFERENCES journal_entries(id) ON DELETE CASCADE
 );

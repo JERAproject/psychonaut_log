@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import db from "./db.js";
+import db from "./db";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -76,7 +76,7 @@ app.get("/api/logs", (req, res) => {
     params.push(endDate);
   }
 
-  query += " ORDER BY log_date DESC";
+  query += " ORDER BY log_date ASC";
 
   const logs = db.prepare(query).all(...params);
   res.json(logs);
@@ -159,7 +159,7 @@ app.post("/api/journal", async (req, res) => {
         estado_previo, fenomenologia_somatica, fenomenologia_cognitiva,
         cuerpo, insight, integracion, estado_post,
         energy_pre, valence_pre, energy_post, valence_post
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       fecha,
       hora || "",
@@ -180,13 +180,12 @@ app.post("/api/journal", async (req, res) => {
 
     const entryId = result.lastInsertRowid;
 
-    // Extract states and generate embeddings (async, don't block response)
-    extractAndStoreStates(entryId as number, somatica, cognitiva).catch((err) => {
-      console.error("State extraction failed:", err);
-    });
+    extractAndStoreStates(entryId as number, somatica, cognitiva)
+      .catch((err) => console.error("State extraction failed:", err));
 
     res.status(201).json({ ok: true, id: entryId });
   } catch (err: any) {
+    console.error("Database error:", err);
     res.status(500).json({ error: err.message || "Database error" });
   }
 });
@@ -350,60 +349,66 @@ async function extractAndStoreStates(
 ) {
   if (!somatica && !cognitiva) return;
 
-  // A) Extract somatic from fenomenologia_somatica
   let somatic = "neutral";
-  if (somatica) {
-    try {
-      const promptA = SOMATIC_PROMPT.replace("{{TEXT}}", somatica);
-      const rawA = await callOllama(promptA);
-      const parsedA = parseJsonSafe(rawA);
-      somatic = parsedA.somatic || "neutral";
-    } catch (e) {
-      console.error("Somatic extraction failed:", e);
-    }
-  }
-
-  // B) Extract cognition from fenomenologia_cognitiva
   let cognition = "neutral";
-  if (cognitiva) {
-    try {
-      const promptB = COGNITIVE_PROMPT.replace("{{TEXT}}", cognitiva);
-      const rawB = await callOllama(promptB);
-      const parsedB = parseJsonSafe(rawB);
-      cognition = parsedB.cognition || "neutral";
-    } catch (e) {
-      console.error("Cognition extraction failed:", e);
-    }
-  }
-
-  // C) Extract emotional + attention from fenomenologia_cognitiva
   let emotional = "neutral";
   let attention = "neutral";
-  if (cognitiva) {
-    try {
-      const promptC = EMOTIONAL_ATTENTION_PROMPT.replace("{{TEXT}}", cognitiva);
-      const rawC = await callOllama(promptC);
-      const parsedC = parseJsonSafe(rawC);
-      emotional = parsedC.emotional || "neutral";
-      attention = parsedC.attention || "neutral";
-    } catch (e) {
-      console.error("Emotional/Attention extraction failed:", e);
+
+  try {
+    if (somatica) {
+      try {
+        const promptA = SOMATIC_PROMPT.replace("{{TEXT}}", somatica);
+        const rawA = await callOllama(promptA);
+        const parsedA = parseJsonSafe(rawA);
+        somatic = parsedA.somatic || "neutral";
+      } catch (e) {
+        console.error("Somatic extraction failed:", e);
+      }
     }
+
+    if (cognitiva) {
+      try {
+        const promptB = COGNITIVE_PROMPT.replace("{{TEXT}}", cognitiva);
+        const rawB = await callOllama(promptB);
+        const parsedB = parseJsonSafe(rawB);
+        cognition = parsedB.cognition || "neutral";
+      } catch (e) {
+        console.error("Cognition extraction failed:", e);
+      }
+
+      try {
+        const promptC = EMOTIONAL_ATTENTION_PROMPT.replace("{{TEXT}}", cognitiva);
+        const rawC = await callOllama(promptC);
+        const parsedC = parseJsonSafe(rawC);
+        emotional = parsedC.emotional || "neutral";
+        attention = parsedC.attention || "neutral";
+      } catch (e) {
+        console.error("Emotional/Attention extraction failed:", e);
+      }
+    }
+  } catch (e) {
+    console.error("State extraction error:", e);
   }
 
-  // Store in inferred_states (UPSERT)
-  db.prepare(
-    `INSERT INTO inferred_states (entry_id, somatic, emotional, attention, cognition)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(entry_id) DO UPDATE SET
-       somatic = excluded.somatic,
-       emotional = excluded.emotional,
-       attention = excluded.attention,
-       cognition = excluded.cognition`
-  ).run(entryId, somatic, emotional, attention, cognition);
+  try {
+    db.prepare(
+      `INSERT INTO inferred_states (entry_id, somatic, emotional, attention, cognition)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(entry_id) DO UPDATE SET
+         somatic = excluded.somatic,
+         emotional = excluded.emotional,
+         attention = excluded.attention,
+         cognition = excluded.cognition`
+    ).run(entryId, somatic, emotional, attention, cognition);
+  } catch (e) {
+    console.error("Failed to store states:", e);
+  }
 
-  // Generate embeddings for emotional, attention, cognition
-  await generateAndStoreEmbeddings(entryId, { emotional, attention, cognition });
+  try {
+    await generateAndStoreEmbeddings(entryId, { emotional, attention, cognition });
+  } catch (e) {
+    console.error("Embedding generation failed:", e);
+  }
 }
 
 // ── Embeddings ─────────────────────────────────────────

@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import bcrypt from "bcryptjs";
+import { v4 as uuidv4 } from "uuid";
 import db from "./db";
 
 const app = express();
@@ -8,12 +10,115 @@ const PORT = Number(process.env.PORT) || 3001;
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
+type AuthUser = { id: number; username: string; role: string } | null;
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthUser;
+    }
+  }
+}
+
+function authMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    req.user = null;
+    return next();
+  }
+
+  const token = authHeader.slice(7);
+  const session = db.prepare(
+    "SELECT s.user_id, u.username, u.role FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.token = ? AND s.expires_at > datetime('now')"
+  ).get(token) as { user_id: number; username: string; role: string } | undefined;
+
+  req.user = session ? { id: session.user_id, username: session.username, role: session.role } : null;
+  next();
+}
+
+app.use(authMiddleware);
+
+app.post("/api/auth/register", async (req, res) => {
+  const { username, password, role = "user" } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: "username and password required" });
+  }
+  if (["user", "psicologo", "admin"].indexOf(role) === -1) {
+    return res.status(400).json({ error: "invalid role" });
+  }
+  const existing = db.prepare("SELECT id FROM users WHERE username = ?").get(username);
+  if (existing) {
+    return res.status(409).json({ error: "username already exists" });
+  }
+  const hash = await bcrypt.hash(password, 10);
+  const result = db.prepare("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)").run(username, hash, role);
+  res.status(201).json({ ok: true, id: result.lastInsertRowid });
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: "username and password required" });
+  }
+  const user = db.prepare("SELECT * FROM users WHERE username = ?").get(username) as any;
+  if (!user) {
+    return res.status(401).json({ error: "invalid credentials" });
+  }
+  const valid = await bcrypt.compare(password, user.password_hash);
+  if (!valid) {
+    return res.status(401).json({ error: "invalid credentials" });
+  }
+  const token = uuidv4();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  db.prepare("INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)").run(user.id, token, expiresAt);
+  res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+});
+
+app.post("/api/auth/logout", (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    db.prepare("DELETE FROM sessions WHERE token = ?").run(token);
+  }
+  res.json({ ok: true });
+});
+
+app.get("/api/auth/me", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "unauthorized" });
+  res.json({ user: req.user });
+});
+
+app.post("/api/auth/change-password", async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "unauthorized" });
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "currentPassword and newPassword required" });
+  }
+  if (newPassword.length < 4) {
+    return res.status(400).json({ error: "newPassword must be at least 4 characters" });
+  }
+  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(req.user.id) as any;
+  if (!user) return res.status(404).json({ error: "User not found" });
+  const valid = await bcrypt.compare(currentPassword, user.password_hash);
+  if (!valid) return res.status(403).json({ error: "Current password is incorrect" });
+  const hash = await bcrypt.hash(newPassword, 10);
+  db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hash, req.user.id);
+  res.json({ ok: true });
+});
+
 // ── Habits ──────────────────────────────────────────────
 
-app.get("/api/habits", (_req, res) => {
+app.get("/api/habits", (req, res) => {
+  if (req.user?.role === "admin") {
+    const habits = db.prepare(
+      "SELECT id, name, color, max_per_day as maxPerDay, user_id FROM habits"
+    ).all();
+    return res.json(habits);
+  }
+  const userId = req.user?.id ?? null;
   const habits = db.prepare(
-    "SELECT id, name, color, max_per_day as maxPerDay FROM habits"
-  ).all();
+    "SELECT id, name, color, max_per_day as maxPerDay FROM habits WHERE user_id = ? OR user_id IS NULL"
+  ).all(userId);
   res.json(habits);
 });
 
@@ -22,10 +127,14 @@ app.post("/api/habits", (req, res) => {
   if (!name || !color) {
     return res.status(400).json({ error: "name and color are required" });
   }
+  if (!req.user) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
   const max = Math.max(1, Math.min(Number(maxPerDay) || 1, 99));
+  const userId = req.user?.role === "admin" ? req.body.userId : req.user?.id;
   db.prepare(
-    "INSERT INTO habits (name, color, max_per_day) VALUES (?, ?, ?)"
-  ).run(name, color, max);
+    "INSERT INTO habits (name, color, max_per_day, user_id) VALUES (?, ?, ?, ?)"
+  ).run(name, color, max, userId);
   res.status(201).json({ ok: true });
 });
 
@@ -34,9 +143,14 @@ app.delete("/api/habits/:id", (req, res) => {
   if (isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
   }
-  db.prepare("DELETE FROM habit_logs WHERE habit_id = ?").run(id);
-  db.prepare("DELETE FROM habits WHERE id = ?").run(id);
-  res.json({ ok: true });
+  const habit = db.prepare("SELECT user_id FROM habits WHERE id = ?").get(id) as any;
+  if (!habit) return res.status(404).json({ error: "Not found" });
+  if (habit.user_id === null || req.user?.role === "admin" || habit.user_id === req.user?.id) {
+    db.prepare("DELETE FROM habit_logs WHERE habit_id = ?").run(id);
+    db.prepare("DELETE FROM habits WHERE id = ?").run(id);
+    return res.json({ ok: true });
+  }
+  res.status(403).json({ error: "Forbidden" });
 });
 
 app.put("/api/habits/:id", (req, res) => {
@@ -47,6 +161,11 @@ app.put("/api/habits/:id", (req, res) => {
   }
   if (!name || !color) {
     return res.status(400).json({ error: "name and color are required" });
+  }
+  const habit = db.prepare("SELECT user_id FROM habits WHERE id = ?").get(id) as any;
+  if (!habit) return res.status(404).json({ error: "Not found" });
+  if (req.user?.role !== "admin" && habit.user_id !== req.user?.id) {
+    return res.status(403).json({ error: "Forbidden" });
   }
   const max = Math.max(1, Math.min(Number(maxPerDay) || 1, 99));
   db.prepare(
@@ -59,9 +178,17 @@ app.put("/api/habits/:id", (req, res) => {
 
 app.get("/api/logs", (req, res) => {
   const { habitId, startDate, endDate } = req.query;
+  const userId = req.user?.id ?? null;
+  const isAdmin = req.user?.role === "admin";
+
   let query =
     "SELECT habit_id as habitId, log_date as logDate, count FROM habit_logs WHERE 1=1";
   const params: any[] = [];
+
+  if (!isAdmin) {
+    query += " AND (user_id = ? OR user_id IS NULL)";
+    params.push(userId);
+  }
 
   if (habitId) {
     query += " AND habit_id = ?";
@@ -87,35 +214,50 @@ app.post("/api/log", (req, res) => {
   if (!habitId || !date) {
     return res.status(400).json({ error: "habitId and date are required" });
   }
+  if (!req.user) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
 
   const habit = db.prepare(
-    "SELECT id, max_per_day as maxPerDay FROM habits WHERE id = ?"
-  ).get(habitId) as { id: number; maxPerDay: number } | undefined;
+    "SELECT id, max_per_day as maxPerDay, user_id FROM habits WHERE id = ?"
+  ).get(habitId) as { id: number; maxPerDay: number; user_id: number | null } | undefined;
 
   if (!habit) {
     return res.status(404).json({ error: "Habit not found" });
   }
 
+  const userId = req.user?.id ?? null;
   db.prepare(
-    `INSERT INTO habit_logs (habit_id, log_date, count) VALUES (?, ?, 1)
-     ON CONFLICT (habit_id, log_date)
+    `INSERT INTO habit_logs (habit_id, log_date, count, user_id) VALUES (?, ?, 1, ?)
+     ON CONFLICT (habit_id, log_date, user_id)
      DO UPDATE SET count = MIN(count + 1, ?)`
-  ).run(habitId, date, habit.maxPerDay);
+  ).run(habitId, date, userId, habit.maxPerDay);
 
   res.json({ ok: true });
 });
 
 // ── Journal ─────────────────────────────────────────────
 
-app.get("/api/journal", (_req, res) => {
-  const entries = db.prepare(
-    `SELECT id, fecha, hora, duracion, tipo_practica,
+app.get("/api/journal", (req, res) => {
+  const isAdmin = req.user?.role === "admin";
+  const userId = req.user?.id ?? null;
+
+  let query = `SELECT id, fecha, hora, duracion, tipo_practica,
             estado_previo, fenomenologia_somatica, fenomenologia_cognitiva,
             cuerpo, insight, integracion, estado_post,
             energy_pre, valence_pre, energy_post, valence_post,
-            created_at
-      FROM journal_entries ORDER BY fecha DESC, hora DESC`
-  ).all();
+            created_at, user_id
+      FROM journal_entries WHERE 1=1`;
+  const params: any[] = [];
+
+  if (!isAdmin) {
+    query += " AND (user_id = ? OR user_id IS NULL)";
+    params.push(userId);
+  }
+
+  query += " ORDER BY fecha DESC, hora DESC";
+
+  const entries = db.prepare(query).all(...params);
   res.json(entries);
 });
 
@@ -145,6 +287,9 @@ app.post("/api/journal", async (req, res) => {
   if (!fecha || !tipo_practica || !estado_previo || !somatica || !estado_post) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+  if (!req.user) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
 
   // Validate energy/valence range (-5 to 5) or null
   const validatedEnergyPre = validateEnergyValence(energy_pre);
@@ -152,14 +297,16 @@ app.post("/api/journal", async (req, res) => {
   const validatedEnergyPost = validateEnergyValence(energy_post);
   const validatedValencePost = validateEnergyValence(valence_post);
 
+  const userId = req.user?.id ?? null;
+
   try {
     const result = db.prepare(
       `INSERT INTO journal_entries (
         fecha, hora, duracion, tipo_practica,
         estado_previo, fenomenologia_somatica, fenomenologia_cognitiva,
         cuerpo, insight, integracion, estado_post,
-        energy_pre, valence_pre, energy_post, valence_post
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        energy_pre, valence_pre, energy_post, valence_post, user_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       fecha,
       hora || "",
@@ -175,7 +322,8 @@ app.post("/api/journal", async (req, res) => {
       validatedEnergyPre,
       validatedValencePre,
       validatedEnergyPost,
-      validatedValencePost
+      validatedValencePost,
+      userId
     );
 
     const entryId = result.lastInsertRowid;
@@ -204,8 +352,13 @@ app.delete("/api/journal/:id", (req, res) => {
   if (isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
   }
-  db.prepare("DELETE FROM journal_entries WHERE id = ?").run(id);
-  res.json({ ok: true });
+  const entry = db.prepare("SELECT user_id FROM journal_entries WHERE id = ?").get(id) as any;
+  if (!entry) return res.status(404).json({ error: "Not found" });
+  if (entry.user_id === null || req.user?.role === "admin" || entry.user_id === req.user?.id) {
+    db.prepare("DELETE FROM journal_entries WHERE id = ?").run(id);
+    return res.json({ ok: true });
+  }
+  res.status(403).json({ error: "Forbidden" });
 });
 
 app.put("/api/journal/:id", (req, res) => {
@@ -230,6 +383,14 @@ app.put("/api/journal/:id", (req, res) => {
 
   if (isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
+  }
+  if (!req.user) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+  const entry = db.prepare("SELECT user_id FROM journal_entries WHERE id = ?").get(id) as any;
+  if (!entry) return res.status(404).json({ error: "Not found" });
+  if (entry.user_id !== null && req.user.role !== "admin" && entry.user_id !== req.user.id) {
+    return res.status(403).json({ error: "Forbidden" });
   }
 
   // Backward compatibility
@@ -489,15 +650,53 @@ app.get("/api/journal/:id/embeddings", (req, res) => {
 
 // ── Visualization Data ─────────────────────────────────
 
-app.get("/api/journal/stats/energy-valence", (_req, res) => {
-  const entries = db.prepare(
-    `SELECT id, fecha, tipo_practica, energy_pre, valence_pre, energy_post, valence_post
+app.get("/api/journal/stats/energy-valence", (req, res) => {
+  const isAdmin = req.user?.role === "admin";
+  const userId = req.user?.id ?? null;
+
+  let query = `SELECT id, fecha, tipo_practica, energy_pre, valence_pre, energy_post, valence_post, user_id
      FROM journal_entries
-     WHERE (energy_pre IS NOT NULL OR valence_pre IS NOT NULL 
-         OR energy_post IS NOT NULL OR valence_post IS NOT NULL)
-     ORDER BY fecha DESC
-     LIMIT 50`
+     WHERE (energy_pre IS NOT NULL OR valence_pre IS NOT NULL
+         OR energy_post IS NOT NULL OR valence_post IS NOT NULL)`;
+  const params: any[] = [];
+
+  if (!isAdmin) {
+    query += " AND (user_id = ? OR user_id IS NULL)";
+    params.push(userId);
+  }
+
+  query += " ORDER BY fecha DESC LIMIT 50";
+
+  const entries = db.prepare(query).all(...params);
+  res.json(entries);
+});
+
+// ── Admin: All Users ─────────────────────────────────────
+
+app.get("/api/admin/users", (req, res) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "admin only" });
+  }
+  const users = db.prepare(
+    "SELECT id, username, role, created_at FROM users ORDER BY created_at ASC"
   ).all();
+  res.json(users);
+});
+
+app.get("/api/admin/entries", (req, res) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "admin only" });
+  }
+  const { username } = req.query;
+  let query = `SELECT j.*, u.username FROM journal_entries j
+               LEFT JOIN users u ON j.user_id = u.id WHERE 1=1`;
+  const params: any[] = [];
+  if (username) {
+    query += " AND u.username = ?";
+    params.push(username);
+  }
+  query += " ORDER BY j.fecha DESC, j.hora DESC";
+  const entries = db.prepare(query).all(...params);
   res.json(entries);
 });
 

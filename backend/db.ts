@@ -87,4 +87,51 @@ if (!tableNames.includes("entry_embeddings")) {
   `);
 }
 
+const userTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('users', 'sessions')").all() as any[];
+const userTableNames = userTables.map((t: any) => t.name);
+
+if (!userTableNames.includes("users")) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
+
+if (!userTableNames.includes("sessions")) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sessions(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      expires_at DATETIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+}
+
+const habitCols: any[] = db.prepare("PRAGMA table_info(habits)").all();
+const habitColNames = habitCols.map((c: any) => c.name);
+if (!habitColNames.includes("user_id")) {
+  db.prepare("ALTER TABLE habits ADD COLUMN user_id INTEGER").run();
+}
+
+const logCols: any[] = db.prepare("PRAGMA table_info(habit_logs)").all();
+const logColNames = logCols.map((c: any) => c.name);
+if (!logColNames.includes("user_id")) {
+  db.prepare("ALTER TABLE habit_logs ADD COLUMN user_id INTEGER").run();
+  db.prepare("DROP INDEX IF EXISTS idx_habit_logs_unique").run();
+}
+
+const journalCols: any[] = db.prepare("PRAGMA table_info(journal_entries)").all();
+const journalColNames = journalCols.map((c: any) => c.name);
+if (!journalColNames.includes("user_id")) {
+  db.prepare("ALTER TABLE journal_entries ADD COLUMN user_id INTEGER").run();
+}
+
 export default db;

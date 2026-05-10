@@ -28,9 +28,62 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
         <li><a href="/about">About</a></li>
         <li><a href="/contact">Contact</a></li>
       </ul>
+      <div class="auth-section">
+        <button id="login-btn" class="btn-login">Iniciar Sesión</button>
+      </div>
     </nav>
   </div>
 </header>
+
+<div id="login-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="login-title" hidden>
+  <div class="modal-content">
+    <button id="close-modal" class="modal-close" aria-label="Cerrar">&times;</button>
+    <h2 id="login-title">Iniciar Sesión</h2>
+    <form id="login-form">
+      <div class="form-group">
+        <label for="username">Usuario</label>
+        <input type="text" id="username" name="username" required autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password" />
+      </div>
+      <div id="login-error" class="error-msg" hidden></div>
+      <button type="submit" class="btn-submit">Entrar</button>
+    </form>
+    <div class="demo-users">
+      <p>Usuarios de prueba:</p>
+      <code>jera / psicologo / admin / invitado</code>
+      <p class="hint">Contraseña: psy2024</p>
+    </div>
+  </div>
+</div>
+
+<div id="password-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pass-title" hidden>
+  <div class="modal-content">
+    <button id="close-pass-modal" class="modal-close" aria-label="Cerrar">&times;</button>
+    <h2 id="pass-title">Cambiar Contraseña</h2>
+    <form id="password-form">
+      <div class="form-group">
+        <label for="current-password">Contraseña actual</label>
+        <input type="password" id="current-password" name="currentPassword" required />
+      </div>
+      <div class="form-group">
+        <label for="new-password">Nueva contraseña</label>
+        <input type="password" id="new-password" name="newPassword" required minlength="4" />
+      </div>
+      <div id="pass-error" class="error-msg" hidden></div>
+      <div id="pass-success" class="success-msg" hidden>Contraseña actualizada correctamente</div>
+      <button type="submit" class="btn-submit">Guardar</button>
+    </form>
+  </div>
+</div>
+
+<div id="user-menu" class="user-menu" hidden>
+  <span id="user-display"></span>
+  <button id="change-pass-btn" class="btn-secondary">Cambiar clave</button>
+  <button id="logout-btn" class="btn-logout">Cerrar Sesión</button>
+</div>
 
 <script>
   const toggle = document.querySelector('.menu-toggle');
@@ -49,6 +102,186 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
       toggle?.setAttribute('aria-expanded', 'false');
     }
   });
+
+  const TOKEN_KEY = 'psy_token';
+  const USER_KEY = 'psy_user';
+
+  const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
+  const logoutBtn = document.getElementById('logout-btn') as HTMLButtonElement;
+  const loginModal = document.getElementById('login-modal') as HTMLDivElement;
+  const closeModal = document.getElementById('close-modal') as HTMLButtonElement;
+  const loginForm = document.getElementById('login-form') as HTMLFormElement;
+  const loginError = document.getElementById('login-error') as HTMLDivElement;
+  const userMenu = document.getElementById('user-menu') as HTMLDivElement;
+  const userDisplay = document.getElementById('user-display') as HTMLSpanElement;
+
+  function getApiBase(): string {
+    const meta = document.querySelector('meta[name="api-base"]');
+    return meta ? meta.getAttribute('content') || '' : 'http://localhost:3001';
+  }
+
+  function getToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY);
+  }
+
+  function setToken(token: string) {
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+
+  function setUser(user: { id: number; username: string; role: string }) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+
+  function getUser(): { id: number; username: string; role: string } | null {
+    const u = localStorage.getItem(USER_KEY);
+    return u ? JSON.parse(u) : null;
+  }
+
+  function clearAuth() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+  }
+
+  function updateAuthUI() {
+    const user = getUser();
+    const token = getToken();
+    if (user && token) {
+      loginBtn.hidden = true;
+      userMenu.hidden = false;
+      userDisplay.textContent = `${user.username} (${user.role})`;
+    } else {
+      loginBtn.hidden = false;
+      userMenu.hidden = true;
+    }
+  }
+
+  async function checkSession() {
+    const token = getToken();
+    if (!token) return updateAuthUI();
+    try {
+      const res = await fetch(`${getApiBase()}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
+        clearAuth();
+      }
+    } catch {
+      clearAuth();
+    }
+    updateAuthUI();
+  }
+
+  loginBtn?.addEventListener('click', () => {
+    loginModal.hidden = false;
+    loginError.hidden = true;
+    (document.getElementById('username') as HTMLInputElement).focus();
+  });
+
+  closeModal?.addEventListener('click', () => {
+    loginModal.hidden = true;
+  });
+
+  loginModal?.addEventListener('click', (e) => {
+    if (e.target === loginModal) loginModal.hidden = true;
+  });
+
+  loginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = (document.getElementById('username') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    loginError.hidden = true;
+    try {
+      const res = await fetch(`${getApiBase()}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        loginError.textContent = data.error || 'Error de autenticación';
+        loginError.hidden = false;
+        return;
+      }
+      setToken(data.token);
+      setUser(data.user);
+      loginModal.hidden = true;
+      updateAuthUI();
+      location.reload();
+    } catch (err) {
+      loginError.textContent = 'Error de conexión';
+      loginError.hidden = false;
+    }
+  });
+
+  logoutBtn?.addEventListener('click', async () => {
+    const token = getToken();
+    if (token) {
+      await fetch(`${getApiBase()}/api/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(() => {});
+    }
+    clearAuth();
+    updateAuthUI();
+    location.reload();
+  });
+
+  const passModal = document.getElementById('password-modal') as HTMLDivElement;
+  const changePassBtn = document.getElementById('change-pass-btn') as HTMLButtonElement;
+  const closePassBtn = document.getElementById('close-pass-modal') as HTMLButtonElement;
+  const passForm = document.getElementById('password-form') as HTMLFormElement;
+  const passError = document.getElementById('pass-error') as HTMLDivElement;
+  const passSuccess = document.getElementById('pass-success') as HTMLDivElement;
+
+  changePassBtn?.addEventListener('click', () => {
+    passError.hidden = true;
+    passSuccess.hidden = true;
+    passModal.hidden = false;
+  });
+
+  closePassBtn?.addEventListener('click', () => {
+    passModal.hidden = true;
+  });
+
+  passModal?.addEventListener('click', (e) => {
+    if (e.target === passModal) passModal.hidden = true;
+  });
+
+  passForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    passError.hidden = true;
+    passSuccess.hidden = true;
+    const currentPassword = (document.getElementById('current-password') as HTMLInputElement).value;
+    const newPassword = (document.getElementById('new-password') as HTMLInputElement).value;
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res = await fetch(`${getApiBase()}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        passError.textContent = data.error || 'Error al cambiar contraseña';
+        passError.hidden = false;
+        return;
+      }
+      passSuccess.hidden = false;
+      setTimeout(() => { passModal.hidden = true; }, 1500);
+    } catch {
+      passError.textContent = 'Error de conexión';
+      passError.hidden = false;
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', checkSession);
 </script>
 
 <style>
@@ -174,6 +407,205 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
   .nav-list a:focus-visible {
     outline: 2px solid #5b8ff9;
     outline-offset: 2px;
+  }
+
+  .auth-section {
+    display: flex;
+    align-items: center;
+  }
+
+  .btn-login {
+    background: #5b8ff9;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-login:hover {
+    background: #4a7de0;
+  }
+
+  .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  #user-display {
+    color: #aaa;
+    font-size: 0.9rem;
+  }
+
+  .btn-logout {
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-logout:hover {
+    background: #ef4444;
+    color: #fff;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid #3a3a4e;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    color: #fefefe;
+    border-color: #5b8ff9;
+  }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal[hidden] {
+    display: none;
+  }
+
+  .modal-content {
+    background: #1a1a2e;
+    border: 1px solid #2a2a3e;
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .modal-close:hover {
+    color: #fff;
+  }
+
+  .modal-content h2 {
+    margin: 0 0 1.5rem;
+    color: #fefefe;
+    font-size: 1.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
+    display: block;
+    color: #aaa;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    background: #0f0f1a;
+    border: 1px solid #2a2a3e;
+    border-radius: 8px;
+    color: #fefefe;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: #5b8ff9;
+  }
+
+  .error-msg {
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .error-msg[hidden] {
+    display: none;
+  }
+
+  .success-msg {
+    color: #22c55e;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+
+  .success-msg[hidden] {
+    display: none;
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 0.75rem;
+    background: #5b8ff9;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-submit:hover {
+    background: #4a7de0;
+  }
+
+  .demo-users {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #2a2a3e;
+    text-align: center;
+  }
+
+  .demo-users p {
+    color: #888;
+    font-size: 0.85rem;
+    margin: 0.25rem 0;
+  }
+
+  .demo-users code {
+    color: #5b8ff9;
+    font-size: 0.9rem;
+  }
+
+  .demo-users .hint {
+    color: #666;
+    font-size: 0.8rem;
   }
 
   @media (max-width: 768px) {

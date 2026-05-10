@@ -3,10 +3,19 @@ export function getApiBase(): string {
   return meta ? meta.getAttribute("content") || "" : "";
 }
 
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem("psy_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const base = getApiBase();
   const url = path.startsWith("/") ? `${base}${path}` : path;
-  return fetch(url, init);
+  const headers = {
+    ...getAuthHeaders(),
+    ...(init?.headers as Record<string, string> || {}),
+  };
+  return fetch(url, { ...init, headers });
 }
 
 export async function apiGet<T>(path: string): Promise<T> {

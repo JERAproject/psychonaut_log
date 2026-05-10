@@ -86,6 +86,7 @@ Attention:
 Cognition:
 [rumination, analytical, mental_fog, clear]
 
+If multiple labels could apply, always choose the most conservative (least inferred) option.
 ---
 
 INPUT:

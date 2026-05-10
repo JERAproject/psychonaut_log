@@ -1,64 +1,171 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import NetworkGraph from '../components/NetworkGraph.astro';
+import About from '../pages/about.astro';
+import Contact from '../pages/contact.astro';
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
 // Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
 <Layout>
-	<div class="hero">
-        <h1 class="text-2xl flex flex-col justify-center items-center text-white"> 
-        PsychonautLog
-        </h1>
-        <h2 class="text-l flex flex-col items-center">Bitácora psiconauta</h2>
+
+<div class="hero">
+        <h1 class="hero-title">PsychonautLog</h1>
+        <h2 class="hero-subtitle">Bitácora psiconauta</h2>
         <NetworkGraph />
-        <p class="graph-overlay-text">Esta bitacora es un registro de las experiencias y descubrimientos de un psiconauta en su viaje de exploración mental. </br></br>
-        Aquí se documentan las prácticas, insights y reflexiones obtenidas a través de diversas técnicas de meditación, visualización y autoindagación. </br></br>
-        El objetivo es observar los pensamientos y emociones a medida que evolucionan en el tiempo, buscar los patrones subyacentes y comprender la naturaleza de nuestra mente, y servir como una herramiente para modificarlos a través de la introspección y la atención plena en estados basales y alterados de conciencia. </p>
+        <div class="graph-overlay">
+          <p class="graph-overlay-text">Esta bitacora es un registro de las experiencias y descubrimientos de un psiconauta en su viaje de exploración mental.</p>
+          <p class="graph-overlay-text">Aquí se documentan las prácticas, insights y reflexiones obtenidas a través de diversas técnicas de meditación, visualización y autoindagación.</p>
+          <p class="graph-overlay-text">El objetivo es observar los pensamientos y emociones a medida que evolucionan en el tiempo, buscar los patrones subyacentes y comprender la naturaleza de nuestra mente.</p>
+        </div>
     </div>
-    <div class="bottom actions">
-        <a href="/journal#entradas-guardadas" class="primary-btn">
+
+    <About />
+    <!-- <div class="bottom actions">
+        <a href="  ja689/journal#entradas-guardadas" class="primary-btn">
         📓 Entradas Guardadas
         </a>
-    </div>
+    </div> -->
+    <Contact />
 
 </Layout>
-<style>
-    .hero{
-        position:relative;
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-        text-align:center;
-        padding:4rem 2rem;
-    }
-    .bottom{
-        position:fixed;
-        bottom:2rem;
-        left:50%;
-        transform:translateX(-50%);
-        z-index: 10;
-    }
-    .actions{
-text-align:center;
-margin-top:3rem;
-}
 
-.primary-btn{
-display:inline-block;
-padding:1.2rem 2.5rem;
-background:linear-gradient(
-90deg,
-#2563eb,
-#7c3aed
-);
-border-radius:999px;
-color:white;
-text-decoration:none;
-font-size:1.1rem;
-font-weight:700;
-box-shadow:0 0 20px rgba(59,130,246,.25);
-}
-</style>
+<style>
+    .hero {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+      background: linear-gradient(135deg, #fefefe 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin: 0 0 2rem;
+      color: #9ca3af;
+    }
+
+    .graph-overlay {
+      position: absolute;
+      top: 50%;
+      right: 1rem;
+      transform: translateY(-50%);
+      max-width: 40vw;
+      width: 100%;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .graph-overlay-text {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #fefefe;
+      text-align: justify;
+      margin: 0;
+      padding: 0.75rem;
+      background: rgba(1, 2, 7, 0.85);
+      border-radius: 8px;
+      backdrop-filter: blur(4px);
+    }
+
+    @media (min-width: 640px) {
+      .hero-title {
+        font-size: 3.5rem;
+      }
+      .hero-subtitle {
+        font-size: 1.25rem;
+      }
+      .graph-overlay-text {
+        font-size: 0.95rem;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .hero {
+        padding: 4rem 2rem;
+      }
+      .hero-title {
+        font-size: 4rem;
+      }
+      .graph-overlay {
+        right: 2rem;
+        max-width: 35vw;
+      }
+      .graph-overlay-text {
+        font-size: 1rem;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .hero-title {
+        font-size: 5rem;
+      }
+      .graph-overlay {
+        right: 3rem;
+        max-width: 30vw;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .graph-overlay {
+        position: relative;
+        top: auto;
+        right: auto;
+        transform: none;
+        max-width: 100%;
+        margin-top: 1rem;
+      }
+      .graph-overlay-text {
+        font-size: 0.8rem;
+        text-align: left;
+      }
+    }
+
+    .bottom {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+
+    .actions {
+      text-align: center;
+      margin-top: 3rem;
+    }
+
+    .primary-btn {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: linear-gradient(90deg, #2563eb, #7c3aed);
+      border-radius: 999px;
+      color: white;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 700;
+      box-shadow: 0 0 20px rgba(59,130,246,.25);
+    }
+
+    @media (min-width: 640px) {
+      .primary-btn {
+        padding: 1.2rem 2.5rem;
+        font-size: 1.1rem;
+      }
+    }
 </style>

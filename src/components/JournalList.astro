@@ -783,4 +783,48 @@
     .entries-table { min-width: 500px; }
     .edit-modal .grid { grid-template-columns: 1fr; }
   }
+
+  @media (max-width: 640px) {
+    .entries-table {
+      min-width: 100%;
+    }
+
+    .entries-table th,
+    .entries-table td {
+      padding: 0.75rem;
+    }
+
+    .cell-acciones {
+      flex-direction: row;
+      gap: 0.25rem;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      font-size: 0.65rem;
+    }
+
+    .cell-insight {
+      max-width: 150px;
+    }
+
+    .modal {
+      padding: 1.5rem;
+      border-radius: 16px;
+    }
+
+    .edit-sliders {
+      grid-template-columns: 1fr;
+    }
+
+    .continuous-values {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-meta {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
 </style>

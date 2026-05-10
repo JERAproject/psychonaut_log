@@ -151,7 +151,7 @@ import Layout from '../layouts/Layout.astro';
       <div class="visualization-section">
         <h3 class="viz-title">Patrones Energy × Valence</h3>
         <p class="viz-subtitle">Evolución de tus sesiones</p>
-        <canvas id="energy-valence-chart" width="600" height="300"></canvas>
+        <canvas id="energy-valence-chart"></canvas>
         <div class="viz-legend">
           <span class="legend-item"><span class="dot pre"></span> Pre-práctica</span>
           <span class="legend-item"><span class="dot post"></span> Post-práctica</span>
@@ -272,11 +272,24 @@ import Layout from '../layouts/Layout.astro';
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width || 600;
+    const height = rect.height || 300;
+    canvas.width = width;
+    canvas.height = height;
+
     fetch("/api/journal/stats/energy-valence")
       .then((res) => res.json())
-      .then((data) => drawChart(ctx, canvas.width, canvas.height, data))
+      .then((data) => drawChart(ctx, width, height, data))
       .catch(() => {});
   }
+
+  // Handle resize
+  let resizeTimeout: number;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(loadVisualization, 250) as unknown as number;
+  });
 
   function drawChart(ctx: CanvasRenderingContext2D, width: number, height: number, data: any[]) {
     const padding = 40;
@@ -421,15 +434,23 @@ import Layout from '../layouts/Layout.astro';
 
   .tab-btn {
     flex: 1;
-    padding: 0.75rem 1.25rem;
+    padding: 0.875rem 1rem;
     background: transparent;
     border: none;
     border-radius: 10px;
     color: #9ca3af;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    min-height: 44px;
+  }
+
+  @media (min-width: 640px) {
+    .tab-btn {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.95rem;
+    }
   }
 
   .tab-btn:hover {
@@ -680,8 +701,18 @@ import Layout from '../layouts/Layout.astro';
   }
 
   .visualization-section canvas {
+    width: 100% !important;
+    height: auto !important;
     max-width: 100%;
     border-radius: 8px;
+    aspect-ratio: 2 / 1;
+  }
+
+  @media (min-width: 640px) {
+    .visualization-section canvas {
+      aspect-ratio: auto;
+      height: 300px !important;
+    }
   }
 
   .viz-legend {

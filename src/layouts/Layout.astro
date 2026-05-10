@@ -5,7 +5,7 @@ import Footer from '../components/Footer.astro';
 import Hero from '../components/Hero.astro';
 
 interface Props {
-  title?: string;
+  title?: string; 
   description?: string;
   image?: string;
 }
@@ -76,7 +76,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url.origin)
   <body>
     <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
     <Header />
-    <main id="main-content">
+    <main id="main-content" class="main-content">
       <slot />
       <Hero />
     </main>
@@ -96,5 +96,33 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url.origin)
   }
   main {
     min-height: 100vh;
+  }
+  .main-content {
+    padding: 1rem;
+  }
+  @media (min-width: 640px) {
+    .main-content {
+      padding: 1.5rem;
+    }
+  }
+  @media (min-width: 768px) {
+    .main-content {
+      padding: 2rem;
+    }
+  }
+  button.action-btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(90deg, #2563eb, #7c3aed);
+    border-radius: 999px;
+    color: white;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    margin: 0.5rem;
   }
 </style>

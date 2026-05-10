@@ -343,6 +343,7 @@ export default function HabitDashboard() {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
+          margin: 0.5rem;
         }
 
         .add-btn:hover:not(:disabled) {
@@ -469,6 +470,7 @@ export default function HabitDashboard() {
           font-size: 1rem;
           font-weight: bold;
           color: white;
+          margin: 0.5rem;
         }
 
         .check-btn:hover:not(:disabled) {
@@ -526,6 +528,7 @@ export default function HabitDashboard() {
           border-radius: 8px;
           opacity: 0;
           transition: all 0.2s;
+          margin: 0.5rem;
         }
 
         .habit-item:hover .delete-habit-btn {
@@ -608,6 +611,7 @@ export default function HabitDashboard() {
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
+          margin: 0.5rem;
         }
 
         .skip-btn:hover {
@@ -624,6 +628,7 @@ export default function HabitDashboard() {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
+          margin: 0.5rem;
         }
 
         .save-btn:hover {

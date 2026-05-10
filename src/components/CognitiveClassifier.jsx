@@ -215,6 +215,7 @@ export default function CognitiveClassifier() {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
+          margin: 0.5rem;
         }
 
         .classify-btn:hover:not(:disabled) {

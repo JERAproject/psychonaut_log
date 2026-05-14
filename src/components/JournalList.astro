@@ -1,4 +1,20 @@
 <section class="journal-list">
+  <div class="filter-bar">
+    <label for="user-filter" class="filter-label">Filtrar por usuario:</label>
+    <select id="user-filter" class="user-filter-select">
+      <option value="all">Todos los usuarios</option>
+    </select>
+    <span id="entry-count" class="entry-count"></span>
+  </div>
+  <div class="chart-section">
+    <h3 class="chart-title">Patrones Energy × Valence</h3>
+    <p class="chart-subtitle">Evolución de tus sesiones</p>
+    <div id="journal-chart" class="journal-chart"></div>
+    <div class="chart-legend">
+      <span class="legend-item"><span class="dot pre"></span> Pre-práctica</span>
+      <span class="legend-item"><span class="dot post"></span> Post-práctica</span>
+    </div>
+  </div>
   <div class="table-container">
     <table class="entries-table">
       <thead>
@@ -134,6 +150,7 @@
 
 <script>
   import { renderEntryDashboard } from "./EntryDashboard.jsx";
+  import { render3DChart } from "./Chart3D.jsx";
   interface JournalEntry {
     id: number;
     fecha: string;
@@ -263,7 +280,8 @@
         entry.energy_pre,
         entry.valence_pre,
         entry.energy_post,
-        entry.valence_post
+        entry.valence_post,
+        entry.fecha
       );
     }
   }
@@ -451,55 +469,144 @@
       }
 
       var showUserCol = entries.some(function(e) { return e.username; });
-      var sortedEntries = entries.slice().sort(function(a, b) {
-        var dateA = a.fecha + (a.hora || "");
-        var dateB = b.fecha + (b.hora || "");
-        return dateB.localeCompare(dateA);
-      });
-
-      container.innerHTML = sortedEntries.map(function(e) {
-        var canEditEntry = canEdit(e);
-        return '<tr class="entry-row" data-id="' + e.id + '">' +
-          '<td class="col-fecha"><div class="cell-fecha"><span class="fecha-date">' + formatDate(e.fecha) + '</span>' +
-          (e.hora ? '<span class="fecha-time">' + formatTime(e.hora) + '</span>' : '') +
-          '</div></td>' +
-          '<td class="col-tecnica"><span class="cell-tecnica">' + (practiceLabels[e.tipo_practica] || e.tipo_practica) + '</span></td>' +
-          '<td class="col-insight"><span class="cell-insight">' + (e.insight || "—") + '</span></td>' +
-          (showUserCol ? '<td class="col-usuario"><span class="cell-usuario">' + (e.username || "—") + '</span></td>' : '') +
-          '<td class="col-acciones"><div class="cell-acciones">' +
-          '<button class="action-btn view-btn" data-id="' + e.id + '" aria-label="Ver detalles">View</button>' +
-          (canEditEntry ? '<button class="action-btn edit-btn" data-id="' + e.id + '" aria-label="Editar">Edit</button><button class="action-btn delete-btn" data-id="' + e.id + '" aria-label="Eliminar">Del</button>' : '') +
-          '</div></td></tr>';
-      }).join("");
-
-      container.querySelectorAll(".view-btn").forEach(function(btn) {
-        btn.addEventListener("click", function(e) {
-          var target = e.target as HTMLElement;
-          var btn2 = target.closest("[data-id]") as HTMLElement;
-          var id = Number(btn2.getAttribute("data-id"));
-          var entry = entries.find(function(ent) { return ent.id === id; });
-          if (entry) openDetailModal(entry);
+      var grouped = {};
+      if (showUserCol) {
+        entries.forEach(function(e) {
+          var key = e.username || "—";
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(e);
         });
-      });
-
-      container.querySelectorAll(".edit-btn").forEach(function(btn) {
-        btn.addEventListener("click", function(e) {
-          var target = e.target as HTMLElement;
-          var btn2 = target.closest("[data-id]") as HTMLElement;
-          var id = Number(btn2.getAttribute("data-id"));
-          var entry = entries.find(function(ent) { return ent.id === id; });
-          if (entry) openEditModal(entry);
+        Object.keys(grouped).forEach(function(key) {
+          grouped[key].sort(function(a, b) {
+            return (b.fecha + (b.hora || "")).localeCompare(a.fecha + (a.hora || ""));
+          });
         });
-      });
+      } else {
+        grouped = { "": entries.slice().sort(function(a, b) {
+          return (b.fecha + (b.hora || "")).localeCompare(a.fecha + (a.hora || ""));
+        })};
+      }
 
-      container.querySelectorAll(".delete-btn").forEach(function(btn) {
-        btn.addEventListener("click", function(e) {
-          var target = e.target as HTMLElement;
-          var btn2 = target.closest("[data-id]") as HTMLElement;
-          var id = Number(btn2.getAttribute("data-id"));
-          deleteEntry(id);
+      window._journalData = entries;
+      window._journalGrouped = grouped;
+      window._journalShowUserCol = showUserCol;
+
+      var filterSelect = document.getElementById("user-filter");
+      var countSpan = document.getElementById("entry-count");
+      if (filterSelect) {
+        filterSelect.innerHTML = '<option value="all">Todos los usuarios</option>';
+        Object.keys(grouped).sort().forEach(function(user) {
+          var opt = document.createElement("option");
+          opt.value = user;
+          opt.textContent = (user || "Sin usuario") + " (" + grouped[user].length + ")";
+          filterSelect.appendChild(opt);
         });
-      });
+      }
+
+      function renderEntries(filterUser) {
+        var keys = filterUser === "all"
+          ? Object.keys(grouped).sort()
+          : [filterUser];
+
+        var total = 0;
+        container.innerHTML = keys.map(function(user) {
+          var userEntries = grouped[user];
+          total += userEntries.length;
+          return '<tr class="user-group-header"><td colspan="' + (showUserCol ? 5 : 4) + '" class="group-header-cell">' +
+            '<span class="group-user">' + (user || "Sin usuario") + '</span>' +
+            '<span class="group-count">' + userEntries.length + ' entrada' + (userEntries.length !== 1 ? "s" : "") + '</span>' +
+            '</td></tr>' +
+            userEntries.map(function(e) {
+              var canEditEntry = canEdit(e);
+              return '<tr class="entry-row" data-id="' + e.id + '">' +
+                (showUserCol ? '<td class="col-usuario"><span class="cell-usuario">' + (e.username || "—") + '</span></td>' : '') +
+                '<td class="col-fecha"><div class="cell-fecha"><span class="fecha-date">' + formatDate(e.fecha) + '</span>' +
+                (e.hora ? '<span class="fecha-time"><br>' + formatTime(e.hora) + '</span>' : '') +
+                '</div></td>' +
+                '<td class="col-tecnica"><span class="cell-tecnica">' + (practiceLabels[e.tipo_practica] || e.tipo_practica) + '</span></td>' +
+                '<td class="col-insight"><span class="cell-insight">' + (e.insight || "—") + '</span></td>' +
+                '<td class="col-acciones"><div class="cell-acciones">' +
+                '<button class="action-btn view-btn" data-id="' + e.id + '" aria-label="Ver detalles">View</button>' +
+                (canEditEntry ? '<button class="action-btn edit-btn" data-id="' + e.id + '" aria-label="Editar">Edit</button><button class="action-btn delete-btn" data-id="' + e.id + '" aria-label="Eliminar">Del</button>' : '') +
+                '</div></td></tr>';
+            }).join("");
+        }).join("");
+
+        if (countSpan) {
+          countSpan.textContent = "Total: " + total + " entrada" + (total !== 1 ? "s" : "");
+        }
+
+        container.querySelectorAll(".view-btn").forEach(function(btn) {
+          btn.addEventListener("click", function(e) {
+            var target = e.target as HTMLElement;
+            var btn2 = target.closest("[data-id]") as HTMLElement;
+            var id = Number(btn2.getAttribute("data-id"));
+            var entry = entries.find(function(ent) { return ent.id === id; });
+            if (entry) openDetailModal(entry);
+          });
+        });
+
+        container.querySelectorAll(".edit-btn").forEach(function(btn) {
+          btn.addEventListener("click", function(e) {
+            var target = e.target as HTMLElement;
+            var btn2 = target.closest("[data-id]") as HTMLElement;
+            var id = Number(btn2.getAttribute("data-id"));
+            var entry = entries.find(function(ent) { return ent.id === id; });
+            if (entry) openEditModal(entry);
+          });
+        });
+
+        container.querySelectorAll(".delete-btn").forEach(function(btn) {
+          btn.addEventListener("click", function(e) {
+            var target = e.target as HTMLElement;
+            var btn2 = target.closest("[data-id]") as HTMLElement;
+            var id = Number(btn2.getAttribute("data-id"));
+            deleteEntry(id);
+          });
+        });
+      }
+
+      function renderChartData(filterUser) {
+        var keys = filterUser === "all"
+          ? Object.keys(grouped).sort()
+          : [filterUser];
+        var chartEntries: Array<JournalEntry> = [];
+        keys.forEach(function(user) {
+          chartEntries = chartEntries.concat(grouped[user]);
+        });
+        var chartContainer = document.getElementById("journal-chart");
+        if (chartContainer) {
+          chartContainer.innerHTML = render3DChart(chartEntries);
+          var tip = chartContainer.querySelector(".chart-tt");
+          chartContainer.querySelectorAll(".pt").forEach(function(el) {
+            el.addEventListener("mouseover", function(e) {
+              if (tip) {
+                tip.textContent = el.getAttribute("data-tip") || "";
+                tip.style.display = "block";
+              }
+            });
+            el.addEventListener("mousemove", function(e) {
+              if (tip) {
+                tip.style.left = (e.clientX + 12) + "px";
+                tip.style.top = (e.clientY - 28) + "px";
+              }
+            });
+            el.addEventListener("mouseout", function() {
+              if (tip) tip.style.display = "none";
+            });
+          });
+        }
+      }
+
+      if (filterSelect) {
+        filterSelect.addEventListener("change", function() {
+          renderEntries(filterSelect.value);
+          renderChartData(filterSelect.value);
+        });
+      }
+
+      renderEntries("all");
+      renderChartData("all");
     } catch (err) {
       container.innerHTML = '<tr class="error-row"><td colspan="5">Error al cargar las entradas: ' + (err.message || String(err)) + '</td></tr>';
       console.error("loadEntries error:", err);
@@ -515,6 +622,67 @@
 
 <style>
   .journal-list { width: 100%; }
+
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .filter-label { font-size: 0.85rem; color: #6b7280; }
+  .user-filter-select {
+    background: #1f1f35;
+    color: #e5e7eb;
+    border: 1px solid #2a2a35;
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .user-filter-select:focus { outline: none; border-color: #8b5cf6; }
+  .entry-count { font-size: 0.8rem; color: #6b7280; }
+
+  .chart-section {
+    margin-bottom: 1.5rem;
+    background: linear-gradient(145deg, #16162a 0%, #1a1a2e 100%);
+    border: 1px solid #2a2a35;
+    border-radius: 16px;
+    padding: 1.25rem;
+  }
+  .chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin: 0 0 0.25rem;
+  }
+  .chart-subtitle {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0 0 0.75rem;
+  }
+  .journal-chart { margin: 0 -0.5rem; }
+  .journal-chart svg { border-radius: 8px; }
+  .chart-legend {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 0.75rem;
+    justify-content: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: #9ca3af;
+  }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+  }
+  .dot.pre { background: #60a5fa; }
+  .dot.post { background: #f472b6; }
 
   .table-container {
     overflow-x: auto;
@@ -566,8 +734,14 @@
     border-radius: 6px;
   }
 
-  .cell-fecha { display: flex; flex-direction: column; gap: 0.25rem; }
-  .fecha-date { font-weight: 500; color: #e5e7eb; }
+  .user-group-header td { display: table-cell; }
+  .group-header-cell { display: flex; align-items: center; gap: 0.75rem; }
+  .group-user { font-weight: 600; color: #a78bfa; font-size: 0.9rem; }
+  .group-count { font-size: 0.75rem; color: #6b7280; }
+  .entry-row:hover { background: rgba(255,255,255,0.03); }
+
+  .cell-fecha { display: flex; flex-direction: column; gap: 0.5rem; }
+  .fecha-date { font-weight: 500; color: #e5e7eb;  }
   .fecha-time { font-size: 0.8rem; color: #6b7280; }
 
   .cell-tecnica {

@@ -133,6 +133,7 @@
 </div>
 
 <script>
+  import { renderEntryDashboard } from "./EntryDashboard.jsx";
   interface JournalEntry {
     id: number;
     fecha: string;
@@ -248,18 +249,23 @@
         ${(entry.energy_pre != null || entry.valence_pre != null || entry.energy_post != null || entry.valence_post != null) ? `
           <div class="detail-section">
             <h3>Medición Continua</h3>
-            <div class="continuous-values">
-              ${entry.energy_pre != null ? `<div class="cv-item"><span class="cv-label">Energy (Pre)</span><span class="cv-value">${formatContinuous(entry.energy_pre)}</span></div>` : ''}
-              ${entry.valence_pre != null ? `<div class="cv-item"><span class="cv-label">Valence (Pre)</span><span class="cv-value">${formatContinuous(entry.valence_pre)}</span></div>` : ''}
-              ${entry.energy_post != null ? `<div class="cv-item"><span class="cv-label">Energy (Post)</span><span class="cv-value">${formatContinuous(entry.energy_post)}</span></div>` : ''}
-              ${entry.valence_post != null ? `<div class="cv-item"><span class="cv-label">Valence (Post)</span><span class="cv-value">${formatContinuous(entry.valence_post)}</span></div>` : ''}
-            </div>
+            <div id="entry-dashboard-container" class="entry-dashboard-container"></div>
           </div>
         ` : ''}
       </div>
     `;
 
     detailModal?.classList.remove("hidden");
+
+    const dashContainer = document.getElementById("entry-dashboard-container");
+    if (dashContainer && (entry.energy_pre != null || entry.valence_pre != null || entry.energy_post != null || entry.valence_post != null)) {
+      dashContainer.innerHTML = renderEntryDashboard(
+        entry.energy_pre,
+        entry.valence_pre,
+        entry.energy_post,
+        entry.valence_post
+      );
+    }
   }
 
   function formatContinuous(value: number): string {
@@ -429,7 +435,15 @@
 
     try {
       var res = await fetch("/api/journal", { headers: getAuthHeaders() });
-      var entries = await res.json();
+      var text = await res.text();
+      var entries;
+      try {
+        entries = JSON.parse(text);
+      } catch (e) {
+        container.innerHTML = '<tr class="error-row"><td colspan="5">Error parseando respuesta: ' + res.status + '</td></tr>';
+        console.error("JSON parse error:", text);
+        return;
+      }
 
       if (entries.length === 0) {
         container.innerHTML = '<tr class="empty-row"><td colspan="5"><div class="empty-state"><p>No hay entradas en tu bitácora aún.</p><a href="/practica" class="empty-link">Crear primera entrada →</a></div></td></tr>';
@@ -487,8 +501,8 @@
         });
       });
     } catch (err) {
-      container.innerHTML = '<tr class="error-row"><td colspan="5">Error al cargar las entradas.</td></tr>';
-      console.error(err);
+      container.innerHTML = '<tr class="error-row"><td colspan="5">Error al cargar las entradas: ' + (err.message || String(err)) + '</td></tr>';
+      console.error("loadEntries error:", err);
     }
   }
 
@@ -808,6 +822,10 @@
     font-size: 0.9rem;
     font-weight: 600;
     color: #5b8ff9;
+  }
+
+  .entry-dashboard-container {
+    min-height: 80px;
   }
 
   @media (max-width: 768px) {

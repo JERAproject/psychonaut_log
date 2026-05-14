@@ -6,12 +6,13 @@
           <th class="col-fecha">Fecha</th>
           <th class="col-tecnica">Técnica</th>
           <th class="col-insight">Insight</th>
+          <th class="col-usuario">Usuario</th>
           <th class="col-acciones">Acciones</th>
         </tr>
       </thead>
       <tbody id="journal-entries">
         <tr class="loading-row">
-          <td colspan="4">Cargando entradas...</td>
+          <td colspan="5">Cargando entradas...</td>
         </tr>
       </tbody>
     </table>
@@ -150,6 +151,8 @@
     energy_post: number | null;
     valence_post: number | null;
     created_at: string;
+    user_id: number | null;
+    username?: string | null;
   }
 
   const practiceLabels: Record<string, string> = {
@@ -398,6 +401,18 @@
       return token ? { Authorization: `Bearer ${token}` } : {};
     }
 
+    function getCurrentUser(): { id: number; role: string } | null {
+      const u = localStorage.getItem("psy_user");
+      return u ? JSON.parse(u) : null;
+    }
+
+    function canEdit(entry: { user_id: number | null }): boolean {
+      const user = getCurrentUser();
+      if (!user) return false;
+      if (user.role === "admin") return true;
+      return entry.user_id === user.id;
+    }
+
     async function deleteEntry(id) {
       if (!confirm("Eliminar esta entrada?")) return;
       try {
@@ -417,10 +432,11 @@
       var entries = await res.json();
 
       if (entries.length === 0) {
-        container.innerHTML = '<tr class="empty-row"><td colspan="4"><div class="empty-state"><p>No hay entradas en tu bitácora aún.</p><a href="/practica" class="empty-link">Crear primera entrada →</a></div></td></tr>';
+        container.innerHTML = '<tr class="empty-row"><td colspan="5"><div class="empty-state"><p>No hay entradas en tu bitácora aún.</p><a href="/practica" class="empty-link">Crear primera entrada →</a></div></td></tr>';
         return;
       }
 
+      var showUserCol = entries.some(function(e) { return e.username; });
       var sortedEntries = entries.slice().sort(function(a, b) {
         var dateA = a.fecha + (a.hora || "");
         var dateB = b.fecha + (b.hora || "");
@@ -428,16 +444,17 @@
       });
 
       container.innerHTML = sortedEntries.map(function(e) {
+        var canEditEntry = canEdit(e);
         return '<tr class="entry-row" data-id="' + e.id + '">' +
           '<td class="col-fecha"><div class="cell-fecha"><span class="fecha-date">' + formatDate(e.fecha) + '</span>' +
           (e.hora ? '<span class="fecha-time">' + formatTime(e.hora) + '</span>' : '') +
           '</div></td>' +
           '<td class="col-tecnica"><span class="cell-tecnica">' + (practiceLabels[e.tipo_practica] || e.tipo_practica) + '</span></td>' +
           '<td class="col-insight"><span class="cell-insight">' + (e.insight || "—") + '</span></td>' +
+          (showUserCol ? '<td class="col-usuario"><span class="cell-usuario">' + (e.username || "—") + '</span></td>' : '') +
           '<td class="col-acciones"><div class="cell-acciones">' +
           '<button class="action-btn view-btn" data-id="' + e.id + '" aria-label="Ver detalles">View</button>' +
-          '<button class="action-btn edit-btn" data-id="' + e.id + '" aria-label="Editar">Edit</button>' +
-          '<button class="action-btn delete-btn" data-id="' + e.id + '" aria-label="Eliminar">Del</button>' +
+          (canEditEntry ? '<button class="action-btn edit-btn" data-id="' + e.id + '" aria-label="Editar">Edit</button><button class="action-btn delete-btn" data-id="' + e.id + '" aria-label="Eliminar">Del</button>' : '') +
           '</div></td></tr>';
       }).join("");
 
@@ -470,7 +487,7 @@
         });
       });
     } catch (err) {
-      container.innerHTML = '<tr class="error-row"><td colspan="4">Error al cargar las entradas.</td></tr>';
+      container.innerHTML = '<tr class="error-row"><td colspan="5">Error al cargar las entradas.</td></tr>';
       console.error(err);
     }
   }
@@ -521,10 +538,19 @@
   .entry-row { transition: background 0.2s; }
   .entry-row:hover { background: rgba(255, 255, 255, 0.02); }
 
-  .col-fecha { width: 20%; }
-  .col-tecnica { width: 20%; }
-  .col-insight { width: 40%; }
+  .col-fecha { width: 18%; }
+  .col-tecnica { width: 18%; }
+  .col-insight { width: 32%; }
+  .col-usuario { width: 12%; text-align: center; }
   .col-acciones { width: 20%; }
+
+  .cell-usuario {
+    font-size: 0.8rem;
+    color: #6b7280;
+    background: rgba(255,255,255,0.05);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+  }
 
   .cell-fecha { display: flex; flex-direction: column; gap: 0.25rem; }
   .fecha-date { font-weight: 500; color: #e5e7eb; }

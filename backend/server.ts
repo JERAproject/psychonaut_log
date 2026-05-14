@@ -285,23 +285,24 @@ app.post("/api/log", (req, res) => {
 // ── Journal ─────────────────────────────────────────────
 
 app.get("/api/journal", (req, res) => {
-  const isAdmin = req.user?.role === "admin";
+  const role = req.user?.role;
+  const isAdminOrPsicologo = role === "admin" || role === "psicologo";
   const userId = req.user?.id ?? null;
 
-  let query = `SELECT id, fecha, hora, duracion, tipo_practica,
-            estado_previo, fenomenologia_somatica, fenomenologia_cognitiva,
-            cuerpo, insight, integracion, estado_post,
-            energy_pre, valence_pre, energy_post, valence_post,
-            created_at, user_id
-      FROM journal_entries WHERE 1=1`;
+  let query = `SELECT j.id, j.fecha, j.hora, j.duracion, j.tipo_practica,
+            j.estado_previo, j.fenomenologia_somatica, j.fenomenologia_cognitiva,
+            j.cuerpo, j.insight, j.integracion, j.estado_post,
+            j.energy_pre, j.valence_pre, j.energy_post, j.valence_post,
+            j.created_at, j.user_id, ${isAdminOrPsicologo ? "u.username" : "NULL as username"}
+      FROM journal_entries j ${isAdminOrPsicologo ? "LEFT JOIN users u ON j.user_id = u.id" : ""} WHERE 1=1`;
   const params: any[] = [];
 
-  if (!isAdmin) {
-    query += " AND (user_id = ? OR user_id IS NULL)";
+  if (!isAdminOrPsicologo) {
+    query += " AND (j.user_id = ? OR j.user_id IS NULL)";
     params.push(userId);
   }
 
-  query += " ORDER BY fecha DESC, hora DESC";
+  query += " ORDER BY j.fecha DESC, j.hora DESC";
 
   const entries = db.prepare(query).all(...params);
   res.json(entries);
@@ -400,7 +401,7 @@ app.delete("/api/journal/:id", (req, res) => {
   }
   const entry = db.prepare("SELECT user_id FROM journal_entries WHERE id = ?").get(id) as any;
   if (!entry) return res.status(404).json({ error: "Not found" });
-  if (entry.user_id === null || req.user?.role === "admin" || entry.user_id === req.user?.id) {
+  if (req.user?.role === "admin" || entry.user_id === req.user?.id) {
     db.prepare("DELETE FROM journal_entries WHERE id = ?").run(id);
     return res.json({ ok: true });
   }
@@ -435,7 +436,7 @@ app.put("/api/journal/:id", (req, res) => {
   }
   const entry = db.prepare("SELECT user_id FROM journal_entries WHERE id = ?").get(id) as any;
   if (!entry) return res.status(404).json({ error: "Not found" });
-  if (entry.user_id !== null && req.user.role !== "admin" && entry.user_id !== req.user.id) {
+  if (req.user.role !== "admin" && entry.user_id !== req.user.id) {
     return res.status(403).json({ error: "Forbidden" });
   }
 
@@ -697,7 +698,8 @@ app.get("/api/journal/:id/embeddings", (req, res) => {
 // ── Visualization Data ─────────────────────────────────
 
 app.get("/api/journal/stats/energy-valence", (req, res) => {
-  const isAdmin = req.user?.role === "admin";
+  const role = req.user?.role;
+  const isAdminOrPsicologo = role === "admin" || role === "psicologo";
   const userId = req.user?.id ?? null;
 
   let query = `SELECT id, fecha, tipo_practica, energy_pre, valence_pre, energy_post, valence_post, user_id
@@ -706,7 +708,7 @@ app.get("/api/journal/stats/energy-valence", (req, res) => {
          OR energy_post IS NOT NULL OR valence_post IS NOT NULL)`;
   const params: any[] = [];
 
-  if (!isAdmin) {
+  if (!isAdminOrPsicologo) {
     query += " AND (user_id = ? OR user_id IS NULL)";
     params.push(userId);
   }

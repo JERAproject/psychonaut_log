@@ -18,11 +18,16 @@ export default function HabitCalendar() {
     loadData();
   }, []);
 
+  function getAuthHeaders() {
+    const token = localStorage.getItem("psy_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
   async function loadData() {
     try {
       const [habitsRes, logsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/habits`),
-        fetch(`${API_BASE}/api/logs`)
+        fetch(`${API_BASE}/api/habits`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE}/api/logs`, { headers: getAuthHeaders() })
       ]);
       const habitsData = await habitsRes.json();
       const logsData = await logsRes.json();

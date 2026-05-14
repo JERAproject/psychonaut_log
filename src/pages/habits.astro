@@ -128,11 +128,16 @@ import HabitCalendar from "../components/HabitCalendar.jsx";
   }
 
   // Carga de Estadísticas
+  function getAuthHeaders() {
+    var token = localStorage.getItem("psy_token");
+    return token ? { Authorization: "Bearer " + token } : {};
+  }
+
   async function loadResumen() {
     try {
       var [habitsRes, logsRes] = await Promise.all([
-        fetch("/api/habits"),
-        fetch("/api/logs")
+        fetch("/api/habits", { headers: getAuthHeaders() }),
+        fetch("/api/logs", { headers: getAuthHeaders() })
       ]);
       
       var habits = await habitsRes.json();
@@ -153,8 +158,8 @@ import HabitCalendar from "../components/HabitCalendar.jsx";
   async function loadGrid() {
     try {
       var [habitsRes, logsRes] = await Promise.all([
-        fetch("/api/habits"),
-        fetch("/api/logs")
+        fetch("/api/habits", { headers: getAuthHeaders() }),
+        fetch("/api/logs", { headers: getAuthHeaders() })
       ]);
       
       var habits = await habitsRes.json();

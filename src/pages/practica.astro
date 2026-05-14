@@ -217,13 +217,23 @@ import Layout from '../layouts/Layout.astro';
     });
 
     try {
+      const token = localStorage.getItem("psy_token");
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch("/api/journal", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(payload),
       });
 
       const data = await res.json().catch(() => null);
+
+      if (res.status === 401) {
+        showToast("Inicia sesion para guardar", "error");
+        document.getElementById("login-btn")?.click();
+        return;
+      }
 
       if (res.ok && data?.ok) {
         showToast("Entrada guardada correctamente", "success");
@@ -278,7 +288,11 @@ import Layout from '../layouts/Layout.astro';
     canvas.width = width;
     canvas.height = height;
 
-    fetch("/api/journal/stats/energy-valence")
+    const token = localStorage.getItem("psy_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    fetch("/api/journal/stats/energy-valence", { headers })
       .then((res) => res.json())
       .then((data) => drawChart(ctx, width, height, data))
       .catch(() => {});

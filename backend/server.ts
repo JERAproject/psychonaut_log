@@ -88,6 +88,52 @@ app.get("/api/auth/me", (req, res) => {
   res.json({ user: req.user });
 });
 
+// ── Classifier ──────────────────────────────────────────
+
+app.post("/api/classify", async (req, res) => {
+  const { text } = req.body;
+  if (!text || typeof text !== "string") {
+    return res.status(400).json({ error: "text is required" });
+  }
+
+  try {
+    const results: Record<string, string> = {};
+
+    try {
+      const promptA = SOMATIC_PROMPT.replace("{{TEXT}}", text);
+      const rawA = await callOllama(promptA);
+      const parsedA = parseJsonSafe(rawA);
+      results.somatic = parsedA.somatic || "neutral";
+    } catch (e) {
+      results.somatic = "neutral";
+    }
+
+    try {
+      const promptB = COGNITIVE_PROMPT.replace("{{TEXT}}", text);
+      const rawB = await callOllama(promptB);
+      const parsedB = parseJsonSafe(rawB);
+      results.cognition = parsedB.cognition || "neutral";
+    } catch (e) {
+      results.cognition = "neutral";
+    }
+
+    try {
+      const promptC = EMOTIONAL_ATTENTION_PROMPT.replace("{{TEXT}}", text);
+      const rawC = await callOllama(promptC);
+      const parsedC = parseJsonSafe(rawC);
+      results.emotional = parsedC.emotional || "neutral";
+      results.attention = parsedC.attention || "neutral";
+    } catch (e) {
+      results.emotional = "neutral";
+      results.attention = "neutral";
+    }
+
+    res.json(results);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Classification failed" });
+  }
+});
+
 app.post("/api/auth/change-password", async (req, res) => {
   if (!req.user) return res.status(401).json({ error: "unauthorized" });
   const { currentPassword, newPassword } = req.body;

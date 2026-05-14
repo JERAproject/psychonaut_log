@@ -84,9 +84,14 @@ const maxTotalPerDay = habits.reduce((sum, h) => sum + h.maxPerDay, 0);
 </div>
 
 <script>
+  function getAuthHeaders(): Record<string, string> {
+    const token = localStorage.getItem("psy_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
   async function loadCalendarIntensity() {
     try {
-      const res = await fetch("/api/logs");
+      const res = await fetch("/api/logs", { headers: getAuthHeaders() });
       const logs: { habitId: number; logDate: string; count: number }[] = await res.json();
 
       const dailyTotals = new Map<string, number>();

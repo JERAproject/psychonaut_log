@@ -59,9 +59,14 @@ function getMonthLabel(dateStr: string): string {
 </div>
 
 <script>
+  function getAuthHeaders(): Record<string, string> {
+    const token = localStorage.getItem("psy_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
   async function loadLogs() {
     try {
-      const res = await fetch("/api/logs");
+      const res = await fetch("/api/logs", { headers: getAuthHeaders() });
       const logs: { habitId: number; logDate: string; count: number }[] = await res.json();
 
       const logMap = new Map<string, number>();
@@ -92,14 +97,18 @@ function getMonthLabel(dateStr: string): string {
       const date = cell.getAttribute("data-date");
       if (!habitId || !date) return;
 
+      const token = localStorage.getItem("psy_token");
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       try {
         await fetch("/api/log", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ habitId: Number(habitId), date }),
         });
 
-        const res = await fetch("/api/logs");
+        const res = await fetch("/api/logs", { headers });
         const logs: { habitId: number; logDate: string; count: number }[] = await res.json();
 
         const logMap = new Map<string, number>();

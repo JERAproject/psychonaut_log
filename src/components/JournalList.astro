@@ -372,7 +372,7 @@
     try {
       var res = await fetch("/api/journal/" + id, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(payload),
       });
       var data = await res.json();
@@ -393,22 +393,27 @@
     }
   });
 
-  async function deleteEntry(id) {
-    if (!confirm("¿Eliminar esta entrada?")) return;
-    try {
-      var res = await fetch("/api/journal/" + id, { method: "DELETE" });
-      if (res.ok) loadEntries();
-    } catch (err) {
-      console.error("Error deleting:", err);
+  function getAuthHeaders(): Record<string, string> {
+      const token = localStorage.getItem("psy_token");
+      return token ? { Authorization: `Bearer ${token}` } : {};
     }
-  }
+
+    async function deleteEntry(id) {
+      if (!confirm("Eliminar esta entrada?")) return;
+      try {
+        var res = await fetch("/api/journal/" + id, { method: "DELETE", headers: getAuthHeaders() });
+        if (res.ok) loadEntries();
+      } catch (err) {
+        console.error("Error deleting:", err);
+      }
+    }
 
   async function loadEntries() {
     var container = document.getElementById("journal-entries");
     if (!container) return;
 
     try {
-      var res = await fetch("/api/journal");
+      var res = await fetch("/api/journal", { headers: getAuthHeaders() });
       var entries = await res.json();
 
       if (entries.length === 0) {

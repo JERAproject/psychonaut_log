@@ -36,7 +36,12 @@ function getWeekDays() {
   return days;
 }
 
-export default function HabitDashboard() {
+function getAuthHeaders() {
+    const token = localStorage.getItem("psy_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  export default function HabitDashboard() {
   const [habits, setHabits] = useState([]);
   const [logs, setLogs] = useState({});
   const [observations, setObservations] = useState({});
@@ -55,8 +60,8 @@ export default function HabitDashboard() {
   async function loadData() {
     try {
       const [habitsRes, logsRes] = await Promise.all([
-        fetch("/api/habits"),
-        fetch("/api/logs"),
+        fetch("/api/habits", { headers: getAuthHeaders() }),
+        fetch("/api/logs", { headers: getAuthHeaders() }),
       ]);
       const habitsData = await habitsRes.json();
       const logsData = await logsRes.json();
@@ -80,7 +85,7 @@ export default function HabitDashboard() {
     try {
       const res = await fetch("/api/habits", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ name: newHabit, color: habitColor, maxPerDay: 1 }),
       });
       if (res.ok) {
@@ -95,7 +100,7 @@ export default function HabitDashboard() {
   async function deleteHabit(id) {
     if (!confirm("¿Eliminar este hábito?")) return;
     try {
-      const res = await fetch(`/api/habits/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/habits/${id}`, { method: "DELETE", headers: getAuthHeaders() });
       if (res.ok) loadData();
     } catch (err) {
       console.error("Error deleting habit:", err);
@@ -107,7 +112,7 @@ export default function HabitDashboard() {
     try {
       await fetch("/api/log", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ habitId, date: dateStr }),
       });
       

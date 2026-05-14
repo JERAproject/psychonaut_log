@@ -47,9 +47,13 @@ export default function CognitiveClassifier() {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem("psy_token");
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch("/api/classify", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ text: input }),
       });
       if (!res.ok) throw new Error(await res.text());

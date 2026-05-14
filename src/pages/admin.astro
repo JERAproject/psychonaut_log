@@ -1,0 +1,514 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <div id="admin-root"></div>
+</Layout>
+
+<script>
+  const API_BASE = (document.querySelector('meta[name="api-base"]') as HTMLMetaElement)?.content || 'http://localhost:3001';
+  const TOKEN_KEY = 'psy_token';
+  const USER_KEY = 'psy_user';
+
+  interface User { id: number; username: string; role: string; created_at: string; }
+  interface CurrentUser { id: number; username: string; role: string; }
+
+  function getToken(): string | null { return localStorage.getItem(TOKEN_KEY); }
+  function getUser(): CurrentUser | null {
+    const u = localStorage.getItem(USER_KEY);
+    return u ? JSON.parse(u) : null;
+  }
+  function apiFetch(path: string, opts: RequestInit = {}) {
+    const token = getToken();
+    return fetch(`${API_BASE}${path}`, {
+      ...opts,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...opts.headers
+      }
+    });
+  }
+
+  const root = document.getElementById('admin-root')!;
+  render();
+
+  function render() {
+    const user = getUser();
+    if (!user || user.role !== 'admin') {
+      root.innerHTML = `<div class="admin-container">
+        <div class="admin-unauthorized">
+          <h2>Acceso denegado</h2>
+          <p>Solo administradores pueden acceder a esta página.</p>
+          <a href="/" class="btn">Volver al inicio</a>
+        </div>
+      </div>`;
+      return;
+    }
+    root.innerHTML = `
+      <div class="admin-container">
+        <div class="admin-header">
+          <div>
+            <h1 class="admin-title">Panel de Administración</h1>
+            <p class="admin-subtitle">Gestión de usuarios del sistema</p>
+          </div>
+          <div class="admin-user-info">
+            Conectado como <strong>${user.username}</strong> (${user.role})
+          </div>
+        </div>
+
+        <div class="admin-create-section">
+          <h2>Crear nuevo usuario</h2>
+          <form id="create-form" class="create-form">
+            <div class="form-row">
+              <label class="form-label">
+                Username
+                <input type="text" name="username" class="form-input" placeholder="Nombre de usuario" required minlength="2" maxlength="30" />
+              </label>
+              <label class="form-label">
+                Password
+                <input type="password" name="password" class="form-input" placeholder="Contraseña inicial" required minlength="4" />
+              </label>
+              <label class="form-label">
+                Rol
+                <select name="role" class="form-select">
+                  <option value="user">Usuario</option>
+                  <option value="psicologo">Psicólogo</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </label>
+              <button type="submit" class="btn btn-create">Crear usuario</button>
+            </div>
+            <div id="create-error" class="form-error"></div>
+            <div id="create-success" class="form-success"></div>
+          </form>
+        </div>
+
+        <div class="admin-list-section">
+          <h2>Usuarios registrados</h2>
+          <div id="users-list"></div>
+          <div id="list-loading" class="loading">Cargando...</div>
+        </div>
+      </div>
+
+      <div id="edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="modal admin-modal">
+          <div class="modal-header">
+            <h3 id="edit-modal-title">Editar usuario</h3>
+            <button id="close-edit-modal" class="modal-close-btn">&times;</button>
+          </div>
+          <form id="edit-form" class="edit-form">
+            <input type="hidden" name="userId" />
+            <div class="form-group">
+              <label class="form-label">Nueva contraseña <span class="label-hint">(dejar vacío para no cambiar)</span>
+                <input type="password" name="password" class="form-input" placeholder="Nueva contraseña" minlength="4" />
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rol
+                <select name="role" class="form-select">
+                  <option value="user">Usuario</option>
+                  <option value="psicologo">Psicólogo</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </label>
+            </div>
+            <div id="edit-error" class="form-error"></div>
+            <div class="form-actions">
+              <button type="button" id="cancel-edit" class="btn btn-cancel">Cancelar</button>
+              <button type="submit" class="btn btn-save">Guardar cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    attachEvents();
+    loadUsers();
+  }
+
+  function attachEvents() {
+    document.getElementById('create-form')?.addEventListener('submit', handleCreate);
+    document.getElementById('edit-form')?.addEventListener('submit', handleEdit);
+    document.getElementById('close-edit-modal')?.addEventListener('click', closeEditModal);
+    document.getElementById('cancel-edit')?.addEventListener('click', closeEditModal);
+    document.getElementById('edit-modal')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeEditModal();
+    });
+  }
+
+  async function handleCreate(e: Event) {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const fd = new FormData(form);
+    const payload = {
+      username: fd.get('username') as string,
+      password: fd.get('password') as string,
+      role: fd.get('role') as string
+    };
+    const errEl = document.getElementById('create-error')!;
+    const succEl = document.getElementById('create-success')!;
+    errEl.textContent = '';
+    succEl.textContent = '';
+    try {
+      const res = await apiFetch('/api/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) { errEl.textContent = data.error || 'Error creando usuario'; return; }
+      succEl.textContent = 'Usuario creado correctamente';
+      form.reset();
+      loadUsers();
+    } catch {
+      errEl.textContent = 'Error de conexión';
+    }
+  }
+
+  async function loadUsers() {
+    const listEl = document.getElementById('users-list')!;
+    const loadingEl = document.getElementById('list-loading')!;
+    loadingEl.style.display = 'block';
+    listEl.innerHTML = '';
+    try {
+      const res = await apiFetch('/api/admin/users');
+      if (!res.ok) { listEl.innerHTML = '<p class="form-error">Error cargando usuarios</p>'; loadingEl.style.display = 'none'; return; }
+      const users: User[] = await res.json();
+      loadingEl.style.display = 'none';
+      const currentUser = getUser();
+      listEl.innerHTML = `
+        <div class="users-table-wrap">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Rol</th>
+                <th>Fecha de creación</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${users.map(u => `
+                <tr>
+                  <td class="td-username">${u.username}</td>
+                  <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+                  <td class="td-date">${new Date(u.created_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                  <td class="td-actions">
+                    ${u.id !== currentUser?.id ? `
+                      <button class="btn-icon btn-edit" data-id="${u.id}" data-username="${u.username}" data-role="${u.role}" title="Editar">✎</button>
+                      <button class="btn-icon btn-delete" data-id="${u.id}" data-username="${u.username}" title="Eliminar">✕</button>
+                    ` : '<span class="self-label">Tú</span>'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      listEl.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          openEditModal(Number(el.dataset.id), el.dataset.username!, el.dataset.role!);
+        });
+      });
+      listEl.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          const id = Number(el.dataset.id);
+          const username = el.dataset.username!;
+          if (!confirm(`¿Eliminar al usuario "${username}"? Esta acción no se puede deshacer.`)) return;
+          const res = await apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+          if (res.ok) {
+            loadUsers();
+          } else {
+            const data = await res.json();
+            alert(data.error || 'Error eliminando usuario');
+          }
+        });
+      });
+    } catch {
+      listEl.innerHTML = '<p class="form-error">Error de conexión</p>';
+      loadingEl.style.display = 'none';
+    }
+  }
+
+  function openEditModal(id: number, username: string, role: string) {
+    const modal = document.getElementById('edit-modal')!;
+    (document.getElementById('edit-modal-title') as HTMLElement).textContent = `Editar: ${username}`;
+    (document.querySelector('#edit-form input[name="userId"]') as HTMLInputElement).value = String(id);
+    (document.querySelector('#edit-form select[name="role"]') as HTMLSelectElement).value = role;
+    (document.querySelector('#edit-form input[name="password"]') as HTMLInputElement).value = '';
+    (document.getElementById('edit-error') as HTMLElement).textContent = '';
+    modal.classList.remove('hidden');
+  }
+
+  function closeEditModal() {
+    document.getElementById('edit-modal')?.classList.add('hidden');
+  }
+
+  async function handleEdit(e: Event) {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const fd = new FormData(form);
+    const id = fd.get('userId') as string;
+    const payload: Record<string, string> = {};
+    const pw = fd.get('password') as string;
+    const role = fd.get('role') as string;
+    if (pw) payload.password = pw;
+    if (role) payload.role = role;
+    const errEl = document.getElementById('edit-error')!;
+    errEl.textContent = '';
+    try {
+      const res = await apiFetch(`/api/admin/users/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        errEl.textContent = data.error || 'Error actualizando';
+        return;
+      }
+      closeEditModal();
+      loadUsers();
+    } catch {
+      errEl.textContent = 'Error de conexión';
+    }
+  }
+</script>
+
+<style>
+  .admin-container {
+    max-width: 900px;
+    margin: auto;
+    padding: 2rem 1.5rem;
+  }
+
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #252535;
+  }
+
+  .admin-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0 0 0.25rem;
+    background: linear-gradient(135deg, #f9fafb, #a5b4fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .admin-subtitle { color: #6b7280; font-size: 0.9rem; margin: 0; }
+
+  .admin-user-info {
+    font-size: 0.85rem;
+    color: #6b7280;
+    padding: 0.5rem 1rem;
+    background: #1f1f35;
+    border: 1px solid #2a2a35;
+    border-radius: 12px;
+  }
+
+  .admin-unauthorized {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6b7280;
+  }
+  .admin-unauthorized h2 { color: #f9fafb; margin-bottom: 0.5rem; }
+
+  .admin-create-section, .admin-list-section {
+    background: #1a1a2a;
+    border: 1px solid #252535;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-create-section h2, .admin-list-section h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #a5b4fc;
+    margin: 0 0 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .form-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    color: #9ca3af;
+    font-size: 0.8rem;
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .label-hint { font-size: 0.72rem; color: #6b7280; }
+
+  .form-input, .form-select {
+    padding: 0.5rem 0.75rem;
+    background: #13131f;
+    border: 1px solid #2a2a35;
+    border-radius: 8px;
+    color: #f9fafb;
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-input:focus, .form-select:focus {
+    border-color: #5b8cf9;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    display: inline-block;
+    font-family: inherit;
+  }
+
+  .btn-create {
+    background: linear-gradient(135deg, #5b8cf9, #7c3aed);
+    color: white;
+    padding: 0.5rem 1.25rem;
+    align-self: flex-end;
+  }
+  .btn-create:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  .btn-cancel { background: #2a2a35; color: #9ca3af; }
+  .btn-save { background: #5b8cf9; color: white; }
+
+  .form-error { color: #f87171; font-size: 0.82rem; margin-top: 0.5rem; min-height: 1.2em; }
+  .form-success { color: #34d399; font-size: 0.82rem; margin-top: 0.5rem; min-height: 1.2em; }
+
+  .loading { color: #6b7280; font-size: 0.85rem; margin: 1rem 0; }
+  .loading[style*="display: none"] { display: none; }
+
+  .users-table-wrap { overflow-x: auto; }
+
+  .users-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .users-table th {
+    text-align: left;
+    color: #6b7280;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #252535;
+  }
+
+  .users-table td {
+    padding: 0.75rem;
+    color: #d1d5db;
+    border-bottom: 1px solid #1f1f30;
+  }
+
+  .users-table tr:last-child td { border-bottom: none; }
+  .users-table tr:hover td { background: #1f1f35; }
+
+  .td-username { font-weight: 600; color: #f9fafb; }
+  .td-date { color: #6b7280; white-space: nowrap; }
+
+  .role-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .role-admin { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+  .role-psicologo { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.25); }
+  .role-user { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
+
+  .btn-icon {
+    background: none;
+    border: 1px solid #2a2a35;
+    border-radius: 6px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+  }
+
+  .btn-icon:hover { border-color: #5b8cf9; color: #a5b4fc; }
+  .btn-delete:hover { border-color: #f87171; color: #f87171; }
+
+  .self-label { color: #4b5563; font-size: 0.78rem; font-style: italic; }
+
+  .td-actions { white-space: nowrap; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.hidden { display: none; }
+
+  .admin-modal {
+    background: #1a1a2a;
+    border: 1px solid #2a2a35;
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 420px;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .modal-header h3 { margin: 0; font-size: 1rem; color: #f9fafb; }
+
+  .modal-close-btn {
+    background: none;
+    border: none;
+    color: #6b7280;
+    font-size: 1.25rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .modal-close-btn:hover { color: #f9fafb; }
+
+  .edit-form { display: flex; flex-direction: column; gap: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+  .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; }
+</style>

@@ -39,6 +39,9 @@ function authMiddleware(req: express.Request, res: express.Response, next: expre
 app.use(authMiddleware);
 
 app.post("/api/auth/register", async (req, res) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "admin only" });
+  }
   const { username, password, role = "user" } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: "username and password required" });
@@ -731,6 +734,61 @@ app.get("/api/admin/users", (req, res) => {
   res.json(users);
 });
 
+app.post("/api/admin/users", async (req, res) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "admin only" });
+  }
+  const { username, password, role = "user" } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: "username and password required" });
+  }
+  if (["user", "psicologo", "admin"].indexOf(role) === -1) {
+    return res.status(400).json({ error: "invalid role" });
+  }
+  const existing = db.prepare("SELECT id FROM users WHERE username = ?").get(username);
+  if (existing) {
+    return res.status(409).json({ error: "username already exists" });
+  }
+  const hash = await bcrypt.hash(password, 10);
+  const result = db.prepare("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)").run(username, hash, role);
+  res.status(201).json({ ok: true, id: result.lastInsertRowid });
+});
+
+app.patch("/api/admin/users/:id", async (req, res) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "admin only" });
+  }
+  const id = Number(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: "invalid id" });
+  const { password, role } = req.body;
+  const updates: string[] = [];
+  const params: any[] = [];
+  if (password) {
+    const hash = await bcrypt.hash(password, 10);
+    updates.push("password_hash = ?");
+    params.push(hash);
+  }
+  if (role && ["user", "psicologo", "admin"].indexOf(role) !== -1) {
+    updates.push("role = ?");
+    params.push(role);
+  }
+  if (updates.length === 0) return res.status(400).json({ error: "nothing to update" });
+  params.push(id);
+  db.prepare(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+  res.json({ ok: true });
+});
+
+app.delete("/api/admin/users/:id", (req, res) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "admin only" });
+  }
+  const id = Number(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: "invalid id" });
+  if (id === req.user.id) return res.status(400).json({ error: "cannot delete yourself" });
+  db.prepare("DELETE FROM users WHERE id = ?").run(id);
+  res.json({ ok: true });
+});
+
 app.get("/api/admin/entries", (req, res) => {
   if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({ error: "admin only" });
@@ -750,6 +808,6 @@ app.get("/api/admin/entries", (req, res) => {
 
 // ── Start ───────────────────────────────────────────────
 
-app.listen(PORT, () => {
-  console.log(`API server running on http://localhost:${PORT}`);
+app.listen(Number(PORT), "0.0.0.0", () => {
+  console.log(`API server running on http://0.0.0.0:${PORT}`);
 });

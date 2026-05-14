@@ -27,6 +27,7 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
         <li><a href="/clasificador">Clasificador</a></li>
         <!-- <li><a href="/about">About</a></li> -->
         <!-- <li><a href="/contact">Contact</a></li> -->
+        <li id="admin-nav-link" hidden><a href="/admin">Admin</a></li>
       </ul>
       <div class="auth-section">
         <button id="login-btn" class="btn-login">Iniciar Sesión</button>
@@ -145,13 +146,16 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
   function updateAuthUI() {
     const user = getUser();
     const token = getToken();
+    const adminLink = document.getElementById('admin-nav-link') as HTMLLIElement;
     if (user && token) {
       loginBtn.hidden = true;
       userMenu.hidden = false;
       userDisplay.textContent = `${user.username} (${user.role})`;
+      if (adminLink) adminLink.hidden = user.role !== 'admin';
     } else {
       loginBtn.hidden = false;
       userMenu.hidden = true;
+      if (adminLink) adminLink.hidden = true;
     }
   }
 

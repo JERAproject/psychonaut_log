@@ -644,25 +644,126 @@ function getAuthHeaders() {
         @media (max-width: 640px) {
           .creator-card {
             flex-direction: column;
+            padding: 0.875rem;
           }
-          
+
           .creator-inputs {
             width: 100%;
           }
-          
+
           .add-btn {
             width: 100%;
             justify-content: center;
+            padding: 0.65rem 1rem;
           }
 
           .day-header {
-            padding: 0.875rem 1rem;
+            padding: 0.75rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+          }
+
+          .day-label {
+            font-size: 0.9rem;
+          }
+
+          .day-date {
+            font-size: 0.75rem;
           }
 
           .check-btn {
             width: 32px;
             height: 32px;
             min-width: 32px;
+          }
+
+          .habit-main {
+            padding: 0.5rem;
+            gap: 0.5rem;
+          }
+
+          .habit-name {
+            font-size: 0.85rem;
+          }
+
+          .habit-obs {
+            font-size: 0.7rem;
+          }
+        }
+
+        @media (max-width: 390px) {
+          .creator-inputs input[type="text"] {
+            font-size: 0.85rem;
+            padding: 0.6rem 0.75rem;
+          }
+
+          .creator-inputs input[type="color"] {
+            width: 36px;
+            height: 36px;
+          }
+
+          .btn-text {
+            display: none;
+          }
+
+          .add-btn {
+            padding: 0.6rem;
+          }
+
+          .add-btn .btn-icon {
+            font-size: 1.1rem;
+          }
+
+          .day-header {
+            padding: 0.6rem;
+          }
+
+          .day-label {
+            font-size: 0.8rem;
+          }
+
+          .day-date {
+            font-size: 0.65rem;
+          }
+
+          .check-btn {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            margin: 0.25rem;
+          }
+
+          .habit-main {
+            padding: 0.4rem;
+            gap: 0.35rem;
+          }
+
+          .habit-name {
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+          }
+
+          .delete-habit-btn {
+            padding: 0.35rem;
+            font-size: 0.75rem;
+            opacity: 0.7;
+          }
+
+          .obs-modal {
+            padding: 1.25rem;
+            border-radius: 16px;
+          }
+
+          .modal-title {
+            font-size: 1rem;
+          }
+
+          .modal-subtitle {
+            font-size: 0.8rem;
           }
         }
       `}</style>

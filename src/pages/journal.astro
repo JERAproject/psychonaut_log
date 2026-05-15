@@ -18,40 +18,50 @@ import Layout from '../layouts/Layout.astro';
 
 <style>
   .journal-page {
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
     max-width: 900px;
     margin: 0 auto;
     min-height: 100vh;
   }
 
+  @media (min-width: 640px) {
+    .journal-page {
+      padding: 2rem 1.5rem;
+    }
+  }
+
   .page-header {
     text-align: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .page-header {
+      margin-bottom: 2.5rem;
+    }
   }
 
   .page-header h1 {
-    font-size: 2.5rem;
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
     font-weight: 700;
-    margin: 0 0 0.75rem;
+    margin: 0 0 0.5rem;
     background: linear-gradient(135deg, #fefefe 0%, #a5b4fc 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  .subtitle {
-    color: #6b7280;
-    font-size: 1.1rem;
-    margin: 0;
+  @media (min-width: 640px) {
+    .page-header h1 {
+      margin-bottom: 0.75rem;
+    }
   }
 
-  @media (max-width: 640px) {
-    .page-header h1 {
-      font-size: 2rem;
-    }
-    
-    .journal-page {
-      padding: 1.5rem 1rem;
-    }
+  .subtitle {
+    color: #6b7280;
+    font-size: clamp(0.875rem, 2.5vw, 1.1rem);
+    margin: 0;
   }
 </style>

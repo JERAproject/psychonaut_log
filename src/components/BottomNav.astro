@@ -1,0 +1,112 @@
+---
+const currentPath = Astro.url.pathname;
+
+const navItems = [
+  { href: '/practica', label: 'Nueva', icon: 'plus' },
+  { href: '/journal', label: 'Bitácora', icon: 'book' },
+  { href: '/habits', label: 'Hábitos', icon: 'chart' },
+];
+---
+
+<nav class="bottom-nav" aria-label="Navegación principal">
+  {navItems.map(item => (
+    <a
+      href={item.href}
+      class:list={['nav-item', { active: currentPath === item.href || currentPath.startsWith(item.href + '/') }]}
+      aria-current={currentPath === item.href ? 'page' : undefined}
+    >
+      <span class="nav-icon">
+        {item.icon === 'plus' && (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        )}
+        {item.icon === 'book' && (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        )}
+        {item.icon === 'chart' && (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        )}
+      </span>
+      <span class="nav-label">{item.label}</span>
+    </a>
+  ))}
+</nav>
+
+<style>
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(1, 2, 7, 0.98);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid #2a2a35;
+    padding: 0.5rem 0.75rem;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    z-index: 99;
+    justify-content: space-around;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 767px) {
+    .bottom-nav {
+      display: flex;
+    }
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #6b7280;
+    transition: all 0.2s ease;
+    min-width: 64px;
+    min-height: 56px;
+    flex: 1;
+  }
+
+  .nav-item:hover {
+    color: #9ca3af;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .nav-item.active {
+    color: #5b8ff9;
+    background: rgba(91, 143, 249, 0.1);
+  }
+
+  .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+  }
+
+  .nav-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 640px) {
+    .nav-label {
+      font-size: 0.75rem;
+    }
+  }
+</style>

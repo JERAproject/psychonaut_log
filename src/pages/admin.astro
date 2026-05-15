@@ -58,7 +58,13 @@ import Layout from "../layouts/Layout.astro";
           </div>
         </div>
 
-        <div class="admin-create-section">
+        <div class="admin-tabs">
+          <button class="tab-btn active" data-tab="users">Usuarios</button>
+          <button class="tab-btn" data-tab="psicologo">Asignar Psicólogos</button>
+        </div>
+
+        <div id="tab-users" class="tab-panel">
+          <div class="admin-create-section">
           <h2>Crear nuevo usuario</h2>
           <form id="create-form" class="create-form">
             <div class="form-row">
@@ -89,6 +95,16 @@ import Layout from "../layouts/Layout.astro";
           <h2>Usuarios registrados</h2>
           <div id="users-list"></div>
           <div id="list-loading" class="loading">Cargando...</div>
+        </div>
+        </div>
+
+        <div id="tab-psicologo" class="tab-panel" style="display:none;">
+          <div class="admin-list-section">
+            <h2>Asignar Usuarios a Psicólogos</h2>
+            <p class="section-hint">Seleccioná qué pacientes puede ver cada psicólogo en su bitácora.</p>
+            <div id="psicologo-assignments"></div>
+            <div id="assign-loading" class="loading">Cargando...</div>
+          </div>
         </div>
       </div>
 
@@ -125,7 +141,18 @@ import Layout from "../layouts/Layout.astro";
     `;
     attachEvents();
     loadUsers();
+    loadPsicologoAssignments();
   }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = (btn as HTMLButtonElement).dataset.tab!;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => (p as HTMLElement).style.display = 'none');
+      btn.classList.add('active');
+      (document.getElementById(`tab-${tab}`) as HTMLElement).style.display = 'block';
+    });
+  });
 
   function attachEvents() {
     document.getElementById('create-form')?.addEventListener('submit', handleCreate);
@@ -272,6 +299,82 @@ import Layout from "../layouts/Layout.astro";
       loadUsers();
     } catch {
       errEl.textContent = 'Error de conexión';
+    }
+  }
+
+  async function loadPsicologoAssignments() {
+    const container = document.getElementById('psicologo-assignments')!;
+    const loading = document.getElementById('assign-loading')!;
+    loading.style.display = 'block';
+    container.innerHTML = '';
+    try {
+      const res = await apiFetch('/api/psicologo/users');
+      if (!res.ok) { container.innerHTML = '<p class="form-error">Error cargando</p>'; loading.style.display = 'none'; return; }
+      const data: { psicologos: any[]; users: any[]; assignments: Record<number, number[]> } = await res.json();
+      loading.style.display = 'none';
+
+      const psicologos = data.psicologos;
+      const users = data.users;
+
+      if (psicologos.length === 0) {
+        container.innerHTML = '<p class="hint-text">No hay psicólogos registrados.</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="assign-table-wrap">
+          <table class="assign-table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Estado</th>
+                ${psicologos.map(p => `<th class="th-psicologo">${p.username}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${users.map(u => {
+                const assignedTo = psicologos.filter(p => data.assignments[p.id]?.includes(u.id));
+                const statusText = assignedTo.length === 0 ? 'Sin asignar' : assignedTo.map(p => p.username).join(', ');
+                const statusClass = assignedTo.length === 0 ? 'status-none' : 'status-assigned';
+                return `<tr>
+                  <td class="td-user">${u.username}</td>
+                  <td class="td-status"><span class="status-badge ${statusClass}">${statusText}</span></td>
+                  ${psicologos.map(p => {
+                    const isAssigned = data.assignments[p.id]?.includes(u.id);
+                    return `<td class="td-assign">
+                      <button type="button"
+                        class="assign-btn ${isAssigned ? 'assigned' : ''}"
+                        data-pid="${p.id}" data-uid="${u.id}" data-assigned="${isAssigned}"
+                        title="${isAssigned ? 'Desasignar de ' + p.username : 'Asignar a ' + p.username}">
+                        ${isAssigned ? '✓' : '–'}
+                      </button>
+                    </td>`;
+                  }).join('')}
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.querySelectorAll('.assign-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          const pid = Number(el.dataset.pid);
+          const uid = Number(el.dataset.uid);
+          const isAssigned = el.dataset.assigned === 'true';
+          const endpoint = isAssigned ? '/api/psicologo/unassign' : '/api/psicologo/assign';
+          const res = await apiFetch(endpoint, {
+            method: 'POST',
+            body: JSON.stringify({ psicologoId: pid, userId: uid })
+          });
+          if (res.ok) loadPsicologoAssignments();
+          else { const d = await res.json(); alert(d.error || 'Error'); }
+        });
+      });
+    } catch {
+      container.innerHTML = '<p class="form-error">Error de conexión</p>';
+      loading.style.display = 'none';
     }
   }
 </script>
@@ -511,4 +614,156 @@ import Layout from "../layouts/Layout.astro";
   .edit-form { display: flex; flex-direction: column; gap: 1rem; }
   .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
   .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; }
+
+  .admin-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #252535;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    color: #6b7280;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.6rem 1.25rem;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .tab-btn:hover { color: #a5b4fc; }
+
+  .tab-btn.active {
+    color: #a5b4fc;
+    border-bottom-color: #5b8cf9;
+  }
+
+  .section-hint { color: #6b7280; font-size: 0.82rem; margin: -0.5rem 0 1rem; }
+
+  .psicologo-card {
+    background: #1f1f35;
+    border: 1px solid #252535;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .psicologo-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .psicologo-name { font-weight: 700; color: #a5b4fc; font-size: 0.92rem; }
+
+  .patient-count { font-size: 0.78rem; color: #6b7280; }
+
+  .user-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .chip {
+    background: #13131f;
+    border: 1px solid #2a2a35;
+    border-radius: 20px;
+    color: #6b7280;
+    font-size: 0.78rem;
+    cursor: pointer;
+    padding: 0.3rem 0.75rem;
+    transition: all 0.15s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .chip:hover { border-color: #5b8cf9; color: #a5b4fc; }
+
+  .chip-assigned {
+    background: rgba(91,143,249,0.15);
+    border-color: rgba(91,143,249,0.4);
+    color: #93c5fd;
+  }
+
+  .chip-assigned:hover { border-color: #f87171; color: #f87171; }
+
+  .hint-text { color: #4b5563; font-size: 0.85rem; font-style: italic; }
+
+  .tab-panel { display: block; }
+
+  .assign-table-wrap { overflow-x: auto; }
+
+  .assign-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .assign-table th {
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.6rem 0.5rem;
+    border-bottom: 1px solid #252535;
+  }
+
+  .assign-table th:first-child, .assign-table th:nth-child(2) {
+    text-align: left;
+  }
+
+  .th-psicologo { white-space: nowrap; }
+
+  .assign-table td {
+    padding: 0.6rem 0.5rem;
+    border-bottom: 1px solid #1a1a2a;
+    vertical-align: middle;
+  }
+
+  .assign-table tr:last-child td { border-bottom: none; }
+  .assign-table tr:hover td { background: #1a1a2a; }
+
+  .td-user { font-weight: 600; color: #f3f4f6; white-space: nowrap; }
+  .td-status { font-size: 0.75rem; }
+
+  .status-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .status-none { background: rgba(107,114,128,0.15); color: #6b7280; }
+  .status-assigned { background: rgba(91,143,249,0.12); color: #93c5fd; }
+
+  .td-assign { text-align: center; }
+
+  .assign-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #13131f;
+    border: 1px solid #2a2a35;
+    border-radius: 8px;
+    color: #4b5563;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .assign-btn:hover { border-color: #5b8cf9; color: #a5b4fc; }
+  .assign-btn.assigned { background: rgba(91,143,249,0.15); border-color: rgba(91,143,249,0.4); color: #93c5fd; }
+  .assign-btn.assigned:hover { border-color: #f87171; color: #f87171; background: rgba(248,113,113,0.1); }
 </style>

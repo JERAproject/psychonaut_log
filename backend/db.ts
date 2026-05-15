@@ -134,4 +134,41 @@ if (!journalColNames.includes("user_id")) {
   db.prepare("ALTER TABLE journal_entries ADD COLUMN user_id INTEGER").run();
 }
 
+const practiceTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='practices'").all();
+if (practiceTables.length === 0) {
+  db.exec(`
+    CREATE TABLE practices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      slug TEXT NOT NULL,
+      label TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, slug)
+    )
+  `);
+  const defaultPractices = [
+    { slug: "mindfulness", label: "Mindfulness" },
+    { slug: "trataka", label: "Trataka" },
+    { slug: "visualizacion", label: "Visualización Guiada" },
+    { slug: "shambhavi", label: "Third Eye Gazing" },
+    { slug: "escritura", label: "Escritura Reflectiva" },
+  ];
+  const insert = db.prepare("INSERT OR IGNORE INTO practices (user_id, slug, label) VALUES (NULL, ?, ?)");
+  for (const p of defaultPractices) insert.run(p.slug, p.label);
+}
+
+const psicologoTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='psicologo_users'").all();
+if (psicologoTables.length === 0) {
+  db.exec(`
+    CREATE TABLE psicologo_users (
+      psicologo_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (psicologo_id, user_id),
+      FOREIGN KEY (psicologo_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+}
+
 export default db;

@@ -45,10 +45,6 @@ export function renderEntryDashboard(energy_pre, valence_pre, energy_post, valen
   paths += `<text x="${cx}" y="${H - padding + 14}" text-anchor="middle" ${labelStyle}>0</text>`;
   paths += `<text x="${padding - 8}" y="${cy + 4}" text-anchor="middle" ${labelStyle}>0</text>`;
 
-  // Axis names
-  paths += `<text x="${cx}" y="${H - 8}" text-anchor="middle" style="font-size:10px;fill:#6b7280;font-family:monospace;font-weight:600;">Energy</text>`;
-  paths += `<text x="${padding - 20}" y="${cy + 20}" text-anchor="middle" style="font-size:10px;fill:#6b7280;font-family:monospace;font-weight:600;writing-mode:vertical-rl;transform:rotate(180deg);">Valence</text>`;
-
   // Connection line
   if (preHas && postHas) {
     const x1 = toX(valence_pre);
@@ -97,7 +93,7 @@ export function renderEntryDashboard(energy_pre, valence_pre, energy_post, valen
     const eColor = energy_pre >= 0 ? '#22c55e' : '#ef4444';
     const vColor = valence_pre >= 0 ? '#22c55e' : '#ef4444';
     infoHtml += `
-      <div style="background:#16162a;border-radius:8px;padding:0.5rem;border:1px solid rgba(96,165,250,0.2);">
+      <div style="background:#16162a;border-radius:8px;padding:0.5rem;border:1px solid rgba(96,165,250,0.2);flex:1;">
         <div style="font-size:0.65rem;color:#60a5fa;font-weight:600;margin-bottom:4px;">PRE</div>
         <div style="font-size:0.7rem;color:#9ca3af;">E: <span style="color:${eColor};font-weight:600;">${formatVal(energy_pre)}</span></div>
         <div style="font-size:0.7rem;color:#9ca3af;">V: <span style="color:${vColor};font-weight:600;">${formatVal(valence_pre)}</span></div>
@@ -108,7 +104,7 @@ export function renderEntryDashboard(energy_pre, valence_pre, energy_post, valen
     const eColor = energy_post >= 0 ? '#22c55e' : '#ef4444';
     const vColor = valence_post >= 0 ? '#22c55e' : '#ef4444';
     infoHtml += `
-      <div style="background:#16162a;border-radius:8px;padding:0.5rem;border:1px solid rgba(244,114,182,0.2);">
+      <div style="background:#16162a;border-radius:8px;padding:0.5rem;border:1px solid rgba(244,114,182,0.2);flex:1;">
         <div style="font-size:0.65rem;color:#f472b6;font-weight:600;margin-bottom:4px;">POST</div>
         <div style="font-size:0.7rem;color:#9ca3af;">E: <span style="color:${eColor};font-weight:600;">${formatVal(energy_post)}</span></div>
         <div style="font-size:0.7rem;color:#9ca3af;">V: <span style="color:${vColor};font-weight:600;">${formatVal(valence_post)}</span></div>
@@ -121,7 +117,7 @@ export function renderEntryDashboard(energy_pre, valence_pre, energy_post, valen
     const dEColor = dE > 0 ? '#22c55e' : dE < 0 ? '#ef4444' : '#6b7280';
     const dVColor = dV > 0 ? '#22c55e' : dV < 0 ? '#ef4444' : '#6b7280';
     infoHtml += `
-      <div style="background:#0d0d1a;border-radius:8px;padding:0.5rem;border:1px solid #2a2a35;">
+      <div style="background:#0d0d1a;border-radius:8px;padding:0.5rem;border:1px solid #2a2a35;flex:1;">
         <div style="font-size:0.65rem;color:#a78bfa;font-weight:600;margin-bottom:4px;">Δ</div>
         <div style="font-size:0.7rem;color:#9ca3af;">E: <span style="color:${dEColor};font-weight:600;">${dE > 0 ? '+' : ''}${dE}</span></div>
         <div style="font-size:0.7rem;color:#9ca3af;">V: <span style="color:${dVColor};font-weight:600;">${dV > 0 ? '+' : ''}${dV}</span></div>
@@ -131,19 +127,21 @@ export function renderEntryDashboard(energy_pre, valence_pre, energy_post, valen
 
   return `
     <div style="background:#0d0d1a;border-radius:12px;padding:1rem;margin-top:0.5rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;">
         <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#6b7280;">Energy × Valence</span>
         <div style="display:flex;gap:0.75rem;font-size:0.65rem;color:#9ca3af;">
           <span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:#60a5fa;"></span>Pre</span>
           <span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:#f472b6;"></span>Post</span>
         </div>
       </div>
-      <div style="display:flex;gap:0.75rem;align-items:flex-start;">
-        <svg width="${W}" height="${H}" style="overflow:visible;">
-          <rect x="0" y="0" width="${W}" height="${H}" fill="#0f0f1a" rx="8"/>
-          ${paths}
-        </svg>
-        <div style="display:flex;flex-direction:column;gap:0.4rem;min-width:80px;justify-content:center;">
+      <div style="display:flex;gap:0.75rem;align-items:flex-start;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-width:100%;display:block;">
+            <rect x="0" y="0" width="${W}" height="${H}" fill="#0f0f1a" rx="8"/>
+            ${paths}
+          </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.4rem;min-width:70px;flex:1;max-width:120px;">
           ${infoHtml}
         </div>
       </div>

@@ -289,18 +289,25 @@ app.post("/api/log", (req, res) => {
 
 app.get("/api/journal", (req, res) => {
   const role = req.user?.role;
-  const isAdminOrPsicologo = role === "admin" || role === "psicologo";
+  const isAdmin = role === "admin";
+  const isPsicologo = role === "psicologo";
   const userId = req.user?.id ?? null;
 
   let query = `SELECT j.id, j.fecha, j.hora, j.duracion, j.tipo_practica,
             j.estado_previo, j.fenomenologia_somatica, j.fenomenologia_cognitiva,
             j.cuerpo, j.insight, j.integracion, j.estado_post,
             j.energy_pre, j.valence_pre, j.energy_post, j.valence_post,
-            j.created_at, j.user_id, ${isAdminOrPsicologo ? "u.username" : "NULL as username"}
-      FROM journal_entries j ${isAdminOrPsicologo ? "LEFT JOIN users u ON j.user_id = u.id" : ""} WHERE 1=1`;
+            j.created_at, j.user_id, ${(isAdmin || isPsicologo) ? "u.username" : "NULL as username"}
+      FROM journal_entries j ${(isAdmin || isPsicologo) ? "LEFT JOIN users u ON j.user_id = u.id" : ""} WHERE 1=1`;
   const params: any[] = [];
 
-  if (!isAdminOrPsicologo) {
+  if (isAdmin) {
+  } else if (isPsicologo) {
+    query += ` AND (j.user_id = ? OR j.user_id IS NULL OR j.user_id IN (
+      SELECT user_id FROM psicologo_users WHERE psicologo_id = ?
+    ))`;
+    params.push(userId, userId);
+  } else {
     query += " AND (j.user_id = ? OR j.user_id IS NULL)";
     params.push(userId);
   }
@@ -804,6 +811,76 @@ app.get("/api/admin/entries", (req, res) => {
   query += " ORDER BY j.fecha DESC, j.hora DESC";
   const entries = db.prepare(query).all(...params);
   res.json(entries);
+});
+
+// ── Practices (per user) ──────────────────────────────────
+
+app.get("/api/practices", (req, res) => {
+  const userId = req.user?.id ?? null;
+  const practices = db.prepare(
+    "SELECT slug, label FROM practices WHERE user_id IS NULL OR user_id = ? ORDER BY user_id DESC, label ASC"
+  ).all(userId);
+  res.json(practices);
+});
+
+app.post("/api/practices", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "unauthorized" });
+  const { slug, label } = req.body;
+  if (!slug || !label) return res.status(400).json({ error: "slug and label required" });
+  const slugified = slug.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+  const existing = db.prepare("SELECT id FROM practices WHERE (user_id = ? OR user_id IS NULL) AND slug = ?").get(req.user.id, slugified) as any;
+  if (existing) return res.status(409).json({ error: "practice already exists" });
+  db.prepare("INSERT INTO practices (user_id, slug, label) VALUES (?, ?, ?)").run(req.user.id, slugified, label.trim());
+  res.status(201).json({ ok: true, slug: slugified, label: label.trim() });
+});
+
+app.delete("/api/practices/:slug", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "unauthorized" });
+  const { slug } = req.params;
+  const deleted = db.prepare("DELETE FROM practices WHERE user_id = ? AND slug = ?").run(req.user.id, slug);
+  if (deleted.changes === 0) return res.status(404).json({ error: "practice not found or not yours" });
+  res.json({ ok: true });
+});
+
+// ── Psicologo-User Assignments ───────────────────────────
+
+app.get("/api/psicologo/users", (req, res) => {
+  if (!req.user || req.user.role !== "admin") return res.status(403).json({ error: "admin only" });
+  const psicologos = db.prepare(
+    "SELECT id, username FROM users WHERE role = 'psicologo' ORDER BY username"
+  ).all() as any[];
+  const users = db.prepare(
+    "SELECT id, username FROM users WHERE role = 'user' ORDER BY username"
+  ).all() as any[];
+  const assignments = db.prepare(
+    "SELECT psicologo_id, user_id FROM psicologo_users"
+  ).all() as any[];
+  const map: Record<number, number[]> = {};
+  for (const a of assignments) {
+    if (!map[a.psicologo_id]) map[a.psicologo_id] = [];
+    map[a.psicologo_id].push(a.user_id);
+  }
+  res.json({ psicologos, users, assignments: map });
+});
+
+app.post("/api/psicologo/assign", (req, res) => {
+  if (!req.user || req.user.role !== "admin") return res.status(403).json({ error: "admin only" });
+  const { psicologoId, userId } = req.body;
+  if (!psicologoId || !userId) return res.status(400).json({ error: "psicologoId and userId required" });
+  const psicologo = db.prepare("SELECT id FROM users WHERE id = ? AND role = 'psicologo'").get(psicologoId);
+  if (!psicologo) return res.status(400).json({ error: "invalid psicologo" });
+  const targetUser = db.prepare("SELECT id FROM users WHERE id = ? AND role = 'user'").get(userId);
+  if (!targetUser) return res.status(400).json({ error: "invalid user" });
+  db.prepare("INSERT OR IGNORE INTO psicologo_users (psicologo_id, user_id) VALUES (?, ?)").run(psicologoId, userId);
+  res.json({ ok: true });
+});
+
+app.post("/api/psicologo/unassign", (req, res) => {
+  if (!req.user || req.user.role !== "admin") return res.status(403).json({ error: "admin only" });
+  const { psicologoId, userId } = req.body;
+  if (!psicologoId || !userId) return res.status(400).json({ error: "psicologoId and userId required" });
+  db.prepare("DELETE FROM psicologo_users WHERE psicologo_id = ? AND user_id = ?").run(psicologoId, userId);
+  res.json({ ok: true });
 });
 
 // ── Start ───────────────────────────────────────────────

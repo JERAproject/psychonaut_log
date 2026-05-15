@@ -37,17 +37,17 @@ import Layout from '../layouts/Layout.astro';
             </label>
           </div>
 
-          <label>
-            Tipo de Práctica
-            <select name="tipo_practica" required aria-required="true">
-              <option value="">Selecciona una práctica</option>
-              <option value="mindfulness">Mindfulness</option>
-              <option value="trataka">Trataka</option>
-              <option value="visualizacion">Visualización Guiada</option>
-              <option value="shambhavi">Third Eye Gazing (Shambhavi)</option>
-              <option value="escritura">Escritura Reflectiva</option>
-            </select>
-          </label>
+          <div class="tipo-practica-row">
+            <label>
+              Tipo de Práctica
+              <select name="tipo_practica" id="tipo-practica-select" required aria-required="true">
+                <option value="">Cargando...</option>
+              </select>
+            </label>
+            <button type="button" id="manage-practices-btn" class="btn-icon-small" title="Gestionar prácticas" aria-label="Gestionar prácticas">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
         </fieldset>
 
         <fieldset>
@@ -155,6 +155,30 @@ import Layout from '../layouts/Layout.astro';
   </main>
 </Layout>
 
+<div id="practice-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal practice-modal">
+    <div class="modal-hd">
+      <h3>Gestionar Prácticas</h3>
+      <button id="close-practice-modal" class="mc" aria-label="Cerrar">&times;</button>
+    </div>
+    <div class="add-practice-form-wrap">
+      <h4>Nueva práctica</h4>
+      <form id="add-practice-form" class="apf">
+        <input type="text" name="slug" placeholder="slug (ej: respiracion_circular)" required maxlength="40" />
+        <input type="text" name="label" placeholder="Nombre visible (ej: Respiración Circular)" required maxlength="60" />
+        <button type="submit" class="btn-blue-sm">Agregar</button>
+        <div id="add-practice-err" class="ferr"></div>
+        <div id="add-practice-succ" class="fsucc"></div>
+      </form>
+    </div>
+    <div class="practice-list-wrap">
+      <h4>Prácticas disponibles</h4>
+      <div id="practice-list"></div>
+      <div id="practice-list-err" class="ferr"></div>
+    </div>
+  </div>
+</div>
+
 <script>
   const tabs = document.querySelectorAll(".tab-btn");
   const contents = document.querySelectorAll(".tab-content");
@@ -183,6 +207,91 @@ import Layout from '../layouts/Layout.astro';
       }
     });
   });
+
+  // ── Practices CRUD ──────────────────────────────────────
+  const TOKEN_KEY = 'psy_token';
+  function getApiBase(): string {
+    const meta = document.querySelector('meta[name="api-base"]');
+    return meta ? meta.getAttribute('content') || '' : 'http://localhost:3001';
+  }
+  function getToken(): string | null { return localStorage.getItem(TOKEN_KEY); }
+
+  async function apiFetch(path: string, opts: RequestInit = {}) {
+    const token = getToken();
+    return fetch(`${getApiBase()}${path}`, {
+      ...opts,
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...opts.headers }
+    });
+  }
+
+  async function loadPractices() {
+    const select = document.getElementById('tipo-practica-select') as HTMLSelectElement;
+    try {
+      const res = await apiFetch('/api/practices');
+      if (!res.ok) { select.innerHTML = '<option value="">Error cargando</option>'; return; }
+      const practices: { slug: string; label: string }[] = await res.json();
+      select.innerHTML = '<option value="">Selecciona una práctica</option>' +
+        practices.map(p => `<option value="${p.slug}">${p.label}</option>`).join('');
+    } catch {
+      select.innerHTML = '<option value="">Error de conexión</option>';
+    }
+  }
+
+  function openPracticeModal() {
+    const overlay = document.getElementById('practice-modal')!;
+    overlay.classList.remove('hidden');
+    loadPracticeList();
+  }
+
+  async function loadPracticeList() {
+    const list = document.getElementById('practice-list')!;
+    const listErr = document.getElementById('practice-list-err')!;
+    listErr.textContent = '';
+    try {
+      const res = await apiFetch('/api/practices');
+      const practices: { slug: string; label: string }[] = await res.ok ? await res.json() : [];
+      list.innerHTML = practices.map(p => `
+        <div class="practice-item">
+          <span class="practice-label">${p.label}</span>
+          <span class="practice-slug">${p.slug}</span>
+          <button type="button" class="btn-del-practice" data-slug="${p.slug}" title="Eliminar">✕</button>
+        </div>
+      `).join('');
+      list.querySelectorAll('.btn-del-practice').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const slug = (e.currentTarget as HTMLButtonElement).dataset.slug!;
+          if (!confirm(`¿Eliminar la práctica "${slug}"?`)) return;
+          const res = await apiFetch(`/api/practices/${slug}`, { method: 'DELETE' });
+          if (res.ok) { loadPracticeList(); loadPractices(); }
+          else { const d = await res.json(); listErr.textContent = d.error || 'Error eliminando'; }
+        });
+      });
+    } catch { listErr.textContent = 'Error de conexión'; }
+  }
+
+  document.getElementById('manage-practices-btn')?.addEventListener('click', openPracticeModal);
+  document.getElementById('close-practice-modal')?.addEventListener('click', () => document.getElementById('practice-modal')?.classList.add('hidden'));
+  document.getElementById('practice-modal')?.addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden'); });
+
+  document.getElementById('add-practice-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const fd = new FormData(form);
+    const slug = fd.get('slug') as string;
+    const label = fd.get('label') as string;
+    const errEl = document.getElementById('add-practice-err')!;
+    const succEl = document.getElementById('add-practice-succ')!;
+    errEl.textContent = ''; succEl.textContent = '';
+    const res = await apiFetch('/api/practices', { method: 'POST', body: JSON.stringify({ slug, label }) });
+    const d = await res.json();
+    if (!res.ok) { errEl.textContent = d.error || 'Error'; return; }
+    succEl.textContent = `Práctica "${label}" creada`;
+    form.reset();
+    loadPracticeList();
+    loadPractices();
+  });
+
+  loadPractices();
 
   const form = document.getElementById("journal-form") as HTMLFormElement;
   const btn = form?.querySelector(".submit-btn") as HTMLButtonElement;
@@ -270,48 +379,74 @@ import Layout from '../layouts/Layout.astro';
   .practica-page {
     max-width: 800px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
     min-height: 100vh;
+  }
+
+  @media (min-width: 640px) {
+    .practica-page {
+      padding: 2rem 1.5rem;
+    }
   }
 
   .page-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .page-header {
+      margin-bottom: 2rem;
+    }
   }
 
   .page-header h1 {
-    font-size: 2.5rem;
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
     font-weight: 700;
-    margin: 0 0 0.75rem;
+    margin: 0 0 0.5rem;
     background: linear-gradient(135deg, #fefefe 0%, #a5b4fc 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
+  @media (min-width: 640px) {
+    .page-header h1 {
+      margin-bottom: 0.75rem;
+    }
+  }
+
   .subtitle {
     color: #6b7280;
-    font-size: 1.1rem;
+    font-size: clamp(0.875rem, 2.5vw, 1.1rem);
     margin: 0;
   }
 
   .tabs {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     background: #111827;
     padding: 0.35rem;
     border-radius: 12px;
   }
 
+  @media (min-width: 640px) {
+    .tabs {
+      margin-bottom: 2rem;
+    }
+  }
+
   .tab-btn {
     flex: 1;
-    padding: 0.875rem 1rem;
+    padding: 0.75rem 0.5rem;
     background: transparent;
     border: none;
     border-radius: 10px;
     color: #9ca3af;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
@@ -320,7 +455,7 @@ import Layout from '../layouts/Layout.astro';
 
   @media (min-width: 640px) {
     .tab-btn {
-      padding: 0.75rem 1.25rem;
+      padding: 0.875rem 1.25rem;
       font-size: 0.95rem;
     }
   }
@@ -345,55 +480,94 @@ import Layout from '../layouts/Layout.astro';
   .data-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .data-form {
+      gap: 1.5rem;
+    }
   }
 
   fieldset {
     border: 1px solid #2a2a35;
-    border-radius: 16px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 1rem;
     background: linear-gradient(145deg, #16162a 0%, #1a1a2e 100%);
+  }
+
+  @media (min-width: 640px) {
+    fieldset {
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
   }
 
   legend {
     font-weight: 700;
     padding: 0 0.5rem;
     color: #fafafa;
+    font-size: 0.9rem;
+  }
+
+  @media (min-width: 640px) {
+    legend {
+      font-size: 1rem;
+    }
   }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 
-  @media (max-width: 640px) {
+  @media (min-width: 640px) {
     .grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
     }
   }
 
   label {
     display: block;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: #ccc;
+  }
+
+  @media (min-width: 640px) {
+    label {
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
   }
 
   input,
   select,
   textarea {
     width: 100%;
-    padding: 0.7rem 0.8rem;
-    margin-top: 0.3rem;
+    padding: 0.65rem 0.75rem;
+    margin-top: 0.25rem;
     border: 1px solid #333;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 0.95rem;
     background: #0d0d1a;
     color: #fefefe;
     box-sizing: border-box;
     transition: border-color 0.2s;
+    min-height: 44px;
+  }
+
+  @media (min-width: 640px) {
+    input,
+    select,
+    textarea {
+      padding: 0.7rem 0.8rem;
+      margin-top: 0.3rem;
+      font-size: 0.95rem;
+    }
   }
 
   input:focus,
@@ -405,20 +579,34 @@ import Layout from '../layouts/Layout.astro';
 
   textarea {
     resize: vertical;
-    min-height: 8rem;
+    min-height: 6rem;
+  }
+
+  @media (min-width: 640px) {
+    textarea {
+      min-height: 8rem;
+    }
   }
 
   .submit-btn {
     width: 100%;
     background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: #fff;
-    padding: 0.9rem 1.25rem;
+    padding: 1rem;
     border: none;
     border-radius: 12px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    min-height: 52px;
+  }
+
+  @media (min-width: 640px) {
+    .submit-btn {
+      padding: 0.9rem 1.25rem;
+      font-size: 1rem;
+    }
   }
 
   .submit-btn:hover:not(:disabled) {
@@ -433,21 +621,23 @@ import Layout from '../layouts/Layout.astro';
 
   .toast {
     position: fixed;
-    top: 1.5rem;
-    right: 1.5rem;
-    padding: 0.8rem 1.2rem;
+    top: max(1rem, env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%) translateY(-120%);
+    padding: 0.75rem 1rem;
     border-radius: 10px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: #fff;
     z-index: 9999;
-    transform: translateX(120%);
     transition: transform 0.3s ease;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    max-width: calc(100% - 2rem);
+    text-align: center;
   }
 
   .toast-visible {
-    transform: translateX(0);
+    transform: translateX(-50%) translateY(0);
   }
 
   .toast-success {
@@ -460,50 +650,89 @@ import Layout from '../layouts/Layout.astro';
 
   .helper {
     display: block;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #6b7280;
     font-weight: 400;
     margin-top: 0.25rem;
     font-style: italic;
   }
 
+  @media (min-width: 640px) {
+    .helper {
+      font-size: 0.75rem;
+    }
+  }
+
   .sliders-container {
     background: #0d0d1a;
-    border-radius: 12px;
-    padding: 1rem;
-    margin: 1rem 0;
+    border-radius: 10px;
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+  }
+
+  @media (min-width: 640px) {
+    .sliders-container {
+      border-radius: 12px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
   }
 
   .sliders-hint {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #6b7280;
-    margin: 0 0 1rem;
+    margin: 0 0 0.75rem;
     font-style: italic;
   }
 
+  @media (min-width: 640px) {
+    .sliders-hint {
+      font-size: 0.75rem;
+      margin-bottom: 1rem;
+    }
+  }
+
   .slider-group {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
   }
 
   .slider-group:last-child {
     margin-bottom: 0;
   }
 
+  @media (min-width: 640px) {
+    .slider-group {
+      margin-bottom: 1rem;
+    }
+  }
+
   .slider-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  @media (min-width: 640px) {
+    .slider-header {
+      margin-bottom: 0.5rem;
+    }
   }
 
   .slider-title {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #d1d5db;
   }
 
+  @media (min-width: 640px) {
+    .slider-title {
+      font-size: 0.85rem;
+    }
+  }
+
   .slider-value {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: #5b8ff9;
     min-width: 30px;
@@ -545,9 +774,265 @@ import Layout from '../layouts/Layout.astro';
   .slider-labels {
     display: flex;
     justify-content: space-between;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: #6b7280;
-    margin-top: 0.25rem;
+    margin-top: 0.2rem;
   }
 
+  @media (min-width: 640px) {
+    .slider-labels {
+      font-size: 0.65rem;
+      margin-top: 0.25rem;
+    }
+  }
+
+  .tipo-practica-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
+  .tipo-practica-row label {
+    flex: 1;
+  }
+
+  .btn-icon-small {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #1f1f35;
+    border: 1px solid #2a2a35;
+    border-radius: 8px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-icon-small:hover {
+    border-color: #5b8cf9;
+    color: #a5b4fc;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 200;
+  }
+
+  @media (min-width: 640px) {
+    .modal-overlay {
+      align-items: center;
+    }
+  }
+
+  .modal-overlay.hidden {
+    display: none;
+  }
+
+  .practice-modal {
+    background: #1a1a2a;
+    border: 1px solid #2a2a35;
+    border-radius: 16px 16px 0 0;
+    padding: 1.25rem;
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+
+  @media (min-width: 640px) {
+    .practice-modal {
+      border-radius: 16px;
+      padding: 1.5rem;
+      animation: none;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .modal-hd {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .modal-hd {
+      margin-bottom: 1.25rem;
+    }
+  }
+
+  .modal-hd h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #f9fafb;
+  }
+
+  @media (min-width: 640px) {
+    .modal-hd h3 {
+      font-size: 1.1rem;
+    }
+  }
+
+  .mc {
+    background: none;
+    border: none;
+    color: #6b7280;
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mc:hover {
+    color: #f9fafb;
+  }
+
+  .add-practice-form-wrap,
+  .practice-list-wrap {
+    margin-bottom: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .add-practice-form-wrap,
+    .practice-list-wrap {
+      margin-bottom: 1.25rem;
+    }
+  }
+
+  .add-practice-form-wrap h4,
+  .practice-list-wrap h4 {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+    margin: 0 0 0.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .add-practice-form-wrap h4,
+    .practice-list-wrap h4 {
+      font-size: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+  }
+
+  .apf {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .apf input {
+    padding: 0.65rem 0.75rem;
+    background: #13131f;
+    border: 1px solid #2a2a35;
+    border-radius: 8px;
+    color: #f9fafb;
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    min-height: 44px;
+  }
+
+  .apf input:focus {
+    border-color: #5b8cf9;
+  }
+
+  .btn-blue-sm {
+    padding: 0.6rem 1rem;
+    background: #5b8cf9;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    align-self: flex-start;
+    min-height: 40px;
+  }
+
+  .btn-blue-sm:hover {
+    opacity: 0.85;
+  }
+
+  .ferr {
+    color: #f87171;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    min-height: 1.2em;
+  }
+
+  .fsucc {
+    color: #34d399;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    min-height: 1.2em;
+  }
+
+  .practice-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background 0.15s;
+  }
+
+  .practice-item:hover {
+    background: #1f1f35;
+  }
+
+  .practice-label {
+    flex: 1;
+    font-size: 0.85rem;
+    color: #d1d5db;
+  }
+
+  .practice-slug {
+    font-size: 0.7rem;
+    color: #4b5563;
+    font-family: monospace;
+  }
+
+  .btn-del-practice {
+    background: none;
+    border: 1px solid #2a2a35;
+    border-radius: 6px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.7rem;
+    transition: all 0.15s;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .btn-del-practice:hover {
+    border-color: #f87171;
+    color: #f87171;
+  }
 </style>

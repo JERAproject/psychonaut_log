@@ -1,6 +1,6 @@
 export function render3DChart(data) {
   if (!data || !Array.isArray(data) || data.length === 0) {
-    return '<div style="text-align:center;color:#6b7280;padding:2rem;">No hay suficientes datos para mostrar el gráfico</div>';
+    return '<div style="text-align:center;color:#6b7280;padding:2rem;font-size:0.85rem;">No hay suficientes datos para mostrar el gráfico</div>';
   }
 
   function formatDate(dateStr) {
@@ -9,24 +9,6 @@ export function render3DChart(data) {
       const d = new Date(dateStr + "T00:00:00");
       return d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "2-digit" });
     } catch { return dateStr; }
-  }
-
-  function hexToHsl(R, G, B) {
-    const r = R / 255, g = G / 255, b = B / 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
-    if (max === min) {
-      h = s = 0;
-    } else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
-      }
-    }
-    return { h: h * 360, s: s * 100, l: l * 100 };
   }
 
   function hslToHex(h, s, l) {
@@ -62,18 +44,19 @@ export function render3DChart(data) {
   const totalEntries = data.length;
 
   let html = `
-    <svg width="${W}" height="${H}" style="overflow:visible;">
-      <defs>
-        <linearGradient id="legendGradPre" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#2563eb"/>
-          <stop offset="100%" stop-color="#93c5fd"/>
-        </linearGradient>
-        <linearGradient id="legendGradPost" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#701a5e"/>
-          <stop offset="100%" stop-color="#f9a8d4"/>
-        </linearGradient>
-      </defs>
-      <rect x="0" y="0" width="${W}" height="${H}" fill="#0f0f1a" rx="8"/>
+    <div class="chart-container" style="width:100%;overflow:hidden;position:relative;">
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;max-width:100%;">
+        <defs>
+          <linearGradient id="legendGradPre" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#2563eb"/>
+            <stop offset="100%" stop-color="#93c5fd"/>
+          </linearGradient>
+          <linearGradient id="legendGradPost" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#701a5e"/>
+            <stop offset="100%" stop-color="#f9a8d4"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="${W}" height="${H}" fill="#0f0f1a" rx="8"/>
   `;
 
   // Grid
@@ -137,31 +120,48 @@ export function render3DChart(data) {
   });
 
   html += `
+    </svg>
     <style>
-      .journal-chart svg .pt { cursor: pointer; }
+      .chart-container svg .pt { cursor: pointer; }
+      @media (max-width: 640px) {
+        .chart-container { min-height: 200px; }
+      }
     </style>
-    <div class="chart-tt" id="ctt" style="display:none;position:fixed;background:#1f1f35;color:#e5e7eb;padding:0.3rem 0.6rem;border-radius:6px;font-size:11px;font-family:monospace;pointer-events:none;z-index:9999;border:1px solid #374151;box-shadow:0 4px 12px rgba(0,0,0,0.4);"></div>
+    <div class="chart-tt" id="ctt" style="display:none;position:fixed;background:#1f1f35;color:#e5e7eb;padding:0.4rem 0.6rem;border-radius:6px;font-size:11px;font-family:monospace;pointer-events:none;z-index:9999;border:1px solid #374151;box-shadow:0 4px 12px rgba(0,0,0,0.4);max-width:200px;word-wrap:break-word;"></div>
     <script>
       (function(){
         var tt=document.getElementById('ctt');
         if(!tt)return;
-        document.querySelectorAll('.journal-chart .pt').forEach(function(el){
+        document.querySelectorAll('.chart-container .pt').forEach(function(el){
           el.addEventListener('mouseover',function(e){
             tt.textContent=el.getAttribute('data-tip')||'';
             tt.style.display='block';
           });
           el.addEventListener('mousemove',function(e){
-            tt.style.left=(e.clientX+12)+'px';
+            var x=e.clientX+12,w=tt.offsetWidth,winW=window.innerWidth;
+            if(x+w>winW)x=e.clientX-12-w;
+            tt.style.left=x+'px';
             tt.style.top=(e.clientY-28)+'px';
           });
           el.addEventListener('mouseout',function(){
             tt.style.display='none';
           });
+          el.addEventListener('touchstart',function(e){
+            e.preventDefault();
+            tt.textContent=el.getAttribute('data-tip')||'';
+            tt.style.display='block';
+            var touch=e.touches[0];
+            tt.style.left=(touch.clientX+12)+'px';
+            tt.style.top=(touch.clientY-28)+'px';
+          });
+        });
+        document.addEventListener('touchend',function(){
+          tt.style.display='none';
         });
       })();
     </script>
   `;
 
-  html += '</svg>';
+  html += '</div>';
   return html;
 }

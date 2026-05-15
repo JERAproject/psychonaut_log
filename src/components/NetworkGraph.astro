@@ -8,7 +8,13 @@ const { centerNodeColor = "black" } = Astro.props;
 ---
 
 <div class="graph-container">
-  <svg id="network-graph"></svg>
+  <svg id="network-graph">
+    <foreignObject x="0" y="0" width="100%" height="100%" style="pointer-events: none;">
+      <div class="graph-text-overlay" xmlns="http://www.w3.org/1999/xhtml">
+        <slot />
+      </div>
+    </foreignObject>
+  </svg>
 </div>
 
 <script>
@@ -125,6 +131,11 @@ import * as d3 from 'd3';
 
     const { width, height } = svgElement.node()!.getBoundingClientRect();
     svgElement.attr("viewBox", [0, 0, width, height]);
+    
+    // Preserve foreignObject HTML before clearing
+    const foreignObjHtml = svgElement.select("foreignObject").html();
+    
+    // Clear all SVG content
     svgElement.selectAll("*").remove();
 
     // --- 2. Generación de Datos Complejos (Topología de "Islas") ---
@@ -215,6 +226,17 @@ import * as d3 from 'd3';
           .attr("y2", (d: any) => d.target.y);
       node.attr("transform", d => `translate(${d.x},${d.y})`);
     });
+
+    // Restore foreignObject (text overlay) as last layer so it's on top
+    if (foreignObjHtml) {
+      svgElement.append("foreignObject")
+        .attr("x", "0")
+        .attr("y", "0")
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .style("pointer-events", "none")
+        .html(foreignObjHtml);
+    }
   };
 
   // Inicialización
@@ -235,6 +257,40 @@ import * as d3 from 'd3';
     display: block;
     width: 100%;
     height: 100%;
+  }
+
+  .graph-text-overlay {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 1.5rem;
+    box-sizing: border-box;
+  }
+
+  .graph-text-overlay :global(p) {
+    font-size: clamp(0.75rem, 2vw, 0.95rem);
+    line-height: 1.6;
+    color: #d1d5db;
+    text-align: left;
+    margin: 0;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  @media (min-width: 768px) {
+    .graph-text-overlay {
+      padding: 2rem;
+      align-items: flex-end;
+    }
+
+    .graph-text-overlay :global(p) {
+      text-align: right;
+      max-width: 45%;
+    }
   }
 
   @media (min-width: 640px) {

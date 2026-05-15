@@ -515,19 +515,19 @@
           return headerHtml +
             '<div class="entries-container">' + userEntries.map(function(e) {
               var canEditEntry = canEdit(e);
-              var timeHtml = e.hora ? '<span class="entry-card-time">' + formatTime(e.hora) + '</span>' : '';
+              var dateTimeHtml = formatDate(e.fecha) + (e.hora ? ' · ' + formatTime(e.hora) : '');
               return '<div class="entry-card" data-id="' + e.id + '">' +
                 '<div class="entry-card-header">' +
-                '<div class="entry-card-meta">' +
-                '<span class="entry-card-date">' + formatDate(e.fecha) + '</span>' +
-                timeHtml +
-                '</div>' +
                 '<span class="entry-card-tecnica">' + getPracticeLabel(e.tipo_practica) + '</span>' +
+                '<span class="entry-card-datetime">' + dateTimeHtml + '</span>' +
                 '</div>' +
-                '<div class="entry-card-insight">' + (e.insight || "Sin insight registrado") + '</div>' +
-                '<div class="entry-card-actions">' +
+                '<div class="entry-card-body">' +
+                '<span class="entry-card-label">Insight:</span>' +
+                '<span class="entry-card-insight">' + (e.insight || "Sin insight registrado") + '</span>' +
+                '</div>' +
+                '<div class="entry-card-footer">' +
                 '<button class="action-btn view-btn" data-id="' + e.id + '" aria-label="Ver detalles">Ver</button>' +
-                (canEditEntry ? '<button class="action-btn edit-btn" data-id="' + e.id + '" aria-label="Editar">Editar</button><button class="action-btn delete-btn" data-id="' + e.id + '" aria-label="Eliminar">X</button>' : '') +
+                (canEditEntry ? '<button class="action-btn edit-btn" data-id="' + e.id + '" aria-label="Editar">Editar</button><button class="action-btn delete-btn" data-id="' + e.id + '" aria-label="Eliminar">Eliminar</button>' : '') +
                 '</div></div>';
             }).join("") + '</div>';
         }).join("");
@@ -825,6 +825,9 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   @media (min-width: 640px) {
@@ -834,38 +837,24 @@
     }
   }
 
+  /* CABECERA: Técnica (izq) | Fecha/Hora (der) */
   .entry-card-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.5rem;
-  }
-
-  .entry-card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .entry-card-date {
-    font-weight: 600;
-    color: #e5e7eb;
-    font-size: 0.9rem;
-  }
-
-  .entry-card-time {
-    font-size: 0.75rem;
-    color: #6b7280;
+    flex-wrap: wrap;
   }
 
   .entry-card-tecnica {
     display: inline-block;
-    padding: 0.25rem 0.5rem;
-    background: linear-gradient(135deg, #5b8ff922, #8b5cf622);
+    padding: 0.25rem 0.6rem;
+    background: linear-gradient(135deg, rgba(91, 143, 249, 0.15), rgba(139, 92, 246, 0.15));
     color: #a5b4fc;
     border-radius: 6px;
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
 
   @media (min-width: 640px) {
@@ -875,8 +864,41 @@
     }
   }
 
+  .entry-card-datetime {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-align: right;
+  }
+
+  @media (min-width: 640px) {
+    .entry-card-datetime {
+      font-size: 0.8rem;
+    }
+  }
+
+  /* CUERPO: Insight */
+  .entry-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .entry-card-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #5b8ff9;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  @media (min-width: 640px) {
+    .entry-card-label {
+      font-size: 0.75rem;
+    }
+  }
+
   .entry-card-insight {
-    color: #9ca3af;
+    color: #d1d5db;
     font-size: 0.85rem;
     line-height: 1.5;
     display: -webkit-box;
@@ -891,39 +913,53 @@
     }
   }
 
-  .entry-card-actions {
+  /* PIE: Botones de acción */
+  .entry-card-footer {
     display: flex;
     gap: 0.5rem;
     margin-top: 0.25rem;
+    flex-wrap: wrap;
   }
 
   .action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.85rem;
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     font-size: 0.75rem;
     font-weight: 500;
     min-height: 36px;
+    flex: 1;
+  }
+
+  @media (min-width: 640px) {
+    .action-btn {
+      flex: initial;
+      min-width: 70px;
+      padding: 0.5rem 1rem;
+    }
   }
 
   .view-btn {
-    background: #374151;
+    background: rgba(55, 65, 81, 0.8);
     color: #9ca3af;
+    border: 1px solid #374151;
   }
 
   .view-btn:hover {
     background: #4b5563;
     color: #fefefe;
+    border-color: #4b5563;
   }
 
   .edit-btn {
-    background: #2563eb;
+    background: rgba(37, 99, 235, 0.9);
     color: #fff;
+    border: 1px solid #2563eb;
   }
 
   .edit-btn:hover {

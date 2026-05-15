@@ -337,7 +337,18 @@ import Layout from '../layouts/Layout.astro';
       if (res.ok && data?.ok) {
         showToast("Entrada guardada correctamente", "success");
         form.reset();
-        window.dispatchEvent(new CustomEvent("journal-updated"));
+        // Dispatch event with saved entry data for pop-up
+        window.dispatchEvent(new CustomEvent("journal-updated", {
+          detail: {
+            savedEntry: {
+              id: data.entry?.id || Date.now(),
+              fecha: payload.fecha,
+              hora: payload.hora,
+              tipo_practica: payload.tipo_practica,
+              insight: payload.insight,
+            }
+          }
+        }));
         // Reset slider displays
         sliders.forEach((slider) => {
           const target = slider as HTMLInputElement;

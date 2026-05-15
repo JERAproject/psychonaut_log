@@ -2,39 +2,101 @@
 import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
 ---
 
-<header class="site-header">
+<header class="site-header" id="site-header">
   <div class="header-container">
     <a href="/" class="logo" aria-label="Psychonaut Log - Inicio">
       <img src={psychonautIcon} alt="" width="40" height="40" />
-      <span class="logo-text">PsychonautLog</span>
     </a>
-    
-    <button 
-      class="menu-toggle" 
-      aria-label="Abrir menú de navegación"
-      aria-expanded="false"
-      aria-controls="main-nav"
-    >
-      <span class="hamburger"></span>
-    </button>
     
     <nav id="main-nav" class="main-nav" aria-label="Navegación principal">
       <ul class="nav-list" role="list">
-        <!-- <li><a href="/">Home</a></li> -->
         <li><a href="/practica">Nueva entrada</a></li>
-        <li><a href="/habits">Hábitos tracker</a></li>
+        <li><a href="/habits">Hábitos</a></li>
         <li><a href="/journal">Bitácora</a></li>
-        <!-- <li><a href="/clasificador">Clasificador</a></li> -->
-        <!-- <li><a href="/about">About</a></li> -->
-        <!-- <li><a href="/contact">Contact</a></li> -->
         <li id="admin-nav-link" hidden><a href="/admin">Admin</a></li>
       </ul>
       <div class="auth-section">
         <button id="login-btn" class="btn-login">Iniciar Sesión</button>
       </div>
     </nav>
+    
+    <div class="header-profile">
+      <button id="profile-btn" class="profile-btn" aria-label="Abrir menú de perfil">
+        <div class="avatar" id="user-avatar">
+          <span class="avatar-init" id="avatar-init">?</span>
+        </div>
+      </button>
+      
+      <div id="profile-dropdown" class="profile-dropdown" hidden>
+        <div class="dropdown-backdrop"></div>
+        <div class="dropdown-content">
+          <div class="dropdown-header">
+            <div class="user-info">
+              <span class="user-name" id="dropdown-username">Invitado</span>
+              <span class="user-role" id="dropdown-role"></span>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <button id="change-pass-btn" class="dropdown-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Cambiar clave
+          </button>
+          <button id="logout-btn" class="dropdown-item dropdown-item-danger">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
+
+<div id="mobile-sheet" class="mobile-sheet" hidden>
+  <div class="sheet-backdrop"></div>
+  <div class="sheet-content">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-avatar" id="sheet-avatar">
+        <span class="avatar-init" id="sheet-avatar-init">?</span>
+      </div>
+      <div class="sheet-user-info">
+        <span class="sheet-username" id="sheet-username">Invitado</span>
+        <span class="sheet-role" id="sheet-role"></span>
+      </div>
+    </div>
+    <div class="sheet-divider"></div>
+    <button id="sheet-change-pass" class="sheet-item">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      Cambiar clave
+    </button>
+    <button id="sheet-logout" class="sheet-item sheet-item-danger">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+      Cerrar Sesión
+    </button>
+    <div class="sheet-divider"></div>
+    <a href="/settings" class="sheet-item">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      Configuración
+    </a>
+  </div>
+</div>
 
 <div id="login-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="login-title" hidden>
   <div class="modal-content">
@@ -75,41 +137,9 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
   </div>
 </div>
 
-<div id="user-menu" class="user-menu" hidden>
-  <span id="user-display"></span>
-  <button id="change-pass-btn" class="btn-secondary">Cambiar clave</button>
-  <button id="logout-btn" class="btn-logout">Cerrar Sesión</button>
-</div>
-
 <script>
-  const toggle = document.querySelector('.menu-toggle');
-  const nav = document.querySelector('.main-nav');
-  
-  toggle?.addEventListener('click', () => {
-    const isOpen = nav?.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', String(isOpen));
-    toggle.classList.toggle('active');
-  });
-  
-  document.addEventListener('click', (e) => {
-    if (!nav?.contains(e.target as Node) && !toggle?.contains(e.target as Node)) {
-      nav?.classList.remove('open');
-      toggle?.classList.remove('active');
-      toggle?.setAttribute('aria-expanded', 'false');
-    }
-  });
-
   const TOKEN_KEY = 'psy_token';
   const USER_KEY = 'psy_user';
-
-  const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
-  const logoutBtn = document.getElementById('logout-btn') as HTMLButtonElement;
-  const loginModal = document.getElementById('login-modal') as HTMLDivElement;
-  const closeModal = document.getElementById('close-modal') as HTMLButtonElement;
-  const loginForm = document.getElementById('login-form') as HTMLFormElement;
-  const loginError = document.getElementById('login-error') as HTMLDivElement;
-  const userMenu = document.getElementById('user-menu') as HTMLDivElement;
-  const userDisplay = document.getElementById('user-display') as HTMLSpanElement;
 
   function getApiBase(): string {
     const meta = document.querySelector('meta[name="api-base"]');
@@ -138,18 +168,43 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
     localStorage.removeItem(USER_KEY);
   }
 
+  function getInitials(username: string): string {
+    return username.charAt(0).toUpperCase();
+  }
+
+  function updateAvatars(username: string, role: string) {
+    const initials = getInitials(username);
+    const elements = ['avatar-init', 'sheet-avatar-init'];
+    elements.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = initials;
+    });
+
+    const userElements = [
+      { name: 'dropdown-username', role: 'dropdown-role' },
+      { name: 'sheet-username', role: 'sheet-role' }
+    ];
+    userElements.forEach(({ name, role: roleId }) => {
+      const nameEl = document.getElementById(name);
+      const roleEl = document.getElementById(roleId);
+      if (nameEl) nameEl.textContent = username;
+      if (roleEl) roleEl.textContent = role;
+    });
+  }
+
   function updateAuthUI() {
     const user = getUser();
     const token = getToken();
     const adminLink = document.getElementById('admin-nav-link') as HTMLLIElement;
+    const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
+    
     if (user && token) {
       loginBtn.hidden = true;
-      userMenu.hidden = false;
-      userDisplay.textContent = `${user.username} (${user.role})`;
+      updateAvatars(user.username, user.role);
       if (adminLink) adminLink.hidden = user.role !== 'admin';
     } else {
       loginBtn.hidden = false;
-      userMenu.hidden = true;
+      updateAvatars('Invitado', '');
       if (adminLink) adminLink.hidden = true;
     }
   }
@@ -172,6 +227,52 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
     }
     updateAuthUI();
   }
+
+  // Mobile sheet
+  const profileBtn = document.getElementById('profile-btn');
+  const mobileSheet = document.getElementById('mobile-sheet');
+  const sheetBackdrop = mobileSheet?.querySelector('.sheet-backdrop') as HTMLElement;
+  
+  profileBtn?.addEventListener('click', () => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      mobileSheet.hidden = false;
+      document.body.style.overflow = 'hidden';
+    }
+  });
+
+  function closeSheet() {
+    mobileSheet.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  sheetBackdrop?.addEventListener('click', closeSheet);
+
+  // Desktop dropdown
+  const dropdown = document.getElementById('profile-dropdown');
+  const dropdownBackdrop = dropdown?.querySelector('.dropdown-backdrop') as HTMLElement;
+  
+  profileBtn?.addEventListener('mouseenter', () => {
+    const isDesktop = window.innerWidth >= 768;
+    if (isDesktop && getToken()) {
+      dropdown.hidden = false;
+    }
+  });
+
+  dropdown?.addEventListener('mouseleave', () => {
+    dropdown.hidden = true;
+  });
+
+  dropdownBackdrop?.addEventListener('click', () => {
+    dropdown.hidden = true;
+  });
+
+  // Login modal
+  const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
+  const loginModal = document.getElementById('login-modal') as HTMLDivElement;
+  const closeModal = document.getElementById('close-modal') as HTMLButtonElement;
+  const loginForm = document.getElementById('login-form') as HTMLFormElement;
+  const loginError = document.getElementById('login-error') as HTMLDivElement;
 
   loginBtn?.addEventListener('click', () => {
     loginModal.hidden = false;
@@ -208,14 +309,17 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
       setUser(data.user);
       loginModal.hidden = true;
       updateAuthUI();
-      location.reload();
     } catch (err) {
       loginError.textContent = 'Error de conexión';
       loginError.hidden = false;
     }
   });
 
-  logoutBtn?.addEventListener('click', async () => {
+  // Logout buttons
+  const logoutBtn = document.getElementById('logout-btn') as HTMLButtonElement;
+  const sheetLogout = document.getElementById('sheet-logout') as HTMLButtonElement;
+
+  async function handleLogout() {
     const token = getToken();
     if (token) {
       await fetch(`${getApiBase()}/api/auth/logout`, {
@@ -225,21 +329,30 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
     }
     clearAuth();
     updateAuthUI();
-    location.reload();
-  });
+    closeSheet();
+  }
 
+  logoutBtn?.addEventListener('click', handleLogout);
+  sheetLogout?.addEventListener('click', handleLogout);
+
+  // Password modal
   const passModal = document.getElementById('password-modal') as HTMLDivElement;
   const changePassBtn = document.getElementById('change-pass-btn') as HTMLButtonElement;
+  const sheetChangePass = document.getElementById('sheet-change-pass') as HTMLButtonElement;
   const closePassBtn = document.getElementById('close-pass-modal') as HTMLButtonElement;
   const passForm = document.getElementById('password-form') as HTMLFormElement;
   const passError = document.getElementById('pass-error') as HTMLDivElement;
   const passSuccess = document.getElementById('pass-success') as HTMLDivElement;
 
-  changePassBtn?.addEventListener('click', () => {
+  function openPassModal() {
     passError.hidden = true;
     passSuccess.hidden = true;
     passModal.hidden = false;
-  });
+    closeSheet();
+  }
+
+  changePassBtn?.addEventListener('click', openPassModal);
+  sheetChangePass?.addEventListener('click', openPassModal);
 
   closePassBtn?.addEventListener('click', () => {
     passModal.hidden = true;
@@ -292,6 +405,7 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
     backdrop-filter: blur(10px);
     border-bottom: 1px solid #2a2a35;
     padding-top: env(safe-area-inset-top);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .header-container {
@@ -303,96 +417,158 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
+    gap: 1rem;
   }
 
-  .logo {
+  .header-profile {
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .profile-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .profile-btn:hover .avatar {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.3);
+    transform: scale(1.05);
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: #fefefe;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid rgba(139, 92, 246, 0.3);
   }
 
-  .logo img {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-  }
-
-  @media (min-width: 640px) {
-    .logo img {
-      width: 40px;
-      height: 40px;
-    }
-    .logo {
-      gap: 0.75rem;
-    }
-  }
-
-  .logo-text {
+  .avatar-init {
+    color: #fff;
     font-weight: 700;
     font-size: 1rem;
   }
 
-  @media (min-width: 640px) {
-    .logo-text {
-      font-size: 1.1rem;
+  /* Desktop dropdown */
+  .profile-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+    z-index: 200;
+  }
+
+  .profile-dropdown[hidden] {
+    display: none;
+  }
+
+  .dropdown-backdrop {
+    position: fixed;
+    inset: 0;
+  }
+
+  .dropdown-content {
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(42, 42, 53, 0.8);
+    border-radius: 16px;
+    padding: 0.5rem;
+    min-width: 200px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.1);
+    animation: dropdownFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes dropdownFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 
-  .menu-toggle {
-    display: none;
+  .dropdown-header {
+    padding: 0.75rem;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .user-name {
+    color: #fefefe;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .user-role {
+    color: #8b5cf6;
+    font-size: 0.75rem;
+    text-transform: capitalize;
+  }
+
+  .dropdown-divider {
+    height: 1px;
+    background: rgba(42, 42, 53, 0.8);
+    margin: 0.5rem 0;
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem;
     background: transparent;
     border: none;
-    padding: 0.5rem;
+    border-radius: 12px;
+    color: #d1d5db;
+    font-size: 0.9rem;
     cursor: pointer;
-    z-index: 101;
-    min-width: 44px;
-    min-height: 44px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+  }
+
+  .dropdown-item:hover {
+    background: rgba(139, 92, 246, 0.15);
+    color: #fefefe;
+  }
+
+  .dropdown-item-danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+  }
+
+  /* Logo */
+  .logo {
+    display: flex;
     align-items: center;
     justify-content: center;
+    text-decoration: none;
+    color: #fefefe;
+    flex-shrink: 0;
   }
 
-  .hamburger {
-    display: block;
-    width: 20px;
-    height: 2px;
-    background: #fefefe;
-    position: relative;
-    transition: background 0.2s;
+  .logo img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
   }
 
-  .hamburger::before,
-  .hamburger::after {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 2px;
-    background: #fefefe;
-    transition: transform 0.2s;
-  }
-
-  .hamburger::before {
-    top: -6px;
-  }
-
-  .hamburger::after {
-    bottom: -6px;
-  }
-
-  .menu-toggle.active .hamburger {
-    background: transparent;
-  }
-
-  .menu-toggle.active .hamburger::before {
-    transform: rotate(45deg) translate(4px, 5px);
-  }
-
-  .menu-toggle.active .hamburger::after {
-    transform: rotate(-45deg) translate(4px, -5px);
-  }
-
+  /* Navigation */
   .main-nav {
     flex: 1;
     display: flex;
@@ -417,7 +593,7 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
     font-size: 0.875rem;
     font-weight: 500;
     border-radius: 8px;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   @media (min-width: 640px) {
@@ -430,11 +606,12 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
   .nav-list a:hover,
   .nav-list a:focus {
     color: #fefefe;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(139, 92, 246, 0.15);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
   }
 
   .nav-list a:focus-visible {
-    outline: 2px solid #5b8ff9;
+    outline: 2px solid #8b5cf6;
     outline-offset: 2px;
   }
 
@@ -444,16 +621,17 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
   }
 
   .btn-login {
-    background: #5b8ff9;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: #fff;
     border: none;
     padding: 0.5rem 1rem;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 36px;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
   }
 
   @media (min-width: 640px) {
@@ -464,62 +642,141 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
   }
 
   .btn-login:hover {
-    background: #4a7de0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
   }
 
-  .user-menu {
+  /* Mobile Sheet */
+  .mobile-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+  }
+
+  .mobile-sheet[hidden] {
+    display: none;
+  }
+
+  .sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .sheet-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #111827;
+    border-top: 1px solid rgba(42, 42, 53, 0.8);
+    border-radius: 24px 24px 0 0;
+    padding: 1.5rem;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .sheet-handle {
+    width: 40px;
+    height: 4px;
+    background: #4b5563;
+    border-radius: 2px;
+    margin: 0 auto 1.5rem;
+  }
+
+  .sheet-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
   }
 
-  @media (max-width: 640px) {
-    .user-menu {
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    #user-display {
-      font-size: 0.75rem;
-    }
+  .sheet-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
   }
 
-  #user-display {
-    color: #aaa;
-    font-size: 0.85rem;
+  .sheet-avatar .avatar-init {
+    font-size: 1.5rem;
   }
 
-  .btn-logout,
-  .btn-secondary {
-    background: transparent;
-    color: #aaa;
-    border: 1px solid #3a3a4e;
-    padding: 0.35rem 0.5rem;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    min-height: 32px;
+  .sheet-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
-  @media (min-width: 640px) {
-    .btn-logout,
-    .btn-secondary {
-      padding: 0.35rem 0.75rem;
-      font-size: 0.85rem;
-    }
-  }
-
-  .btn-logout:hover {
-    background: #ef4444;
-    color: #fff;
-    border-color: #ef4444;
-  }
-
-  .btn-secondary:hover {
+  .sheet-username {
     color: #fefefe;
-    border-color: #5b8ff9;
+    font-weight: 700;
+    font-size: 1.25rem;
   }
 
+  .sheet-role {
+    color: #8b5cf6;
+    font-size: 0.9rem;
+    text-transform: capitalize;
+  }
+
+  .sheet-divider {
+    height: 1px;
+    background: rgba(42, 42, 53, 0.8);
+    margin: 1rem 0;
+  }
+
+  .sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 16px;
+    color: #d1d5db;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    text-align: left;
+    min-height: 52px;
+    box-sizing: border-box;
+  }
+
+  .sheet-item:hover {
+    background: rgba(139, 92, 246, 0.15);
+    color: #fefefe;
+  }
+
+  .sheet-item-danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+  }
+
+  /* Modal */
   .modal {
     position: fixed;
     inset: 0;
@@ -620,7 +877,8 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
 
   .form-group input:focus {
     outline: none;
-    border-color: #5b8ff9;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
   }
 
   .error-msg {
@@ -647,15 +905,16 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
   .btn-submit {
     width: 100%;
     padding: 0.75rem;
-    background: #5b8ff9;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 44px;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
   }
 
   @media (min-width: 640px) {
@@ -665,112 +924,43 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
   }
 
   .btn-submit:hover {
-    background: #4a7de0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
   }
 
-  .demo-users {
-    margin-top: 1.25rem;
-    padding-top: 1rem;
-    border-top: 1px solid #2a2a3e;
-    text-align: center;
-  }
-
-  .demo-users p {
-    color: #888;
-    font-size: 0.8rem;
-    margin: 0.25rem 0;
-  }
-
-  .demo-users code {
-    color: #5b8ff9;
-    font-size: 0.85rem;
-  }
-
-  .demo-users .hint {
-    color: #666;
-    font-size: 0.75rem;
-  }
-
-  @media (max-width: 768px) {
-    .menu-toggle {
-      display: flex;
-    }
-
-    .main-nav {
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: 280px;
-      max-width: 85vw;
-      background: rgba(17, 24, 39, 0.85);
-      backdrop-filter: blur(16px) saturate(180%);
-      -webkit-backdrop-filter: blur(16px) saturate(180%);
-      border-left: 1px solid rgba(42, 42, 53, 0.5);
-      transform: translateX(100%);
-      transition: transform 0.3s ease, background 0.3s ease;
-      padding-top: 5rem;
-      padding-bottom: env(safe-area-inset-bottom);
-      z-index: 1000;
-      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
-    }
-
-    .main-nav.open {
-      transform: translateX(0);
-    }
-
-    .nav-list {
-      display: flex !important;
-      flex-direction: column !important;
-      flex-wrap: nowrap !important;
-      gap: 0 !important;
-      padding: 0.5rem;
-      width: 100% !important;
-    }
-
-    .nav-list li {
-      width: 100% !important;
-      display: flex !important;
-      flex-direction: column !important;
-    }
-
-    .nav-list a {
-      display: flex !important;
-      width: 100% !important;
-      padding: 0.875rem 1rem;
-      font-size: 1rem;
-      border-radius: 10px;
-      text-align: left;
-      box-sizing: border-box;
-      color: #f3f4f6;
-      background: transparent;
-      min-height: 44px;
-    }
-
-    .nav-list a:hover,
-    .nav-list a:focus {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fefefe;
-    }
-
-    .logo-text {
+  /* Mobile responsive */
+  @media (max-width: 767px) {
+    .profile-dropdown {
       display: none;
     }
 
-    .auth-section {
-      margin-top: auto;
-      padding: 1rem;
-      border-top: 1px solid #2a2a35;
+    .main-nav {
+      display: none;
     }
 
-    .btn-login {
-      width: 100%;
+    .logo img {
+      width: 36px;
+      height: 36px;
+    }
+
+    .header-profile {
+      right: 0.5rem;
     }
   }
 
-  @media (min-width: 769px) {
-    .main-nav.open {
-      transform: translateX(0);
+  @media (min-width: 768px) {
+    .mobile-sheet {
+      display: none !important;
+    }
+
+    .main-nav {
+      justify-content: center;
+      flex: 1;
+      max-width: 600px;
+    }
+
+    .nav-list {
+      flex-wrap: nowrap;
     }
   }
 </style>

@@ -276,11 +276,19 @@ app.post("/api/log", (req, res) => {
   }
 
   const userId = req.user?.id ?? null;
-  db.prepare(
-    `INSERT INTO habit_logs (habit_id, log_date, count, user_id) VALUES (?, ?, 1, ?)
-     ON CONFLICT (habit_id, log_date, user_id)
-     DO UPDATE SET count = MIN(count + 1, ?)`
-  ).run(habitId, date, userId, habit.maxPerDay);
+
+  const existing = db.prepare(
+    "SELECT count FROM habit_logs WHERE habit_id = ? AND log_date = ? AND user_id = ?"
+  ).get(habitId, date, userId) as { count: number } | undefined;
+
+  if (existing) {
+    const newCount = Math.min(existing.count + 1, habit.maxPerDay);
+    db.prepare("UPDATE habit_logs SET count = ? WHERE habit_id = ? AND log_date = ? AND user_id = ?")
+      .run(newCount, habitId, date, userId);
+  } else {
+    db.prepare("INSERT INTO habit_logs (habit_id, log_date, count, user_id) VALUES (?, ?, 1, ?)")
+      .run(habitId, date, userId);
+  }
 
   res.json({ ok: true });
 });

@@ -1,11 +1,11 @@
 ---
-import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
+import LogoImg from '../assets/Logo.jpeg';
 ---
 
 <header class="site-header" id="site-header">
   <div class="header-container">
     <a href="/" class="logo" aria-label="Psychonaut Log - Inicio">
-      <img src={psychonautIcon} alt="" width="40" height="40" />
+      <img src={LogoImg.src} alt="Psychonaut Log" width="60" height="60" />
     </a>
     
     <nav id="main-nav" class="main-nav" aria-label="Navegación principal">
@@ -562,10 +562,17 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
     flex-shrink: 0;
   }
 
-  .logo img {
-    width: 40px;
-    height: 40px;
+  .logo svg {
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
+  }
+
+  @media (min-width: 768px) {
+    .logo svg {
+      width: 52px;
+      height: 52px;
+    }
   }
 
   /* Navigation */
@@ -938,7 +945,7 @@ import psychonautIcon from '../assets/psychonaut_log-icon.png?url';
       display: none;
     }
 
-    .logo img {
+    .logo svg {
       width: 36px;
       height: 36px;
     }

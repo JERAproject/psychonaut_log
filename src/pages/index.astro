@@ -3,8 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import NetworkGraph from '../components/NetworkGraph.astro';
 import About from '../pages/about.astro';
 import Contact from '../pages/contact.astro';
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import LorenzGraph from '../components/LorenzGraph.jsx';
 ---
 
 <Layout>
@@ -12,6 +11,7 @@ import Contact from '../pages/contact.astro';
 <div class="hero">
         <h1 class="hero-title">PsychonautLog</h1>
         <h2 class="hero-subtitle">Bitácora psiconauta</h2>
+
         <NetworkGraph>
           <p>Esta bitacora es un registro de las experiencias y descubrimientos de un psiconauta en su viaje de exploración mental.<br><br>
           <br> Aquí se documentan las prácticas, insights y reflexiones obtenidas a través de diversas técnicas de meditación, visualización y autoindagación.<br><br>
@@ -59,6 +59,18 @@ import Contact from '../pages/contact.astro';
       font-weight: 500;
       margin: 0;
       color: #9ca3af;
+    }
+
+    .lorenz-container {
+      width: 100%;
+      max-width: 500px;
+      margin: 0.5rem 0;
+    }
+
+    @media (min-width: 768px) {
+      .lorenz-container {
+        max-width: 600px;
+      }
     }
 
     .graph-overlay {

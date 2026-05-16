@@ -43,3 +43,10 @@ Thumbs.db
 # Ignore the PFE component, which is a private file that contains sensitive information and should not be committed to version control.
 src/components/PFE.astro
 src/styles/PFE.css
+
+# Ignore the LogoSvg component, which is a private file that contains sensitive information and should not be committed to version control.
+src/assets/lorenz_graph.png
+src/components/HabitTracker.jsx
+src/components/LogoSvg.astro
+src/components/LorenzAttractor.tsx
+src/components/LorenzGraph.tsx

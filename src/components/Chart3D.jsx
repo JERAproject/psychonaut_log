@@ -23,9 +23,11 @@ export function render3DChart(data) {
   }
 
   function getPointColor(ageRatio, isPost) {
-    const baseH = isPost ? 320 : 210;
+    // Pre-práctica: violeta/magenta (270-290)
+    // Post-práctica: azul/celeste (200-210)
+    const baseH = isPost ? 210 : 280;
     const baseS = 100 * (0.15 + ageRatio * 0.85);
-    const baseL = isPost ? 72 : 67;
+    const baseL = isPost ? 65 : 70;
     return hslToHex(baseH, baseS, baseL);
   }
 
@@ -48,12 +50,12 @@ export function render3DChart(data) {
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;max-width:100%;">
         <defs>
           <linearGradient id="legendGradPre" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#2563eb"/>
-            <stop offset="100%" stop-color="#93c5fd"/>
+            <stop offset="0%" stop-color="#A855F7"/>
+            <stop offset="100%" stop-color="#D8B4FE"/>
           </linearGradient>
           <linearGradient id="legendGradPost" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#701a5e"/>
-            <stop offset="100%" stop-color="#f9a8d4"/>
+            <stop offset="0%" stop-color="#3B82F6"/>
+            <stop offset="100%" stop-color="#67E8F1"/>
           </linearGradient>
         </defs>
         <rect x="0" y="0" width="${W}" height="${H}" fill="#0f0f1a" rx="8"/>

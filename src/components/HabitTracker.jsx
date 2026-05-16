@@ -65,20 +65,71 @@ function getMonthDays(year, month) {
 
 export default function HabitTracker() {
   const [habits, setHabits] = useState([]);
+  const [allHabits, setAllHabits] = useState([]);
   const [logs, setLogs] = useState({});
+  const [allLogs, setAllLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("weekly");
   const [newHabit, setNewHabit] = useState("");
   const [habitColor, setHabitColor] = useState(COLORS.violet);
   const [saving, setSaving] = useState(null);
+  const [userFilter, setUserFilter] = useState("all");
+  const [users, setUsers] = useState([]);
 
   const weekDays = getWeekDays();
   const today = getARGDate();
   const monthDays = getMonthDays(today.getFullYear(), today.getMonth());
 
+  function getCurrentUser() {
+    try {
+      const userStr = localStorage.getItem("psy_user");
+      if (!userStr) return null;
+      return JSON.parse(userStr);
+    } catch { return null; }
+  }
+
+  const currentUser = getCurrentUser();
+  const canFilterUsers = currentUser?.role === "admin" || currentUser?.role === "psicologo";
+
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!canFilterUsers) {
+      setHabits(allHabits);
+      const logMap = {};
+      allLogs.forEach(l => {
+        if (!logMap[l.habitId]) logMap[l.habitId] = {};
+        logMap[l.habitId][l.logDate] = l.count;
+      });
+      setLogs(logMap);
+    } else if (users.length > 0) {
+      if (userFilter === "all") {
+        setHabits(allHabits);
+        const logMap = {};
+        allLogs.forEach(l => {
+          if (!logMap[l.habitId]) logMap[l.habitId] = {};
+          logMap[l.habitId][l.logDate] = l.count;
+        });
+        setLogs(logMap);
+      } else {
+        const userId = parseInt(userFilter);
+        const filteredHabits = allHabits.filter(h => h.user_id === userId);
+        setHabits(filteredHabits);
+        const filteredLogs = allLogs.filter(l => {
+          const habit = allHabits.find(h => h.id === l.habitId);
+          return habit && habit.user_id === userId;
+        });
+        const logMap = {};
+        filteredLogs.forEach(l => {
+          if (!logMap[l.habitId]) logMap[l.habitId] = {};
+          logMap[l.habitId][l.logDate] = l.count;
+        });
+        setLogs(logMap);
+      }
+    }
+  }, [userFilter, users, allHabits, allLogs, canFilterUsers]);
 
   function getAuthHeaders() {
     const token = localStorage.getItem("psy_token");
@@ -87,20 +138,25 @@ export default function HabitTracker() {
 
   async function loadData() {
     try {
-      const [habitsRes, logsRes] = await Promise.all([
+      const [habitsRes, logsRes, usersRes] = await Promise.all([
         fetch(`${API_BASE}/api/habits`, { headers: getAuthHeaders() }),
         fetch(`${API_BASE}/api/logs`, { headers: getAuthHeaders() }),
+        canFilterUsers ? fetch(`${API_BASE}/api/admin/users`, { headers: getAuthHeaders() }) : Promise.resolve({ json: () => [] }),
       ]);
       const habitsData = await habitsRes.json();
       const logsData = await logsRes.json();
+      const usersData = canFilterUsers ? await usersRes.json() : [];
+      
+      setAllHabits(habitsData);
       setHabits(habitsData);
-
+      setAllLogs(logsData);
       const logsMap = {};
       logsData.forEach((l) => {
         if (!logsMap[l.habitId]) logsMap[l.habitId] = {};
         logsMap[l.habitId][l.logDate] = l.count;
       });
       setLogs(logsMap);
+      setUsers(usersData);
     } catch (err) {
       console.error("Error loading data:", err);
     } finally {
@@ -210,6 +266,23 @@ export default function HabitTracker() {
 
   return (
     <div className="habit-tracker">
+      {canFilterUsers && (
+        <div className="filter-bar">
+          <label className="filter-label">Filtrar:</label>
+          <select 
+            className="user-filter-select" 
+            value={userFilter} 
+            onChange={(e) => setUserFilter(e.target.value)}
+          >
+            <option value="all">Todos</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>{u.username}</option>
+            ))}
+          </select>
+          <span className="entry-count">{habits.length} hábito{habits.length !== 1 ? "s" : ""}</span>
+        </div>
+      )}
+
       <div className="ht-header">
         <div className="ht-tabs">
           <button className={`ht-tab ${view === "weekly" ? "active" : ""}`} onClick={() => setView("weekly")}>
@@ -434,6 +507,42 @@ export default function HabitTracker() {
           to { transform: rotate(360deg); }
         }
 
+        .filter-bar {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          background: rgba(0,0,0,0.3);
+          border-bottom: 1px solid var(--border);
+        }
+
+        .filter-label {
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .user-filter-select {
+          padding: 0.4rem 0.75rem;
+          background: var(--surface-secondary);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--text-primary);
+          font-size: 0.8rem;
+        }
+
+        .user-filter-select:focus {
+          outline: none;
+          border-color: var(--neon-violet);
+        }
+
+        .entry-count {
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+          margin-left: auto;
+        }
+
         .ht-header {
           display: flex;
           flex-wrap: wrap;
@@ -441,7 +550,7 @@ export default function HabitTracker() {
           justify-content: space-between;
           align-items: center;
           padding: 1rem;
-          background: linear-gradient(180deg, rgba(255,23,68,0.05) 0%, transparent 100%);
+          background: linear-gradient(180deg, rgba(139,92,246,0.05) 0%, transparent 100%);
           border-bottom: 1px solid var(--border);
         }
 

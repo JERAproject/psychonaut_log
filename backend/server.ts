@@ -158,7 +158,7 @@ app.post("/api/auth/change-password", async (req, res) => {
 // ── Habits ──────────────────────────────────────────────
 
 app.get("/api/habits", (req, res) => {
-  if (req.user?.role === "admin") {
+  if (req.user?.role === "admin" || req.user?.role === "psicologo") {
     const habits = db.prepare(
       "SELECT id, name, color, max_per_day as maxPerDay, user_id FROM habits"
     ).all();
@@ -228,13 +228,13 @@ app.put("/api/habits/:id", (req, res) => {
 app.get("/api/logs", (req, res) => {
   const { habitId, startDate, endDate } = req.query;
   const userId = req.user?.id ?? null;
-  const isAdmin = req.user?.role === "admin";
+  const isAdminOrPsicologo = req.user?.role === "admin" || req.user?.role === "psicologo";
 
   let query =
-    "SELECT habit_id as habitId, log_date as logDate, count FROM habit_logs WHERE 1=1";
+    "SELECT habit_id as habitId, log_date as logDate, count, user_id FROM habit_logs WHERE 1=1";
   const params: any[] = [];
 
-  if (!isAdmin) {
+  if (!isAdminOrPsicologo) {
     query += " AND (user_id = ? OR user_id IS NULL)";
     params.push(userId);
   }
@@ -740,12 +740,30 @@ app.get("/api/journal/stats/energy-valence", (req, res) => {
 // ── Admin: All Users ─────────────────────────────────────
 
 app.get("/api/admin/users", (req, res) => {
-  if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ error: "admin only" });
+  if (!req.user || (req.user.role !== "admin" && req.user.role !== "psicologo")) {
+    return res.status(403).json({ error: "admin or psicologo only" });
   }
-  const users = db.prepare(
-    "SELECT id, username, role, created_at FROM users ORDER BY created_at ASC"
-  ).all();
+  
+  let users;
+  if (req.user.role === "admin") {
+    users = db.prepare(
+      "SELECT id, username, role, created_at FROM users WHERE role != 'admin' ORDER BY created_at ASC"
+    ).all();
+  } else {
+    const assignedUsers = db.prepare(`
+      SELECT u.id, u.username, u.role, u.created_at 
+      FROM users u
+      INNER JOIN psicologo_users pu ON pu.user_id = u.id
+      WHERE pu.psicologo_id = ?
+      ORDER BY u.created_at ASC
+    `).all(req.user.id);
+    
+    const psicologoUser = db.prepare(
+      "SELECT id, username, role, created_at FROM users WHERE id = ?"
+    ).get(req.user.id);
+    
+    users = psicologoUser ? [psicologoUser, ...assignedUsers] : assignedUsers;
+  }
   res.json(users);
 });
 

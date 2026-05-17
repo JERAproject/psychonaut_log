@@ -69,7 +69,7 @@ import Layout from '../layouts/Layout.astro';
         <fieldset>
           <legend>Fenomenología y Estado</legend>
           <label>
-            Estado Previo
+            Estado Previo a la Práctica
             <input type="text" name="estado_previo" placeholder="Ej: Dispersión analítica, fatiga..." required aria-required="true" />
           </label>
 
@@ -78,7 +78,7 @@ import Layout from '../layouts/Layout.astro';
             
             <div class="slider-group">
               <div class="slider-header">
-                <span class="slider-title">ENERGY (Pre)</span>
+                <span class="slider-title">ENERGY (Pre) <span class="info-icon" data-tooltip="energy" onclick="showTooltip('energy', event)"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
                 <span class="slider-value" id="energy-pre-value">—</span>
               </div>
               <input type="range" name="energy_pre" min="-5" max="5" step="1" class="slider" />
@@ -90,7 +90,7 @@ import Layout from '../layouts/Layout.astro';
 
             <div class="slider-group">
               <div class="slider-header">
-                <span class="slider-title">VALENCE (Pre)</span>
+                <span class="slider-title">VALENCE (Pre) <span class="info-icon" data-tooltip="valence" onclick="showTooltip('valence', event)"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
                 <span class="slider-value" id="valence-pre-value">—</span>
               </div>
               <input type="range" name="valence_pre" min="-5" max="5" step="1" class="slider" />
@@ -107,12 +107,12 @@ import Layout from '../layouts/Layout.astro';
             <span class="helper">Describe lo que observas, no por qué sucede</span>
           </label>
           <label>
-            Fenomenología Cognitiva (Pensamientos observados)
-            <textarea name="fenomenologia_cognitiva" rows="4" placeholder="Describe los pensamientos que surgen durante la práctica..."></textarea>
+            Fenomenología Cognitiva (Pensamientos observados antes de la práctica)
+            <textarea name="fenomenologia_cognitiva" rows="4" placeholder="Describe los pensamientos que surgieron antes de la práctica..."></textarea>
             <span class="helper">Describe lo que observas, no por qué sucede</span>
           </label>
           <label>
-            Descripción Detallada (Cuerpo)
+            Descripción Detallada (lo que experimentaste durante la práctica)
             <textarea name="cuerpo" rows="6" placeholder="Describe el flujo de la experiencia..."></textarea>
           </label>
         </fieldset>
@@ -120,12 +120,12 @@ import Layout from '../layouts/Layout.astro';
         <fieldset>
           <legend>Análisis e Integración</legend>
           <label>
-            Insight Principal
-            <input type="text" name="insight" placeholder="¿Qué descubriste hoy?" />
+            Hallazgo Principal
+            <input type="text" name="insight" placeholder="¿Qué descubriste hoy sobre mi mente?" />
           </label>
           <label>
-            Plan de Integración
-            <input type="text" name="integracion" placeholder="Acción concreta para el día..." />
+            Plan de Integración de los Hallazgos
+            <input type="text" name="integracion" placeholder="Acción concreta para el día siguiente puedo aplicar en mi vida diaria?" />
           </label>
           <label>
             Estado Post-Práctica
@@ -137,7 +137,7 @@ import Layout from '../layouts/Layout.astro';
             
             <div class="slider-group">
               <div class="slider-header">
-                <span class="slider-title">ENERGY (Post)</span>
+                <span class="slider-title">ENERGY (Post) <span class="info-icon" data-tooltip="energy" onclick="showTooltip('energy', event)"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
                 <span class="slider-value" id="energy-post-value">—</span>
               </div>
               <input type="range" name="energy_post" min="-5" max="5" step="1" class="slider" />
@@ -149,7 +149,7 @@ import Layout from '../layouts/Layout.astro';
 
             <div class="slider-group">
               <div class="slider-header">
-                <span class="slider-title">VALENCE (Post)</span>
+                <span class="slider-title">VALENCE (Post) <span class="info-icon" data-tooltip="valence" onclick="showTooltip('valence', event)"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
                 <span class="slider-value" id="valence-post-value">—</span>
               </div>
               <input type="range" name="valence_post" min="-5" max="5" step="1" class="slider" />
@@ -176,7 +176,7 @@ import Layout from '../layouts/Layout.astro';
           <form id="substance-form" class="sf">
             <label>
               Sustancia
-              <input type="text" name="sustancia" id="sustancia-input" placeholder="Ej: LSD, Psilocibina, MDMA..." required />
+              <input type="text" name="sustancia" id="sustancia-input" placeholder="Ej: Psilocibina u otra sustancia" required />
             </label>
             <label>
               Dosis (opcional)
@@ -222,33 +222,51 @@ import Layout from '../layouts/Layout.astro';
 </div>
 
 <script>
-  const tabs = document.querySelectorAll(".tab-btn");
-  const contents = document.querySelectorAll(".tab-content");
-
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const target = (tab as HTMLElement).dataset.tab;
-
-      tabs.forEach((t) => t.classList.remove("active"));
-      contents.forEach((c) => c.classList.remove("active"));
-
-      tab.classList.add("active");
-      document.getElementById(`${target}-tab`)?.classList.add("active");
+  // Función global para mostrar tooltips con debug
+  window.showTooltip = function(type, event) {
+    console.log('showTooltip llamado - type:', type, 'event:', event);
+    
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    const tooltips = {
+      energy: "ENERGY: Representa el nivel de activación/alerta. Desliza a la izquierda para estados de baja energía (relajación, sueño) y a la derecha para alta energía (excitación, alerte).",
+      valence: "VALENCE: Escala de equilibrio entre estados de dolor y placer. Desliza hacia la izquierda indicando estados de dolor o disconfort más bajos y hacia la derecha indicando estados de placer o bienestar más altos."
+    };
+    
+    const text = tooltips[type] || '';
+    console.log('Texto del tooltip:', text);
+    
+    // Cerrar popup existente
+    const existing = document.querySelector('.info-popup');
+    if (existing) {
+      console.log('Popup existente encontrado, removiendo');
+      existing.remove();
+    }
+    
+    const popup = document.createElement('div');
+    popup.className = 'info-popup';
+    popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;border:1px solid #8b5cf6;border-radius:12px;padding:1.25rem;max-width:90%;width:320px;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,0.5);';
+    popup.innerHTML = '<p style="color:#e5e7eb;font-size:0.9rem;line-height:1.5;margin:0;padding-right:1.5rem;">' + text + '</p><button style="position:absolute;top:0.5rem;right:0.5rem;background:transparent;border:none;color:#9ca3af;font-size:1.25rem;cursor:pointer;width:1.5rem;height:1.5rem;" class="popup-close">×</button>';
+    document.body.appendChild(popup);
+    console.log('Popup creado y agregado al body');
+    
+    popup.querySelector('.popup-close').addEventListener('click', function() { 
+      console.log('Cerrando popup'); 
+      popup.remove(); 
     });
-  });
-
-  // Slider value display
-  const sliders = document.querySelectorAll('input[type="range"]');
-  sliders.forEach((slider) => {
-    slider.addEventListener("input", (e) => {
-      const target = e.target as HTMLInputElement;
-      const valueDisplay = document.getElementById(`${target.name}-value`);
-      if (valueDisplay) {
-        const val = target.value;
-        valueDisplay.textContent = val === "0" ? "—" : (val.startsWith("-") ? val : `+${val}`);
+    
+    popup.addEventListener('click', function(ev) {
+      if (ev.target === popup) {
+        console.log('Click fuera del contenido del popup');
+        popup.remove();
       }
     });
-  });
+    
+    console.log('Popup debería ser visible ahora');
+  };
 
   // ── Practices CRUD ──────────────────────────────────────
   const TOKEN_KEY = 'psy_token';
@@ -965,9 +983,72 @@ import Layout from '../layouts/Layout.astro';
   }
 
   .slider-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
     font-size: 0.8rem;
     font-weight: 600;
     color: #d1d5db;
+  }
+
+  .info-icon {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #9ca3af;
+  }
+
+  .info-icon:hover {
+    opacity: 1;
+    color: #ffffff;
+  }
+
+  .info-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(22, 22, 42, 0.98);
+    border: 1px solid rgba(139, 92, 246, 0.5);
+    border-radius: 12px;
+    padding: 1.25rem;
+    max-width: 90%;
+    width: 320px;
+    z-index: 1000;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .info-popup p {
+    color: #e5e7eb;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+    padding-right: 1.5rem;
+  }
+
+  .info-popup .popup-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-size: 1.25rem;
+    cursor: pointer;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .info-popup .popup-close:hover {
+    color: #fff;
   }
 
   @media (min-width: 640px) {

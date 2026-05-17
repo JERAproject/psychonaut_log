@@ -13,6 +13,7 @@ import LogoImg from '../assets/Logo.png';
         <li><a href="/practica">Nueva entrada</a></li>
         <li><a href="/habits">Hábitos</a></li>
         <li><a href="/journal">Bitácora</a></li>
+        <li id="practica-guiada-link" hidden><a href="/practica_guiada">Guía</a></li>
         <li id="admin-nav-link" hidden><a href="/admin">Admin</a></li>
       </ul>
       
@@ -195,6 +196,7 @@ import LogoImg from '../assets/Logo.png';
     const user = getUser();
     const token = getToken();
     const adminLink = document.getElementById('admin-nav-link') as HTMLLIElement;
+    const practicaGuiadaLink = document.getElementById('practica-guiada-link') as HTMLLIElement;
     const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
     const profileBtn = document.getElementById('profile-btn') as HTMLButtonElement;
     
@@ -203,11 +205,13 @@ import LogoImg from '../assets/Logo.png';
       profileBtn.hidden = false;
       updateAvatars(user.username, user.role);
       if (adminLink) adminLink.hidden = user.role !== 'admin';
+      if (practicaGuiadaLink) practicaGuiadaLink.hidden = false;
     } else {
       loginBtn.hidden = false;
       profileBtn.hidden = true;
       updateAvatars('Invitado', '');
       if (adminLink) adminLink.hidden = true;
+      if (practicaGuiadaLink) practicaGuiadaLink.hidden = true;
     }
   }
 
@@ -311,6 +315,7 @@ import LogoImg from '../assets/Logo.png';
       setUser(data.user);
       loginModal.hidden = true;
       updateAuthUI();
+      window.location.href = '/inicio';
     } catch (err) {
       loginError.textContent = 'Error de conexión';
       loginError.hidden = false;

@@ -814,12 +814,12 @@ export default function HabitTracker() {
 
         .grid-header {
           display: grid;
-          grid-template-columns: minmax(90px, 1.5fr) repeat(7, minmax(38px, 1fr));
-          gap: 4px;
+          grid-template-columns: minmax(4rem, 0.75fr) repeat(7, minmax(2.375rem, 1fr));
+          gap: 0.25rem;
           padding: 0.6rem;
           background: rgba(0,0,0,0.3);
           border-bottom: 1px solid var(--border);
-          min-width: 450px;
+          min-width: 28.125rem;
         }
 
         .header-habit {
@@ -880,9 +880,9 @@ export default function HabitTracker() {
 
         .grid-row {
           display: grid;
-          grid-template-columns: minmax(90px, 1.5fr) repeat(7, minmax(38px, 1fr));
-          gap: 4px;
-          margin-bottom: 6px;
+          grid-template-columns: minmax(4rem, 0.75fr) repeat(7, minmax(2.375rem, 1fr));
+          gap: 0.25rem;
+          margin-bottom: 0.375rem;
           align-items: center;
         }
 
@@ -893,15 +893,15 @@ export default function HabitTracker() {
         .row-habit {
           display: flex;
           align-items: center;
-          gap: 0.4rem;
-          padding: 0.2rem 0.4rem;
+          gap: 0.25rem;
+          padding: 0.125rem 0.25rem;
           min-width: 0;
         }
 
         .habit-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 2px;
+          width: 0.375rem;
+          height: 0.375rem;
+          border-radius: 0.125rem;
           flex-shrink: 0;
         }
 
@@ -909,16 +909,13 @@ export default function HabitTracker() {
           font-size: 0.7rem;
           color: var(--text-primary);
           white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          min-width: 0;
-          flex: 1 1 0;
+          flex: 0 0 auto;
         }
 
         .habit-streak {
           font-size: 0.6rem;
           color: var(--text-secondary);
-          flex-shrink: 0;
+          flex: 0 0 auto;
           padding: 0 0.25rem;
         }
 

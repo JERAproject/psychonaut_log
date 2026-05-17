@@ -14,9 +14,20 @@ import LorenzGraph from '../components/LorenzGraph.jsx';
 
         <NetworkGraph>
           <p>Esta bitacora es un registro de las experiencias y descubrimientos de un psiconauta en su viaje de exploración mental.<br><br>
-          <br> Aquí se documentan las prácticas, insights y reflexiones obtenidas a través de diversas técnicas de meditación, visualización y autoindagación.<br><br>
-          <br>El objetivo es observar los pensamientos y emociones a medida que evolucionan en el tiempo, buscar los patrones subyacentes y comprender la naturaleza de nuestra mente.</p>
+          Aquí se documentan las prácticas, insights y reflexiones obtenidas a través de diversas técnicas de meditación, visualización y autoindagación.<br><br>
+          El objetivo es observar los pensamientos y emociones a medida que evolucionan en el tiempo, buscar los patrones subyacentes y comprender la naturaleza de nuestra mente.</p>
         </NetworkGraph>
+    </div>
+
+    <div id="practice-prompt" class="practice-prompt" style="display: none;">
+      <div class="practice-prompt-content">
+        <span class="practice-icon">🧘</span>
+        <div class="practice-text">
+          <span class="practice-title">¿Cómo comenzar la práctica?</span>
+          <span class="practice-subtitle">Guía para principiantes</span>
+        </div>
+        <a href="/practica_guiada" class="practice-btn">Ver técnicas</a>
+      </div>
     </div>
 
     <About />
@@ -28,6 +39,39 @@ import LorenzGraph from '../components/LorenzGraph.jsx';
     <Contact />
 
 </Layout>
+
+<script>
+  function checkUserAndScroll() {
+    const userStr = localStorage.getItem("psy_user");
+    const prompt = document.getElementById("practice-prompt");
+    
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+      } catch {
+        return;
+      }
+      
+      if (prompt) {
+        prompt.style.display = "block";
+        prompt.addEventListener("click", function() {
+          window.location.href = "/inicio";
+        });
+      }
+    }
+  }
+
+  window.addEventListener("scroll", function() {
+    const prompt = document.getElementById("practice-prompt");
+    if (prompt && window.scrollY > 100) {
+      prompt.classList.add("visible");
+    } else if (prompt) {
+      prompt.classList.remove("visible");
+    }
+  });
+
+  checkUserAndScroll();
+</script>
 
 <style>
     .hero {
@@ -170,6 +214,102 @@ import LorenzGraph from '../components/LorenzGraph.jsx';
         padding: 1.2rem 2.5rem;
         font-size: 1.1rem;
         width: auto;
+      }
+    }
+
+    .practice-prompt {
+      position: fixed;
+      bottom: max(1rem, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%) translateY(150%);
+      z-index: 100;
+      width: calc(100% - 2rem);
+      max-width: 500px;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .practice-prompt.visible {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .practice-prompt-content {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(99, 102, 241, 0.9));
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+    }
+
+    .practice-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .practice-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .practice-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+      line-height: 1.2;
+    }
+
+    .practice-subtitle {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.2;
+    }
+
+    .practice-btn {
+      flex-shrink: 0;
+      padding: 0.5rem 1rem;
+      background: white;
+      color: #7c3aed;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .practice-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (min-width: 640px) {
+      .practice-prompt {
+        bottom: 1.5rem;
+      }
+
+      .practice-prompt-content {
+        padding: 1rem 1.25rem;
+      }
+
+      .practice-icon {
+        font-size: 1.75rem;
+      }
+
+      .practice-title {
+        font-size: 1rem;
+      }
+
+      .practice-subtitle {
+        font-size: 0.75rem;
+      }
+
+      .practice-btn {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.8rem;
       }
     }
 </style>

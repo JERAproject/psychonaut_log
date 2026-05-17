@@ -9,7 +9,7 @@ import LogoImg from '../assets/Logo.png';
     </a>
     
     <nav id="main-nav" class="main-nav" aria-label="Navegación principal">
-      <ul class="nav-list" role="list" id="user-nav-links">
+      <ul class="nav-list" role="list">
         <li><a href="/practica">Nueva entrada</a></li>
         <li><a href="/habits">Hábitos</a></li>
         <li><a href="/journal">Bitácora</a></li>
@@ -197,18 +197,15 @@ import LogoImg from '../assets/Logo.png';
     const adminLink = document.getElementById('admin-nav-link') as HTMLLIElement;
     const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
     const profileBtn = document.getElementById('profile-btn') as HTMLButtonElement;
-    const userNavLinks = document.getElementById('user-nav-links') as HTMLUListElement;
     
     if (user && token) {
       loginBtn.hidden = true;
       profileBtn.hidden = false;
-      if (userNavLinks) userNavLinks.hidden = false;
       updateAvatars(user.username, user.role);
       if (adminLink) adminLink.hidden = user.role !== 'admin';
     } else {
       loginBtn.hidden = false;
       profileBtn.hidden = true;
-      if (userNavLinks) userNavLinks.hidden = true;
       updateAvatars('Invitado', '');
       if (adminLink) adminLink.hidden = true;
     }

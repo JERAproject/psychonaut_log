@@ -194,12 +194,21 @@ export default function HabitTracker() {
   async function toggleHabit(habitId, dateStr) {
     if (new Date(dateStr) > getARGDate()) return;
     setSaving(`${habitId}-${dateStr}`);
+    const isCompleted = logs[habitId]?.[dateStr] > 0;
     try {
-      await fetch(`${API_BASE}/api/log`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ habitId, date: dateStr }),
-      });
+      if (isCompleted) {
+        await fetch(`${API_BASE}/api/log`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify({ habitId, date: dateStr }),
+        });
+      } else {
+        await fetch(`${API_BASE}/api/log`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify({ habitId, date: dateStr }),
+        });
+      }
       loadData();
     } catch (err) {
       console.error("Error toggling habit:", err);
@@ -849,7 +858,7 @@ export default function HabitTracker() {
         }
 
         .header-day .day-label {
-          font-size: 0.55rem;
+          font-size: 0.5rem;
           color: var(--text-secondary);
           letter-spacing: 0.1em;
         }
@@ -970,9 +979,7 @@ export default function HabitTracker() {
         }
 
         .grid-cell.weekend.completed {
-          background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-violet) 100%);
           border-color: transparent;
-          box-shadow: 0 0 15px var(--neon-cyan);
         }
 
         .grid-cell.completed {
@@ -1122,7 +1129,7 @@ export default function HabitTracker() {
           color: var(--text-secondary);
         }
 
-        @media (max-width: 640px) {
+@media (max-width: 640px) {
           .ht-header {
             flex-direction: column;
             align-items: stretch;
@@ -1160,42 +1167,81 @@ export default function HabitTracker() {
 
           .grid-header,
           .grid-row {
-            grid-template-columns: minmax(80px, 1fr) repeat(7, minmax(32px, 1fr));
-            gap: 2px;
+            grid-template-columns: 4rem repeat(7, 2rem);
+            gap: 0.125rem;
           }
 
           .grid-container,
           .grid-body {
-            min-width: 380px;
+            min-width: auto;
+            width: 100%;
           }
 
           .grid-cell {
-            min-width: 32px;
-            border-radius: 8px;
+            width: 2rem;
+            min-width: 2rem;
+            height: 2rem;
+            border-radius: 0.25rem;
+          }
+
+          .header-day {
+            padding: 0;
           }
 
           .header-day .day-num {
-            font-size: 0.7rem;
+            font-size: 0.6rem;
+          }
+
+          .header-day .day-label {
+            font-size: 0.4rem;
+          }
+
+          .header-habit {
+            font-size: 0.5rem;
           }
 
           .habit-name {
-            font-size: 0.65rem;
+            font-size: 0.55rem;
+            max-width: 2.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
 
           .check-icon {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
           }
 
           .grid-cell.weekend.completed {
-            box-shadow: 0 0 10px var(--neon-cyan);
+            box-shadow: 0 0 6px var(--neon-cyan);
           }
 
           .heatmap-grid {
-            gap: 3px;
+            gap: 0.125rem;
           }
 
           .header-day.weekend::after {
-            font-size: 0.35rem;
+            display: none;
+          }
+
+          .row-habit {
+            padding: 0.125rem;
+            gap: 0.25rem;
+          }
+
+          .habit-dot {
+            width: 0.4rem;
+            height: 0.4rem;
+          }
+
+          .habit-streak {
+            font-size: 0.45rem;
+          }
+
+          .delete-btn {
+            width: 0.875rem;
+            height: 0.875rem;
+            font-size: 0.65rem;
           }
         }
 

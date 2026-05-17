@@ -293,6 +293,23 @@ app.post("/api/log", (req, res) => {
   res.json({ ok: true });
 });
 
+app.delete("/api/log", (req, res) => {
+  const { habitId, date } = req.body;
+  if (!habitId || !date) {
+    return res.status(400).json({ error: "habitId and date are required" });
+  }
+  if (!req.user) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+
+  const userId = req.user?.id ?? null;
+
+  db.prepare("DELETE FROM habit_logs WHERE habit_id = ? AND log_date = ? AND user_id = ?")
+    .run(habitId, date, userId);
+
+  res.json({ ok: true });
+});
+
 // ── Journal ─────────────────────────────────────────────
 
 app.get("/api/journal", (req, res) => {

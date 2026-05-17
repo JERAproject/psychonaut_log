@@ -417,13 +417,13 @@ app.delete("/api/journal/:id", (req, res) => {
   if (isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
   }
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ error: "Solo admins pueden eliminar entradas" });
+  }
   const entry = db.prepare("SELECT user_id FROM journal_entries WHERE id = ?").get(id) as any;
   if (!entry) return res.status(404).json({ error: "Not found" });
-  if (req.user?.role === "admin" || entry.user_id === req.user?.id) {
-    db.prepare("DELETE FROM journal_entries WHERE id = ?").run(id);
-    return res.json({ ok: true });
-  }
-  res.status(403).json({ error: "Forbidden" });
+  db.prepare("DELETE FROM journal_entries WHERE id = ?").run(id);
+  return res.json({ ok: true });
 });
 
 app.put("/api/journal/:id", (req, res) => {
@@ -454,8 +454,8 @@ app.put("/api/journal/:id", (req, res) => {
   }
   const entry = db.prepare("SELECT user_id FROM journal_entries WHERE id = ?").get(id) as any;
   if (!entry) return res.status(404).json({ error: "Not found" });
-  if (req.user.role !== "admin" && entry.user_id !== req.user.id) {
-    return res.status(403).json({ error: "Forbidden" });
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Solo admins pueden editar entradas" });
   }
 
   // Backward compatibility

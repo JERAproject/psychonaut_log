@@ -8,7 +8,7 @@ const navItems = [
 ];
 ---
 
-<nav class="bottom-nav" aria-label="Navegación principal">
+<nav id="mobile-nav" class="bottom-nav" aria-label="Navegación principal">
   {navItems.map(item => (
     <a
       href={item.href}
@@ -110,3 +110,46 @@ const navItems = [
     }
   }
 </style>
+
+<script>
+  const USER_KEY = 'psy_user';
+  const TOKEN_KEY = 'psy_token';
+
+  function getUser() {
+    try {
+      const u = localStorage.getItem(USER_KEY);
+      return u ? JSON.parse(u) : null;
+    } catch { return null; }
+  }
+
+  function getToken() {
+    return localStorage.getItem(TOKEN_KEY);
+  }
+
+  function updateMobileNav() {
+    const nav = document.getElementById('mobile-nav') as HTMLElement;
+    if (!nav) return;
+    
+    const user = getUser();
+    const token = getToken();
+    
+    if (user && token) {
+      nav.hidden = false;
+    } else {
+      nav.hidden = true;
+    }
+  }
+
+  // Check on load
+  updateMobileNav();
+
+  // Listen for storage changes (when user logs in/out in another tab)
+  window.addEventListener('storage', (e) => {
+    if (e.key === USER_KEY || e.key === TOKEN_KEY) {
+      updateMobileNav();
+    }
+  });
+
+  // Also check periodically for local changes
+  setInterval(updateMobileNav, 1000);
+</script>

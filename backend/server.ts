@@ -2,13 +2,20 @@ import express from "express";
 import cors from "cors";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
-import db from "./db";
+import multer from "multer";
+import db from "./db.js";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 
 app.use(cors({ origin: "*" }));
 app.use(express.json());
+app.use(express.raw({ type: "audio/*", limit: "10mb" }));
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
 
 type AuthUser = { id: number; username: string; role: string } | null;
 
@@ -924,6 +931,84 @@ app.post("/api/psicologo/unassign", (req, res) => {
   if (!psicologoId || !userId) return res.status(400).json({ error: "psicologoId and userId required" });
   db.prepare("DELETE FROM psicologo_users WHERE psicologo_id = ? AND user_id = ?").run(psicologoId, userId);
   res.json({ ok: true });
+});
+
+// ── Speech-to-Text (Faster-Whisper proxy) ───────────────
+
+app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
+  // Authentication optional for local-first usage
+  // if (!req.user) return res.status(401).json({ error: "unauthorized" });
+
+  if (!req.file) {
+    return res.status(400).json({ error: "No audio file provided" });
+  }
+
+  try {
+    const formData = new FormData();
+    const uint8Array = new Uint8Array(req.file.buffer);
+    const blob = new Blob([uint8Array], { type: req.file.mimetype });
+    formData.append("audio", blob, req.file.originalname);
+
+    const pythonServiceUrl = "http://127.0.0.1:5000/api/transcribe";
+    const response = await fetch(pythonServiceUrl, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return res.status(response.status).json(error);
+    }
+
+    const result = await response.json();
+    res.json(result);
+  } catch (err: any) {
+    console.error("Transcription error:", err);
+    res.status(500).json({ error: "Transcription service unavailable. Make sure Python service is running on port 5000." });
+  }
+});
+
+// Get transcription history
+app.get("/api/transcriptions", (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "unauthorized" });
+
+  const transcriptions = db.prepare(
+    "SELECT id, filename, transcript, language, duration, created_at FROM voice_transcriptions ORDER BY created_at DESC LIMIT 50"
+  ).all();
+
+  res.json(transcriptions);
+});
+
+// ── Ollama Proxy (to avoid CORS) ─────────────────────────
+
+app.post("/api/chat", async (req, res) => {
+  // Authentication optional for local-first usage
+  // if (!req.user) return res.status(401).json({ error: "unauthorized" });
+  
+  const { prompt, model = "llama3" } = req.body;
+  if (!prompt) return res.status(400).json({ error: "prompt is required" });
+
+  try {
+    const response = await fetch("http://localhost:11434/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        prompt,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    res.json({ response: data.response });
+  } catch (err: any) {
+    console.error("Chat error:", err);
+    res.status(500).json({ error: "Ollama unavailable: " + err.message });
+  }
 });
 
 // ── Start ───────────────────────────────────────────────

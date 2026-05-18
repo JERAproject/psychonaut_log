@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const DIMENSION_LABELS = {
   somatic: "Somatic (Body)",
@@ -41,6 +41,32 @@ export default function CognitiveClassifier() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [speaking, setSpeaking] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  useEffect(() => {
+    let interval;
+    if (recording) {
+      interval = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingTime(0);
+    }
+    return () => clearInterval(interval);
+  }, [recording]);
+
+  function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins > 0 ? `${mins}:${secs.toString().padStart(2, "0")}` : `${secs}s`;
+  }
 
   async function classify() {
     if (!input.trim()) return;
@@ -67,8 +93,135 @@ export default function CognitiveClassifier() {
     }
   }
 
+  async function analyze() {
+    if (!input.trim()) return;
+    setAnalyzing(true);
+    setError(null);
+    setAnalysisResult(null);
+    
+    const ANALYSIS_PROMPT = `Eres un guía de introspección empático y profundo. Analiza lo que el usuario expresa y dialoga con él de manera cálida y reflexiva.
+
+El usuario escribe: "${input.slice(0, 500)}"
+
+Responde de manera breve (2-3 oraciones máximo) como un amigo sabio que:
+1. Reconoce lo que siente/pensa
+2. Ofrece una perspectiva gentil
+3. Invita a reflexionar más
+
+Sé directo, no uses listas ni bullet points. Habla en español.`;
+
+    try {
+      const token = localStorage.getItem("psy_token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          prompt: ANALYSIS_PROMPT,
+          model: "llama3"
+        }),
+      });
+
+      if (!response.ok) throw new Error("Análisis no disponible");
+      
+      const data = await response.json();
+      setAnalysisResult(data.response || "No obtuve respuesta.");
+    } catch (err) {
+      setError("Análisis no disponible: " + (err.message || "Error de conexión"));
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+
+  function speakAnalysis() {
+    if (!analysisResult || speaking) return;
+    
+    const utterance = new SpeechSynthesisUtterance(analysisResult);
+    utterance.lang = "es-ES";
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    
+    utterance.onstart = () => setSpeaking(true);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function stopSpeaking() {
+    window.speechSynthesis.cancel();
+    setSpeaking(false);
+  }
+
   function handleKeyDown(e) {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) classify();
+  }
+
+  async function toggleRecording() {
+    if (recording) {
+      // Stop recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.stop();
+      }
+      setRecording(false);
+    } else {
+      // Start recording
+      audioChunksRef.current = [];
+      setRecordingTime(0);
+      
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            audioChunksRef.current.push(e.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          stream.getTracks().forEach((track) => track.stop());
+          
+          if (audioChunksRef.current.length === 0) return;
+
+          setTranscribing(true);
+          try {
+            const token = localStorage.getItem("psy_token");
+            const formData = new FormData();
+            const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+            formData.append("audio", blob, "recording.webm");
+
+            const headers = {};
+            if (token) headers["Authorization"] = `Bearer ${token}`;
+
+            const res = await fetch("/api/transcribe", {
+              method: "POST",
+              headers,
+              body: formData,
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+            const data = await res.json();
+
+            if (data.transcript) {
+              setInput((prev) => prev + (prev ? " " : "") + data.transcript);
+            }
+          } catch (err) {
+            setError("Transcripción fallida: " + (err.message || "Error"));
+          } finally {
+            setTranscribing(false);
+          }
+        };
+
+        mediaRecorder.start();
+        setRecording(true);
+      } catch (err) {
+        setError("No se pudo acceder al micrófono: " + err.message);
+      }
+    }
   }
 
   return (
@@ -86,6 +239,29 @@ export default function CognitiveClassifier() {
           />
           <div className="input-actions">
             <button
+              className="mic-btn"
+              onClick={toggleRecording}
+              disabled={transcribing}
+              title="Grabar voz"
+            >
+              {transcribing ? (
+                <>
+                  <span className="btn-spinner"></span>
+                  <span>Transcribiendo...</span>
+                </>
+              ) : recording ? (
+                <>
+                  <span className="rec-icon">⏹️</span>
+                  <span>Parar ({formatTime(recordingTime)})</span>
+                </>
+              ) : (
+                <>
+                  <span className="mic-icon">🎤</span>
+                  <span>Voz</span>
+                </>
+              )}
+            </button>
+            <button
               className="classify-btn"
               onClick={classify}
               disabled={loading || !input.trim()}
@@ -102,10 +278,43 @@ export default function CognitiveClassifier() {
                 </>
               )}
             </button>
+            <button
+              className="analyze-btn"
+              onClick={analyze}
+              disabled={analyzing || !input.trim()}
+            >
+              {analyzing ? (
+                <>
+                  <span className="btn-spinner"></span>
+                  <span>Analizando...</span>
+                </>
+              ) : (
+                <>
+                  <span className="analyze-icon">💬</span>
+                  <span>Analizar</span>
+                </>
+              )}
+            </button>
             <span className="input-hint">Ctrl + Enter para ejecutar</span>
           </div>
           {error && <div className="error-msg">{error}</div>}
         </div>
+
+        {analysisResult && (
+          <div className="analysis-section">
+            <div className="analysis-header">
+              <h3 className="analysis-title">Análisis</h3>
+              <button
+                className="speak-btn"
+                onClick={speaking ? stopSpeaking : speakAnalysis}
+                title={speaking ? "Detener" : "Escuchar"}
+              >
+                {speaking ? "⏹️" : "🔊"}
+              </button>
+            </div>
+            <p className="analysis-text">{analysisResult}</p>
+          </div>
+        )}
 
         {result && (
           <div className="result-section">
@@ -230,6 +439,113 @@ export default function CognitiveClassifier() {
         .classify-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
+        }
+
+        .mic-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          color: white;
+          border: none;
+          padding: 0.875rem 1.5rem;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          margin: 0.5rem;
+        }
+
+        .mic-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .mic-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        .mic-icon {
+          font-size: 1.1rem;
+        }
+
+        .rec-icon {
+          font-size: 1rem;
+        }
+
+        .analyze-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: none;
+          padding: 0.875rem 1.5rem;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          margin: 0.5rem;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .analyze-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .analyze-icon {
+          font-size: 1.1rem;
+        }
+
+        .analysis-section {
+          margin-top: 1.5rem;
+          padding: 1.25rem;
+          background: linear-gradient(145deg, #1e293b, #0f172a);
+          border-radius: 16px;
+          border: 1px solid #334155;
+        }
+
+        .analysis-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.75rem;
+        }
+
+        .analysis-title {
+          font-size: 1rem;
+          font-weight: 600;
+          color: #10b981;
+          margin: 0;
+        }
+
+        .speak-btn {
+          background: rgba(16, 185, 129, 0.2);
+          border: 1px solid #10b981;
+          color: #10b981;
+          padding: 0.5rem 0.75rem;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 1rem;
+          transition: all 0.2s;
+        }
+
+        .speak-btn:hover {
+          background: rgba(16, 185, 129, 0.3);
+        }
+
+        .analysis-text {
+          color: #e2e8f0;
+          font-size: 1rem;
+          line-height: 1.6;
+          margin: 0;
+          font-style: italic;
         }
 
         .btn-icon {

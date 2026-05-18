@@ -171,4 +171,18 @@ if (psicologoTables.length === 0) {
   `);
 }
 
+const voiceTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='voice_transcriptions'").all();
+if (voiceTables.length === 0) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS voice_transcriptions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      filename TEXT,
+      transcript TEXT,
+      language TEXT,
+      duration REAL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
+
 export default db;

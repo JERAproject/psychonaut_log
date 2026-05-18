@@ -13,11 +13,9 @@ from faster_whisper import WhisperModel
 # =========================================================
 
 UPLOAD_FOLDER = "uploads"
-
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Whisper model:
-# tiny | base | small | medium
+# Whisper model: tiny | base | small | medium
 WHISPER_MODEL = "base"
 
 # CPU mode (safe for most systems)
@@ -34,10 +32,10 @@ model = WhisperModel(
 app = Flask(__name__)
 
 # =========================================================
-# DATABASE
+# DATABASE - Use same path as Express server
 # =========================================================
 
-DB_PATH = "test.db"
+DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "habits.db")
 
 def save_transcription(
     filename,

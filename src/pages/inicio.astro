@@ -1,9 +1,18 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import LogoImg from '../assets/Logo.png';
 ---
 
 <Layout>
   <div class="landing-hero">
+    <!-- Logo temporalmente oculto
+    <div class="landing-image-container">
+      <img src={LogoImg.src} alt="PsychonautLog Logo" class="landing-image" />
+    </div>
+    -->
+    
+    <!-- <canvas id="lorenz-canvas" class="lorenz-canvas" width="400" height="400"></canvas> -->
+    
     <h1 class="landing-title">PsychonautLog</h1>
     <h2 class="landing-subtitle">Bitácora de un psiconauta</h2>
     
@@ -15,6 +24,237 @@ import Layout from '../layouts/Layout.astro';
   </div>
 </Layout>
 
+<script>
+  console.log('[DEBUG] Script de inicio cargado');
+  
+  function startAnimation() {
+    console.log('[DEBUG] startAnimation llamado');
+    
+    // Mostrar imagen inicial
+    const imageContainer = document.querySelector('.landing-image-container');
+    const title = document.querySelector('.landing-title');
+    const subtitle = document.querySelector('.landing-subtitle');
+    const prompt = document.querySelector('.landing-prompt');
+    
+    console.log('[DEBUG] Elementos:', {
+      imageContainer: !!imageContainer,
+      title: !!title,
+      subtitle: !!subtitle,
+      prompt: !!prompt
+    });
+    
+    // Aplicar clases de animación después de un delay (más lento)
+    setTimeout(() => {
+      if (imageContainer) {
+        imageContainer.classList.add('fade-out-scale');
+        console.log('[DEBUG] Animación imagen iniciada');
+      }
+    }, 2000); // La imagen dura 2 segundos antes de desvanecerse
+    
+    setTimeout(() => {
+      if (title) {
+        title.classList.add('fade-in-scale');
+        console.log('[DEBUG] Animación título iniciada');
+      }
+    }, 875); // Título aparece después de 0.875s
+    
+    setTimeout(() => {
+      if (subtitle) {
+        subtitle.classList.add('fade-in-up');
+        console.log('[DEBUG] Animación subtítulo iniciada');
+      }
+    }, 4500);
+    
+    setTimeout(() => {
+      if (prompt) {
+        prompt.classList.add('fade-in-up');
+        console.log('[DEBUG] Animación prompt iniciada');
+      }
+    }, 5000);
+    
+    // Iniciar attractor de Lorenz inmediatamente (sin logo)
+    // setTimeout(() => {
+    //   startLorenzCanvas();
+    // }, 1500);
+  }
+  
+  function startLorenzCanvas() {
+    console.log('[DEBUG] startLorenzCanvas llamado');
+    const canvas = document.getElementById('lorenz-canvas');
+    if (!canvas) {
+      console.error('[DEBUG] Canvas no encontrado');
+      return;
+    }
+    console.log('[DEBUG] Canvas encontrado');
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.error('[DEBUG] No se pudo obtener contexto 2D');
+      return;
+    }
+    console.log('[DEBUG] Contexto 2D obtenido');
+
+    // Parámetros Lorenz classic
+    const sigma = 10;
+    const rho = 28;
+    const beta = 8/3;
+    const dt = 0.01;
+    const scale = 6;
+    const offsetX = canvas.width / 2;
+    const offsetY = canvas.height / 2;
+
+    // Variables de rotación aleatoria (solo X e Y)
+    let rotX = 0, rotY = 0;
+    let rotSpeedX = (Math.random() - 0.5) * 0.025;
+    let rotSpeedY = (Math.random() - 0.5) * 0.025;
+    
+    // Cambio de dirección aleatorio cada cierto tiempo
+    let lastRotChange = 0;
+
+    console.log('[DEBUG] Params - offsetX:', offsetX, 'offsetY:', offsetY, 'scale:', scale);
+
+    // Múltiples puntos de partida para crear más partículas
+    const particles = [];
+    for (let i = 0; i < 20; i++) {
+      particles.push({
+        x: 0.1 + (Math.random() - 0.5) * 2,
+        y: 0 + (Math.random() - 0.5) * 2,
+        z: 20 + (Math.random() - 0.5) * 10
+      });
+    }
+    
+    let time = 0;
+    let frameCount = 0;
+
+    function lorenz(p) {
+      const dx = sigma * (p.y - p.x) * dt;
+      const dy = (p.x * (rho - p.z) - p.y) * dt;
+      const dz = (p.x * p.y - beta * p.z) * dt;
+      
+      p.x += dx;
+      p.y += dy;
+      p.z += dz;
+      
+      return p;
+    }
+
+    function rotatePoint(x, y, z, rx, ry) {
+      // Rotación en X
+      let y1 = y * Math.cos(rx) - z * Math.sin(rx);
+      let z1 = y * Math.sin(rx) + z * Math.cos(rx);
+      let x1 = x;
+      
+      // Rotación en Y
+      let x2 = x1 * Math.cos(ry) + z1 * Math.sin(ry);
+      let z2 = -x1 * Math.sin(ry) + z1 * Math.cos(ry);
+      let y2 = y1;
+      
+      return { x: x2, y: y2, z: z2 };
+    }
+
+    function drawPoint(px, py, radius) {
+      const goldHue = 45;
+      
+      // Glow effect dorado
+      const gradient = ctx.createRadialGradient(px, py, 0, px, py, radius * 3);
+      gradient.addColorStop(0, `hsla(${goldHue}, 90%, 75%, 1)`);
+      gradient.addColorStop(0.3, `hsla(${goldHue}, 85%, 60%, 0.7)`);
+      gradient.addColorStop(0.7, `hsla(${goldHue}, 80%, 50%, 0.3)`);
+      gradient.addColorStop(1, `hsla(${goldHue}, 70%, 40%, 0)`);
+      
+      ctx.beginPath();
+      ctx.arc(px, py, radius * 3, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      
+      // Centro dorado
+      ctx.beginPath();
+      ctx.arc(px, py, radius, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${goldHue}, 100%, 85%, 1)`;
+      ctx.fill();
+    }
+
+    function animateLoop() {
+      frameCount++;
+      time += 0.1;
+      
+      // Cambiar rotación aleatoriamente cada 60 frames
+      if (frameCount - lastRotChange > 60) {
+        rotSpeedX = (Math.random() - 0.5) * 0.04;
+        rotSpeedY = (Math.random() - 0.5) * 0.04;
+        lastRotChange = frameCount;
+      }
+      
+      // Actualizar rotaciones (solo X e Y)
+      rotX += rotSpeedX;
+      rotY += rotSpeedY;
+      
+      // Estelas moradas (menos persistentes = se desvanecen más rápido)
+      ctx.fillStyle = 'rgba(30, 10, 40, 0.8)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Actualizar y dibujar cada partícula
+      for (let i = 0; i < particles.length; i++) {
+        const p = lorenz(particles[i]);
+        
+        // Aplicar rotación 3D
+        const rotated = rotatePoint(p.x, p.y - 25, p.z, rotX, rotY);
+        
+        const px = rotated.x * scale + offsetX;
+        const py = rotated.y * scale + offsetY;
+        
+        const radius = 1;
+        drawPoint(px, py, radius);
+      }
+      
+      if (frameCount % 60 === 0) {
+        console.log('[DEBUG] Frame:', frameCount, 'rotX:', rotX.toFixed(2), 'rotY:', rotY.toFixed(2));
+      }
+      
+      requestAnimationFrame(animateLoop);
+    }
+    
+    canvas.style.opacity = '0.8';
+    console.log('[DEBUG] Iniciando animación...');
+    animateLoop();
+    console.log('[DEBUG] Animación de Lorenz iniciada');
+  }
+  
+  function generateTextPoints(text, width, height) {
+    console.log('[DEBUG] Generando puntos para:', text, 'w:', width, 'h:', height);
+    const points = [];
+    const chars = text.split('');
+    const numPoints = 400;
+    
+    for (let i = 0; i < numPoints; i++) {
+      const t = i / numPoints;
+      const charIndex = Math.floor(t * chars.length);
+      const charX = (charIndex - chars.length/2) * (width / chars.length) + (width / chars.length / 2);
+      
+      const char = chars[charIndex];
+      const letterVar = getLetterPattern(char, (t * chars.length) % 1);
+      const charY = letterVar * height * 0.6;
+      
+      points.push({ x: charX, y: charY });
+    }
+    
+    console.log('[DEBUG] Puntos generados:', points.length);
+    return points;
+  }
+  
+  function getLetterPattern(char, t) {
+    const code = char.charCodeAt(0);
+    return Math.sin(t * Math.PI * (code % 10 + 5)) * (code % 3 - 1) * 0.8;
+  }
+
+  // Ejecutar cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startAnimation);
+  } else {
+    startAnimation();
+  }
+</script>
+
 <style>
   .landing-hero {
     display: flex;
@@ -24,49 +264,119 @@ import Layout from '../layouts/Layout.astro';
     min-height: 100vh;
     padding: 2rem 1rem;
     text-align: center;
-    gap: 2rem;
+    gap: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .landing-image-container {
+    display: none; /* Logo temporalmente oculto */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(60vw, 300px);
+    z-index: 0;
+    transition: opacity 2s ease-out, transform 2s ease-out;
+  }
+
+  .landing-image-container.fade-out-scale {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+
+  .landing-image {
+    width: 100%;
+    height: auto;
+    filter: brightness(0.8) contrast(1.1);
+    border-radius: 20px;
+  }
+
+  .lorenz-canvas {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    opacity: 0;
+    pointer-events: none;
+    width: 150vmin;
+    height: 150vmin;
+    max-width: 600px;
+    max-height: 600px;
+  }
+
+  @media (max-width: 640px) {
+    .lorenz-canvas {
+      width: 180vmin;
+      height: 180vmin;
+      top: 40%;
+    }
   }
 
   .landing-title {
-    font-size: clamp(2rem, 10vw, 3.5rem);
+    position: relative;
+    z-index: 2;
+    font-size: clamp(2.5rem, 12vw, 4.5rem);
     font-weight: 700;
     margin: 0;
-    background: linear-gradient(135deg, #fefefe 0%, #a5b4fc 100%);
+    background: linear-gradient(135deg, #fefefe 0%, #a5b4fc 50%, #8b5cf6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    line-height: 1.2;
+    line-height: 1.1;
+    opacity: 0;
+    transform: scale(0.3);
+    filter: blur(20px);
+    transition: opacity 2.5s ease-out, transform 2.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 2.5s ease-out;
+  }
+
+  .landing-title.fade-in-scale {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
   }
 
   .landing-subtitle {
-    font-size: clamp(1rem, 4vw, 1.25rem);
-    font-weight: 500;
+    position: relative;
+    z-index: 2;
+    font-size: clamp(1rem, 4vw, 1.5rem);
+    font-weight: 400;
     margin: 0;
     color: #9ca3af;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+  }
+
+  .landing-subtitle.fade-in-up {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .landing-prompt {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
     padding: 2rem;
-    background: rgba(22, 22, 42, 0.8);
+    background: rgba(22, 22, 42, 0.7);
     border: 1px solid rgba(139, 92, 246, 0.3);
     border-radius: 20px;
     max-width: 320px;
-    animation: fadeIn 0.6s ease-out;
+    margin-top: 1rem;
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 1s ease-out, transform 1s ease-out;
   }
 
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .landing-prompt.fade-in-up {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .prompt-icon {

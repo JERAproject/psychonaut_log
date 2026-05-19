@@ -141,9 +141,44 @@ import LogoImg from '../assets/Logo.png';
   const TOKEN_KEY = 'psy_token';
   const USER_KEY = 'psy_user';
 
+  // ── Scroll hide/show header ──────────────────────────────
+  function initScrollHeader() {
+    const siteHeader = document.getElementById('site-header');
+    if (!siteHeader) { console.log('[Header] header not found'); return; }
+    let lastScrollY = 0;
+    let ticking = false;
+
+    console.log('[Header] siteHeader:', siteHeader, 'scrollY:', window.scrollY);
+
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          console.log('[Header] scroll:', currentScrollY, 'last:', lastScrollY);
+          if (currentScrollY > lastScrollY && currentScrollY > 80) {
+            siteHeader.style.transform = 'translateY(-100%)';
+            siteHeader.style.transition = 'transform 0.3s';
+            console.log('[Header] HIDDEN');
+          } else {
+            siteHeader.style.transform = '';
+            console.log('[Header] SHOWN');
+          }
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    console.log('[Header] scroll listener attached');
+  }
+
+  initScrollHeader();
+  // ── End scroll logic ─────────────────────────────────────
+
   function getApiBase(): string {
-    const meta = document.querySelector('meta[name="api-base"]');
-    return meta ? meta.getAttribute('content') || '' : 'http://localhost:3001';
+    return '';
   }
 
   function getToken(): string | null {
@@ -412,7 +447,11 @@ import LogoImg from '../assets/Logo.png';
     backdrop-filter: blur(10px);
     border-bottom: 1px solid #2a2a35;
     padding-top: env(safe-area-inset-top);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+  }
+
+  .site-header.header-hidden {
+    transform: translateY(-100%);
   }
 
   .header-container {

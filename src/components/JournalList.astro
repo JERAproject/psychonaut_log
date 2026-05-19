@@ -433,6 +433,7 @@
       const user = getCurrentUser();
       if (!user) return false;
       if (user.role === "admin") return true;
+      if (user.role === "psicologo") return false;
       return entry.user_id === user.id;
     }
 

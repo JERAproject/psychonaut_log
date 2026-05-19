@@ -536,30 +536,30 @@ app.put("/api/journal/:id", (req, res) => {
 
 // ── State Extraction ───────────────────────────────────
 
-const SOMATIC_PROMPT = `You are a somatic state classifier. Classify body sensations into ONE category.
+const SOMATIC_PROMPT = `Eres un clasificador de estados somáticos. Debes responder ÚNICAMENTE en español. Clasifica las sensaciones corporales en UNA categoría.
 
-Allowed values: fatigue, low_energy, neutral, alert, high_energy, tension, relaxed, restless
+Valores permitidos: fatigue, low_energy, neutral, alert, high_energy, tension, relaxed, restless
 
-Output ONLY valid JSON:
+Salida SOLO JSON válido:
 {"somatic": "value"}
 
 Input: {{TEXT}}`;
 
-const COGNITIVE_PROMPT = `You are a cognitive pattern classifier. Classify thinking patterns into ONE category.
+const COGNITIVE_PROMPT = `Eres un clasificador de patrones cognitivos. Debes responder ÚNICAMENTE en español. Clasifica los patrones de pensamiento en UNA categoría.
 
-Allowed values: rumination, overthinking, analytical, mental_fog, clear, insight_oriented
+Valores permitidos: rumination, overthinking, analytical, mental_fog, clear, insight_oriented
 
-Output ONLY valid JSON:
+Salida SOLO JSON válido:
 {"cognition": "value"}
 
 Input: {{TEXT}}`;
 
-const EMOTIONAL_ATTENTION_PROMPT = `You are a dual classifier. Classify emotional state and attention stability.
+const EMOTIONAL_ATTENTION_PROMPT = `Eres un clasificador dual. Debes responder ÚNICAMENTE en español. Clasifica el estado emocional y la estabilidad atencional.
 
-Emotional allowed: anxiety, stress, calm, neutral, irritability, contentment
-Attention allowed: distracted, scattered, unstable_attention, sustained_attention, focused, hyperfocused
+Estados emocionales permitidos: anxiety, stress, calm, neutral, irritability, contentment
+Estados de atención permitidos: distracted, scattered, unstable_attention, sustained_attention, focused, hyperfocused
 
-Output ONLY valid JSON:
+Salida SOLO JSON válido:
 {"emotional": "value", "attention": "value"}
 
 Input: {{TEXT}}`;
@@ -984,9 +984,11 @@ app.get("/api/transcriptions", (req, res) => {
 app.post("/api/chat", async (req, res) => {
   // Authentication optional for local-first usage
   // if (!req.user) return res.status(401).json({ error: "unauthorized" });
-  
+
   const { prompt, model = "llama3" } = req.body;
   if (!prompt) return res.status(400).json({ error: "prompt is required" });
+
+  const systemPrompt = "Responde siempre en español. Sé claro, conciso y útil.";
 
   try {
     const response = await fetch("http://localhost:11434/api/generate", {
@@ -994,7 +996,7 @@ app.post("/api/chat", async (req, res) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model,
-        prompt,
+        prompt: systemPrompt + "\n\nUsuario: " + prompt + "\n\nAsistente:",
         stream: false,
       }),
     });

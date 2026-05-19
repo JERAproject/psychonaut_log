@@ -41,11 +41,11 @@ import Layout from '../layouts/Layout.astro';
           <div class="grid">
             <label>
               Fecha
-              <input type="date" name="fecha" required aria-required="true" />
+              <input type="date" name="fecha" required aria-required="true" value={new Date().toISOString().split('T')[0]} />
             </label>
             <label>
               Hora
-              <input type="time" name="hora" required aria-required="true" />
+              <input type="time" name="hora" required aria-required="true" value={(() => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; })()} />
             </label>
             <label>
               Duración (min)
@@ -271,8 +271,7 @@ import Layout from '../layouts/Layout.astro';
   // ── Practices CRUD ──────────────────────────────────────
   const TOKEN_KEY = 'psy_token';
   function getApiBase(): string {
-    const meta = document.querySelector('meta[name="api-base"]');
-    return meta ? meta.getAttribute('content') || '' : 'http://localhost:3001';
+    return '';
   }
   function getToken(): string | null { return localStorage.getItem(TOKEN_KEY); }
 
@@ -353,6 +352,90 @@ import Layout from '../layouts/Layout.astro';
 
   loadPractices();
 
+  // ── Auto-save form to localStorage ──────────────────────
+  const form = document.getElementById("journal-form") as HTMLFormElement | null;
+  const DRAFT_KEY = 'psy_journal_draft';
+  const draftInputs = ['fecha', 'hora', 'duracion', 'tipo_practica', 'estado_previo', 'fenomenologia_somatica', 'fenomenologia_cognitiva', 'cuerpo', 'insight', 'integracion', 'estado_post'];
+  const draftSliders = ['energy_pre', 'valence_pre', 'energy_post', 'valence_post'];
+
+  function saveDraft() {
+    const data: Record<string, any> = {};
+    draftInputs.forEach(name => {
+      const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+      if (el) data[name] = el.value;
+    });
+    draftSliders.forEach(name => {
+      const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement;
+      if (el) data[name] = el.value;
+    });
+    const stateRadio = document.querySelector('input[name="session_state"]:checked') as HTMLInputElement;
+    if (stateRadio) data.session_state = stateRadio.value;
+    if (currentSustancia) data.sustancia = currentSustancia;
+    if (currentDosis) data.dosis = currentDosis;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  }
+
+  function restoreDraft() {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    if (!saved) return;
+    try {
+      const data = JSON.parse(saved);
+      draftInputs.forEach(name => {
+        const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+        if (el && data[name]) el.value = data[name];
+      });
+      draftSliders.forEach(name => {
+        const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement;
+        if (el && data[name]) {
+          el.value = data[name];
+          const valueDisplay = document.getElementById(`${name}-value`);
+          if (valueDisplay) valueDisplay.textContent = data[name] !== '' ? data[name] : '—';
+        }
+      });
+      if (data.session_state === 'altered') {
+        const alteredRadio = document.querySelector('input[name="session_state"][value="altered"]') as HTMLInputElement;
+        if (alteredRadio) alteredRadio.checked = true;
+        if (data.sustancia) {
+          currentSustancia = data.sustancia;
+          currentDosis = data.dosis || '';
+          applyAlteredMode();
+        }
+      }
+    } catch {}
+  }
+
+  function clearDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+  }
+
+  function resetFormDefaults() {
+    const fechaInput = form?.querySelector('[name="fecha"]') as HTMLInputElement;
+    const horaInput = form?.querySelector('[name="hora"]') as HTMLInputElement;
+    if (fechaInput) {
+      fechaInput.value = new Date().toISOString().split('T')[0];
+    }
+    if (horaInput) {
+      const d = new Date();
+      horaInput.value = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+    const sliders = form?.querySelectorAll('input[type="range"]') as NodeListOf<HTMLInputElement>;
+    sliders?.forEach(slider => {
+      const valueDisplay = document.getElementById(`${slider.name}-value`);
+      if (valueDisplay) valueDisplay.textContent = '—';
+    });
+  }
+
+  if (form) {
+    form.querySelectorAll('input, select, textarea').forEach(el => {
+      el.addEventListener('input', saveDraft);
+      el.addEventListener('change', saveDraft);
+    });
+    const stateRadiosList = form.querySelectorAll('input[name="session_state"]');
+    stateRadiosList.forEach(r => r.addEventListener('change', saveDraft));
+  }
+
+  restoreDraft();
+
   // Estado alterado - mostrar modal y cambiar colores
   const stateRadios = document.querySelectorAll('input[name="session_state"]') as NodeListOf<HTMLInputElement>;
   const page = document.querySelector('.practica-page') as HTMLElement;
@@ -416,7 +499,6 @@ import Layout from '../layouts/Layout.astro';
     }
   });
 
-  const form = document.getElementById("journal-form") as HTMLFormElement;
   const btn = form?.querySelector(".submit-btn") as HTMLButtonElement;
 
   form?.addEventListener("submit", async (e) => {
@@ -471,6 +553,8 @@ import Layout from '../layouts/Layout.astro';
 
       if (res.ok && data?.ok) {
         showToast("Entrada guardada correctamente", "success");
+        clearDraft();
+        resetFormDefaults();
         form.reset();
         // Reset altered state
         page.classList.remove('altered-mode');

@@ -18,6 +18,9 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Whisper model: tiny | base | small | medium
 WHISPER_MODEL = "base"
 
+# Language for transcription (Spanish)
+TRANSCRIPTION_LANGUAGE = "es"
+
 # CPU mode (safe for most systems)
 model = WhisperModel(
     WHISPER_MODEL,
@@ -120,6 +123,7 @@ def transcribe_audio():
 
         segments, info = model.transcribe(
             file_path,
+            language=TRANSCRIPTION_LANGUAGE,
             beam_size=5
         )
 

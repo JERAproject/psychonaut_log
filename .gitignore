@@ -49,3 +49,5 @@ src/assets/lorenz_graph.png
 src/components/LogoSvg.astro
 src/components/LorenzAttractor.tsx
 src/components/LorenzGraph.tsx
+src/components/uploads/
+test_draft.mjs

@@ -31,7 +31,7 @@
   --color-border: #2a2a35;
   --color-text: #fefefe;
   --color-text-muted: #9ca3af;
-  --color-text-dim: #6b7280;
+  --color-text-dim: #a0a5b5;
 }
 
 *,
@@ -228,4 +228,24 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid #5b8ff9;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

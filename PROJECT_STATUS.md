@@ -30,6 +30,10 @@
 - **Speech-to-Text**: Python Flask + Faster-Whisper
 - **Dev Tools**: tsx, concurrently
 
+### Features Recientes
+- **Gráfico Energy/Valence interactivo**: Click en puntos del gráfico navega al detalle de la entrada
+- **Tooltip personalizado**: Muestra fecha, tipo de práctica y valores E/V al hacer hover
+
 ---
 
 ## ✅ Estado de Calidad
@@ -87,6 +91,8 @@
 2. ✅ Tests básicos con Vitest
 3. ✅ Accesibilidad avanzada (layout, skip link, focus, reduced motion)
 4. ✅ Integración agent-skills
+5. ✅ Gráfico Energy/Valence interactivo - Click para ver detalle de entrada
+6. ✅ Tooltip personalizado en gráfico con fecha, práctica y valores E/V
 
 ### 🟡 Pendientes (Próximas iteraciones)
 
@@ -132,4 +138,4 @@ Ver `AGENTS.md` para más detalles sobre workflow.
 
 ---
 
-_Last updated: 2026-05-19_
+_Last updated: 2026-05-19 17:50_

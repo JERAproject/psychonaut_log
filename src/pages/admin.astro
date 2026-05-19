@@ -103,8 +103,8 @@ import Layout from "../layouts/Layout.astro";
 
         <div id="tab-psicologo" class="tab-panel" style="display:none;">
           <div class="admin-list-section">
-            <h2>Asignar Usuarios a Psicólogos</h2>
-            <p class="section-hint">Seleccioná qué pacientes puede ver cada psicólogo en su bitácora.</p>
+            <h2>Asignar Psicólogo a Cada Usuario</h2>
+            <p class="section-hint">Seleccioná qué psychologist supervise a cada usuario. Solo un psicólogo por usuario.</p>
             <div id="psicologo-assignments"></div>
             <div id="assign-loading" class="loading">Cargando...</div>
           </div>
@@ -329,51 +329,48 @@ import Layout from "../layouts/Layout.astro";
       }
 
       container.innerHTML = `
-        <div class="assign-table-wrap">
-          <table class="assign-table">
-            <thead>
-              <tr>
-                <th>Usuario</th>
-                <th>Estado</th>
-                ${psicologos.map(p => `<th class="th-psicologo">${p.username}</th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${users.map(u => {
-                const assignedTo = psicologos.filter(p => data.assignments[p.id]?.includes(u.id));
-                const statusText = assignedTo.length === 0 ? 'Sin asignar' : assignedTo.map(p => p.username).join(', ');
-                const statusClass = assignedTo.length === 0 ? 'status-none' : 'status-assigned';
-                return `<tr>
-                  <td class="td-user">${u.username}</td>
-                  <td class="td-status"><span class="status-badge ${statusClass}">${statusText}</span></td>
-                  ${psicologos.map(p => {
-                    const isAssigned = data.assignments[p.id]?.includes(u.id);
-                    return `<td class="td-assign">
-                      <button type="button"
-                        class="assign-btn ${isAssigned ? 'assigned' : ''}"
-                        data-pid="${p.id}" data-uid="${u.id}" data-assigned="${isAssigned}"
-                        title="${isAssigned ? 'Desasignar de ' + p.username : 'Asignar a ' + p.username}">
-                        ${isAssigned ? '✓' : '–'}
-                      </button>
-                    </td>`;
-                  }).join('')}
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
+        <div class="assign-cards">
+          ${users.map(u => {
+            const assignedTo = psicologos.find(p => data.assignments[p.id]?.includes(u.id));
+            const currentPsicologoId = assignedTo?.id || 0;
+            return `
+              <div class="patient-card">
+                <div class="patient-info">
+                  <span class="patient-name">${u.username}</span>
+                  <span class="patient-status ${assignedTo ? 'assigned' : ''}">
+                    ${assignedTo ? 'Asignado a ' + assignedTo.username : 'Sin asignar'}
+                  </span>
+                </div>
+                <select class="psicologo-select" data-uid="${u.id}">
+                  <option value="0">-- Seleccionar psicólogo --</option>
+                  ${psicologos.map(p => `
+                    <option value="${p.id}" ${p.id === currentPsicologoId ? 'selected' : ''}>${p.username}</option>
+                  `).join('')}
+                </select>
+              </div>
+            `;
+          }).join('')}
         </div>
       `;
 
-      container.querySelectorAll('.assign-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const el = e.currentTarget as HTMLButtonElement;
-          const pid = Number(el.dataset.pid);
+      container.querySelectorAll('.psicologo-select').forEach(select => {
+        select.addEventListener('change', async (e) => {
+          const el = e.currentTarget as HTMLSelectElement;
           const uid = Number(el.dataset.uid);
-          const isAssigned = el.dataset.assigned === 'true';
-          const endpoint = isAssigned ? '/api/psicologo/unassign' : '/api/psicologo/assign';
-          const res = await apiFetch(endpoint, {
+          const newPsicologoId = Number(el.value);
+          
+          if (newPsicologoId === 0) {
+            const res = await apiFetch('/api/psicologo/unassign', {
+              method: 'POST',
+              body: JSON.stringify({ psicologoId: 0, userId: uid })
+            });
+            if (res.ok) loadPsicologoAssignments();
+            return;
+          }
+
+          const res = await apiFetch('/api/psicologo/assign', {
             method: 'POST',
-            body: JSON.stringify({ psicologoId: pid, userId: uid })
+            body: JSON.stringify({ psicologoId: newPsicologoId, userId: uid })
           });
           if (res.ok) loadPsicologoAssignments();
           else { const d = await res.json(); alert(d.error || 'Error'); }
@@ -758,72 +755,90 @@ import Layout from "../layouts/Layout.astro";
 
   .tab-panel { display: block; }
 
-  .assign-table-wrap { overflow-x: auto; }
-
-  .assign-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.82rem;
+  .assign-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
-  .assign-table th {
-    text-align: center;
-    color: rgba(255,255,255,0.55);
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 0.6rem 0.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-
-  .assign-table th:first-child, .assign-table th:nth-child(2) {
-    text-align: left;
-  }
-
-  .th-psicologo { white-space: nowrap; }
-
-  .assign-table td {
-    padding: 0.6rem 0.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    vertical-align: middle;
-  }
-
-  .assign-table tr:last-child td { border-bottom: none; }
-  .assign-table tr:hover td { background: rgba(255,255,255,0.03); }
-
-  .td-user { font-weight: 600; color: #fff; white-space: nowrap; }
-  .td-status { font-size: 0.75rem; }
-
-  .status-badge {
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
-  .status-none { background: rgba(107,114,128,0.15); color: rgba(255,255,255,0.55); }
-  .status-assigned { background: rgba(251,191,36,0.12); color: #fbbf24; }
-
-  .td-assign { text-align: center; }
-
-  .assign-btn {
-    width: 32px;
-    height: 32px;
-    display: inline-flex;
+  .patient-card {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.4);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 8px;
-    color: rgba(255,255,255,0.4);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.15s;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
 
-  .assign-btn:hover { border-color: #fbbf24; color: #fbbf24; }
-  .assign-btn.assigned { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.3); color: #fbbf24; }
-  .assign-btn.assigned:hover { border-color: #f87171; color: #f87171; background: rgba(248,113,113,0.1); }
+  .patient-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 140px;
+  }
+
+  .patient-name {
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.92rem;
+  }
+
+  .patient-status {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.45);
+  }
+
+  .patient-status.assigned {
+    color: #fbbf24;
+  }
+
+  .psicologo-select {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.6rem 0.85rem;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.15s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem;
+  }
+
+  .psicologo-select:hover {
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .psicologo-select:focus {
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.15);
+  }
+
+  .psicologo-select option {
+    background: #12121a;
+    color: #fff;
+    padding: 0.5rem;
+  }
+
+  @media (max-width: 500px) {
+    .patient-card {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .patient-info {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
 </style>

@@ -67,11 +67,12 @@ export function renderEntryDashboard(energy_pre, valence_pre, energy_post, valen
   if (preHas) {
     const px = toX(valence_pre);
     const py = toY(energy_pre);
+    const preTitle = fecha ? `PRE · ${fecha}` : 'PRE';
     paths += `
       <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="12" fill="rgba(96,165,250,0.12)"/>
-      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="7" fill="#60a5fa" opacity="0.9"/>
-      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="3" fill="#bfdbfe"/>
-      <text x="${(px + 12).toFixed(1)}" y="${(py - 8).toFixed(1)}" style="font-size:9px;fill:#60a5fa;font-family:monospace;font-weight:600;">PRE</text>
+      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="7" fill="#60a5fa" opacity="0.9" title="${preTitle} · E:${energy_pre} V:${valence_pre}"/>
+      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="3" fill="#bfdbfe" title="${preTitle} · E:${energy_pre} V:${valence_pre}"/>
+      <text x="${(px + 12).toFixed(1)}" y="${(py - 8).toFixed(1)}" style="font-size:9px;fill:#60a5fa;font-family:monospace;font-weight:600;" title="${preTitle}">PRE</text>
     `;
   }
 
@@ -79,11 +80,12 @@ export function renderEntryDashboard(energy_pre, valence_pre, energy_post, valen
   if (postHas) {
     const px = toX(valence_post);
     const py = toY(energy_post);
+    const postTitle = fecha ? `POST · ${fecha}` : 'POST';
     paths += `
       <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="12" fill="rgba(244,114,182,0.12)"/>
-      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="7" fill="#f472b6" opacity="0.9"/>
-      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="3" fill="#fbcfe8"/>
-      <text x="${(px + 12).toFixed(1)}" y="${(py - 8).toFixed(1)}" style="font-size:9px;fill:#f472b6;font-family:monospace;font-weight:600;">POST</text>
+      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="7" fill="#f472b6" opacity="0.9" title="${postTitle} · E:${energy_post} V:${valence_post}"/>
+      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="3" fill="#fbcfe8" title="${postTitle} · E:${energy_post} V:${valence_post}"/>
+      <text x="${(px + 12).toFixed(1)}" y="${(py - 8).toFixed(1)}" style="font-size:9px;fill:#f472b6;font-family:monospace;font-weight:600;" title="${postTitle}">POST</text>
     `;
   }
 
@@ -125,6 +127,7 @@ export function renderEntryDashboard(energy_pre, valence_pre, energy_post, valen
     `;
   }
 
+  const tooltipId = 'entry-tt-' + Math.random().toString(36).substr(2, 9);
   return `
     <div style="background:#0d0d1a;border-radius:12px;padding:1rem;margin-top:0.5rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;">

@@ -78,7 +78,7 @@ import Layout from '../layouts/Layout.astro';
             
             <div class="slider-group">
               <div class="slider-header">
-                <span class="slider-title">ENERGY (Pre) <span class="info-icon" data-tooltip="energy" onclick="showTooltip('energy', event)"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
+                <span class="slider-title">ENERGY (Pre) <span class="info-icon" data-tooltip="energy" onclick="showTooltip('energy', event)" role="button" tabindex="0" aria-label="Información sobre ENERGY"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
                 <span class="slider-value" id="energy-pre-value">—</span>
               </div>
               <input type="range" name="energy_pre" min="-5" max="5" step="1" class="slider" />
@@ -90,7 +90,7 @@ import Layout from '../layouts/Layout.astro';
 
             <div class="slider-group">
               <div class="slider-header">
-                <span class="slider-title">VALENCE (Pre) <span class="info-icon" data-tooltip="valence" onclick="showTooltip('valence', event)"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
+                <span class="slider-title">VALENCE (Pre) <span class="info-icon" data-tooltip="valence" onclick="showTooltip('valence', event)" role="button" tabindex="0" aria-label="Información sobre VALENCE"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
                 <span class="slider-value" id="valence-pre-value">—</span>
               </div>
               <input type="range" name="valence_pre" min="-5" max="5" step="1" class="slider" />
@@ -137,7 +137,7 @@ import Layout from '../layouts/Layout.astro';
             
             <div class="slider-group">
               <div class="slider-header">
-                <span class="slider-title">ENERGY (Post) <span class="info-icon" data-tooltip="energy" onclick="showTooltip('energy', event)"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
+                <span class="slider-title">ENERGY (Post) <span class="info-icon" data-tooltip="energy" onclick="showTooltip('energy', event)" role="button" tabindex="0" aria-label="Información sobre ENERGY"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
                 <span class="slider-value" id="energy-post-value">—</span>
               </div>
               <input type="range" name="energy_post" min="-5" max="5" step="1" class="slider" />
@@ -149,7 +149,7 @@ import Layout from '../layouts/Layout.astro';
 
             <div class="slider-group">
               <div class="slider-header">
-                <span class="slider-title">VALENCE (Post) <span class="info-icon" data-tooltip="valence" onclick="showTooltip('valence', event)"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
+                <span class="slider-title">VALENCE (Post) <span class="info-icon" data-tooltip="valence" onclick="showTooltip('valence', event)" role="button" tabindex="0" aria-label="Información sobre VALENCE"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
                 <span class="slider-value" id="valence-post-value">—</span>
               </div>
               <input type="range" name="valence_post" min="-5" max="5" step="1" class="slider" />
@@ -248,20 +248,35 @@ import Layout from '../layouts/Layout.astro';
     
     const popup = document.createElement('div');
     popup.className = 'info-popup';
+    popup.setAttribute('role', 'dialog');
+    popup.setAttribute('aria-modal', 'true');
+    popup.setAttribute('aria-label', `Información sobre ${type}`);
+    const infoIcon = document.querySelector(`.info-icon[data-tooltip="${type}"]`);
+    infoIcon?.setAttribute('aria-expanded', 'true');
     popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;border:1px solid #8b5cf6;border-radius:12px;padding:1.25rem;max-width:90%;width:320px;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,0.5);';
-    popup.innerHTML = '<p style="color:#e5e7eb;font-size:0.9rem;line-height:1.5;margin:0;padding-right:1.5rem;">' + text + '</p><button style="position:absolute;top:0.5rem;right:0.5rem;background:transparent;border:none;color:#9ca3af;font-size:1.25rem;cursor:pointer;width:1.5rem;height:1.5rem;" class="popup-close">×</button>';
+    popup.innerHTML = '<p id="popup-desc" style="color:#e5e7eb;font-size:0.9rem;line-height:1.5;margin:0;padding-right:1.5rem;">' + text + '</p><button style="position:absolute;top:0.5rem;right:0.5rem;background:transparent;border:none;color:#9ca3af;font-size:1.25rem;cursor:pointer;width:1.5rem;height:1.5rem;" class="popup-close" aria-label="Cerrar">×</button>';
     document.body.appendChild(popup);
     console.log('Popup creado y agregado al body');
     
-    popup.querySelector('.popup-close').addEventListener('click', function() { 
+    const closeBtn = popup.querySelector('.popup-close') as HTMLButtonElement;
+    closeBtn?.addEventListener('click', function() { 
       console.log('Cerrando popup'); 
       popup.remove(); 
+      document.querySelector(`.info-icon[data-tooltip="${type}"]`)?.setAttribute('aria-expanded', 'false');
+    });
+    
+    popup.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') {
+        popup.remove();
+        document.querySelector(`.info-icon[data-tooltip="${type}"]`)?.setAttribute('aria-expanded', 'false');
+      }
     });
     
     popup.addEventListener('click', function(ev) {
       if (ev.target === popup) {
         console.log('Click fuera del contenido del popup');
         popup.remove();
+        document.querySelector(`.info-icon[data-tooltip="${type}"]`)?.setAttribute('aria-expanded', 'false');
       }
     });
     
@@ -313,7 +328,7 @@ import Layout from '../layouts/Layout.astro';
         <div class="practice-item">
           <span class="practice-label">${p.label}</span>
           <span class="practice-slug">${p.slug}</span>
-          <button type="button" class="btn-del-practice" data-slug="${p.slug}" title="Eliminar">✕</button>
+          <button type="button" class="btn-del-practice" data-slug="${p.slug}" aria-label="Eliminar práctica ${p.label}">✕</button>
         </div>
       `).join('');
       list.querySelectorAll('.btn-del-practice').forEach(btn => {

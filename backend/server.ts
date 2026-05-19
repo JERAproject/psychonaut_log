@@ -921,15 +921,16 @@ app.post("/api/psicologo/assign", (req, res) => {
   if (!psicologo) return res.status(400).json({ error: "invalid psicologo" });
   const targetUser = db.prepare("SELECT id FROM users WHERE id = ? AND role = 'user'").get(userId);
   if (!targetUser) return res.status(400).json({ error: "invalid user" });
-  db.prepare("INSERT OR IGNORE INTO psicologo_users (psicologo_id, user_id) VALUES (?, ?)").run(psicologoId, userId);
+  db.prepare("DELETE FROM psicologo_users WHERE user_id = ?").run(userId);
+  db.prepare("INSERT INTO psicologo_users (psicologo_id, user_id) VALUES (?, ?)").run(psicologoId, userId);
   res.json({ ok: true });
 });
 
 app.post("/api/psicologo/unassign", (req, res) => {
   if (!req.user || req.user.role !== "admin") return res.status(403).json({ error: "admin only" });
-  const { psicologoId, userId } = req.body;
-  if (!psicologoId || !userId) return res.status(400).json({ error: "psicologoId and userId required" });
-  db.prepare("DELETE FROM psicologo_users WHERE psicologo_id = ? AND user_id = ?").run(psicologoId, userId);
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: "userId required" });
+  db.prepare("DELETE FROM psicologo_users WHERE user_id = ?").run(userId);
   res.json({ ok: true });
 });
 

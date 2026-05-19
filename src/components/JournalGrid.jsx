@@ -119,6 +119,25 @@ export default function JournalGrid({
     }
   }, [userFilter, users, allEntries, canFilterUsers]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const highlightId = params.get("highlight");
+    if (highlightId && allEntries.length > 0) {
+      const entryId = parseInt(highlightId, 10);
+      const entry = allEntries.find(e => e.id === entryId);
+      if (entry) {
+        setTimeout(() => {
+          setSelectedEntry(entry);
+          const el = document.querySelector(`[data-entry-id="${entryId}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.classList.add("highlighted-entry");
+          }
+        }, 300);
+      }
+    }
+  }, [allEntries]);
+
   function getAuthHeaders() {
     const token = localStorage.getItem("psy_token");
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -377,7 +396,7 @@ export default function JournalGrid({
         <h3 className="entries-title">Entradas Recientes</h3>
         <div className="entries-list">
           {entries.slice(0, 10).map((entry) => (
-            <div key={entry.id} className="entry-card">
+            <div key={entry.id} className="entry-card" data-entry-id={entry.id}>
               <div className="entry-card-header">
                 <span className="entry-type" style={{ backgroundColor: getPracticeColor(entry.tipo_practica) }}>
                   {getPracticeLabel(entry.tipo_practica)}
@@ -1350,6 +1369,17 @@ export default function JournalGrid({
         .detail-text.highlight {
           color: var(--neon-violet);
           font-weight: 500;
+        }
+
+        .entry-card.highlighted-entry {
+          border: 2px solid #5b8ff9;
+          box-shadow: 0 0 20px rgba(91, 143, 249, 0.4);
+          animation: highlight-pulse 2s ease-in-out;
+        }
+
+        @keyframes highlight-pulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(91, 143, 249, 0.4); }
+          50% { box-shadow: 0 0 30px rgba(91, 143, 249, 0.6); }
         }
 
         /* Edit Form */

@@ -608,6 +608,23 @@
 
       renderEntries("all");
       renderChartData("all");
+
+      var urlParams = new URLSearchParams(window.location.search);
+      var highlightId = urlParams.get("highlight");
+      if (highlightId) {
+        var highlightNum = parseInt(highlightId, 10);
+        setTimeout(function() {
+          var entryRow = document.querySelector('[data-id="' + highlightId + '"]');
+          if (entryRow) {
+            entryRow.scrollIntoView({ behavior: "smooth", block: "center" });
+            entryRow.classList.add("highlighted-entry");
+          }
+          var entry = entries.find(function(e) { return e.id === highlightNum; });
+          if (entry) {
+            openDetailModal(entry);
+          }
+        }, 300);
+      }
     } catch (err) {
       container.innerHTML = '<tr class="error-row"><td colspan="5">Error al cargar las entradas: ' + (err.message || String(err)) + '</td></tr>';
       console.error("loadEntries error:", err);
@@ -829,6 +846,17 @@
     width: 100%;
     max-width: 100%;
     overflow: hidden;
+  }
+
+  .entry-card.highlighted-entry {
+    border: 2px solid #5b8ff9;
+    box-shadow: 0 0 20px rgba(91, 143, 249, 0.4);
+    animation: highlight-pulse 2s ease-in-out;
+  }
+
+  @keyframes highlight-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(91, 143, 249, 0.4); }
+    50% { box-shadow: 0 0 30px rgba(91, 143, 249, 0.6); }
   }
 
   @media (min-width: 640px) {

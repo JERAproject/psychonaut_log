@@ -47,6 +47,7 @@ export function render3DChart(data) {
 
   let html = `
     <div class="chart-container" style="width:100%;overflow:hidden;position:relative;">
+      <div class="chart-tt" style="position:absolute;display:none;background:#1a1a2e;border:1px solid #5b8ff9;border-radius:8px;padding:8px 12px;font-size:12px;color:#fefefe;pointer-events:none;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.5);max-width:250px;white-space:pre-wrap;"></div>
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;max-width:100%;">
         <defs>
           <linearGradient id="legendGradPre" x1="0" y1="0" x2="1" y2="0">
@@ -93,23 +94,45 @@ export function render3DChart(data) {
     const vPre = entry.valence_pre, ePre = entry.energy_pre;
     const vPost = entry.valence_post, ePost = entry.energy_post;
 
+    const practiceLabels = {
+      mindfulness: "Mindfulness",
+      meditacion: "Meditación",
+      visualizacion: "Visualización",
+      respiracion: "Respiración",
+      escritura: "Escritura",
+      trataka: "Trataka",
+      shambhavi: "Shambhavi",
+      hypnosis: "Hipnosis",
+      default: "Práctica"
+    };
+    const practiceName = practiceLabels[entry.tipo_practica] || practiceLabels.default || entry.tipo_practica;
+    const dateStr = formatDate(entry.fecha);
+
     if (ePre != null && vPre != null) {
       const px = toSvgX(vPre), py = toSvgY(ePre);
       const col = getPointColor(ageRatio, false);
+      const tipText = `${dateStr} - ${practiceName} (Pre) E:${ePre} V:${vPre}`;
+      const link = `/journal?highlight=${entry.id}`;
       html += `
-        <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="8" fill="${col}" opacity="0.35" class="pt" data-tip="Pre · ${formatDate(entry.fecha)} · E:${ePre} V:${vPre}" />
-        <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5" fill="${col}" opacity="0.85" class="pt" data-tip="Pre · ${formatDate(entry.fecha)} · E:${ePre} V:${vPre}" />
-        <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2" fill="#fff" opacity="0.9" class="pt" data-tip="Pre · ${formatDate(entry.fecha)} · E:${ePre} V:${vPre}" />
+        <a href="${link}">
+          <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="8" fill="${col}" opacity="0.35" class="pt" title="${tipText}" />
+          <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5" fill="${col}" opacity="0.85" class="pt" title="${tipText}" />
+          <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2" fill="#fff" opacity="0.9" class="pt" title="${tipText}" />
+        </a>
       `;
     }
 
     if (ePost != null && vPost != null) {
       const px = toSvgX(vPost), py = toSvgY(ePost);
       const col = getPointColor(ageRatio, true);
+      const tipText = `${dateStr} - ${practiceName} (Post) E:${ePost} V:${vPost}`;
+      const link = `/journal?highlight=${entry.id}`;
       html += `
-        <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="8" fill="${col}" opacity="0.35" class="pt" data-tip="Post · ${formatDate(entry.fecha)} · E:${ePost} V:${vPost}" />
-        <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5" fill="${col}" opacity="0.85" class="pt" data-tip="Post · ${formatDate(entry.fecha)} · E:${ePost} V:${vPost}" />
-        <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2" fill="#fff" opacity="0.9" class="pt" data-tip="Post · ${formatDate(entry.fecha)} · E:${ePost} V:${vPost}" />
+        <a href="${link}">
+          <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="8" fill="${col}" opacity="0.35" class="pt" title="${tipText}" />
+          <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5" fill="${col}" opacity="0.85" class="pt" title="${tipText}" />
+          <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2" fill="#fff" opacity="0.9" class="pt" title="${tipText}" />
+        </a>
       `;
     }
 
@@ -124,41 +147,34 @@ export function render3DChart(data) {
   html += `
     </svg>
     <style>
-      .chart-container svg .pt { cursor: pointer; }
+      .journal-chart svg .pt, .chart-container svg .pt { cursor: pointer; }
+      .journal-chart svg .pt:hover, .chart-container svg .pt:hover { opacity: 1 !important; }
+      .journal-chart svg a, .chart-container svg a { cursor: pointer; }
+      .journal-chart svg a:hover, .chart-container svg a:hover { opacity: 1 !important; }
       @media (max-width: 640px) {
-        .chart-container { min-height: 200px; }
+        .journal-chart, .chart-container { min-height: 200px; }
       }
     </style>
-    <div class="chart-tt" id="ctt" style="display:none;position:fixed;background:#1f1f35;color:#e5e7eb;padding:0.4rem 0.6rem;border-radius:6px;font-size:11px;font-family:monospace;pointer-events:none;z-index:9999;border:1px solid #374151;box-shadow:0 4px 12px rgba(0,0,0,0.4);max-width:200px;word-wrap:break-word;"></div>
     <script>
-      (function(){
-        var tt=document.getElementById('ctt');
-        if(!tt)return;
-        document.querySelectorAll('.chart-container .pt').forEach(function(el){
-          el.addEventListener('mouseover',function(e){
-            tt.textContent=el.getAttribute('data-tip')||'';
-            tt.style.display='block';
+      (function() {
+        var container = document.currentScript.parentElement;
+        var tip = container.querySelector(".chart-tt");
+        if (!tip) return;
+        container.querySelectorAll(".pt").forEach(function(el) {
+          el.addEventListener("mouseover", function(e) {
+            var title = el.getAttribute("title");
+            if (title) {
+              tip.textContent = title;
+              tip.style.display = "block";
+            }
           });
-          el.addEventListener('mousemove',function(e){
-            var x=e.clientX+12,w=tt.offsetWidth,winW=window.innerWidth;
-            if(x+w>winW)x=e.clientX-12-w;
-            tt.style.left=x+'px';
-            tt.style.top=(e.clientY-28)+'px';
+          el.addEventListener("mousemove", function(e) {
+            tip.style.left = (e.offsetX + 12) + "px";
+            tip.style.top = (e.offsetY - 28) + "px";
           });
-          el.addEventListener('mouseout',function(){
-            tt.style.display='none';
+          el.addEventListener("mouseout", function() {
+            tip.style.display = "none";
           });
-          el.addEventListener('touchstart',function(e){
-            e.preventDefault();
-            tt.textContent=el.getAttribute('data-tip')||'';
-            tt.style.display='block';
-            var touch=e.touches[0];
-            tt.style.left=(touch.clientX+12)+'px';
-            tt.style.top=(touch.clientY-28)+'px';
-          });
-        });
-        document.addEventListener('touchend',function(){
-          tt.style.display='none';
         });
       })();
     </script>

@@ -165,16 +165,24 @@ app.post("/api/auth/change-password", async (req, res) => {
 // ── Habits ──────────────────────────────────────────────
 
 app.get("/api/habits", (req, res) => {
-  if (req.user?.role === "admin" || req.user?.role === "psicologo") {
+  if (req.user?.role === "admin") {
     const habits = db.prepare(
       "SELECT id, name, color, max_per_day as maxPerDay, user_id FROM habits"
     ).all();
     return res.json(habits);
   }
   const userId = req.user?.id ?? null;
-  const habits = db.prepare(
-    "SELECT id, name, color, max_per_day as maxPerDay FROM habits WHERE user_id = ? OR user_id IS NULL"
-  ).all(userId);
+  const isPsicologo = req.user?.role === "psicologo";
+  let query = "SELECT id, name, color, max_per_day as maxPerDay FROM habits WHERE 1=1";
+  const params: any[] = [];
+  if (isPsicologo) {
+    query += " AND (user_id = ? OR user_id IS NULL OR user_id IN (SELECT user_id FROM psicologo_users WHERE psicologo_id = ?))";
+    params.push(userId, userId);
+  } else {
+    query += " AND (user_id = ? OR user_id IS NULL)";
+    params.push(userId);
+  }
+  const habits = db.prepare(query).all(...params);
   res.json(habits);
 });
 
@@ -201,7 +209,8 @@ app.delete("/api/habits/:id", (req, res) => {
   }
   const habit = db.prepare("SELECT user_id FROM habits WHERE id = ?").get(id) as any;
   if (!habit) return res.status(404).json({ error: "Not found" });
-  if (habit.user_id === null || req.user?.role === "admin" || habit.user_id === req.user?.id) {
+  const canDelete = req.user?.role === "admin" || habit.user_id === req.user?.id;
+  if (canDelete) {
     db.prepare("DELETE FROM habit_logs WHERE habit_id = ?").run(id);
     db.prepare("DELETE FROM habits WHERE id = ?").run(id);
     return res.json({ ok: true });
@@ -235,13 +244,17 @@ app.put("/api/habits/:id", (req, res) => {
 app.get("/api/logs", (req, res) => {
   const { habitId, startDate, endDate } = req.query;
   const userId = req.user?.id ?? null;
-  const isAdminOrPsicologo = req.user?.role === "admin" || req.user?.role === "psicologo";
+  const role = req.user?.role;
 
   let query =
     "SELECT habit_id as habitId, log_date as logDate, count, user_id FROM habit_logs WHERE 1=1";
   const params: any[] = [];
 
-  if (!isAdminOrPsicologo) {
+  if (role === "admin") {
+  } else if (role === "psicologo") {
+    query += " AND (user_id = ? OR user_id IS NULL OR user_id IN (SELECT user_id FROM psicologo_users WHERE psicologo_id = ?))";
+    params.push(userId, userId);
+  } else {
     query += " AND (user_id = ? OR user_id IS NULL)";
     params.push(userId);
   }
@@ -441,11 +454,12 @@ app.delete("/api/journal/:id", (req, res) => {
   if (isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
   }
-  if (req.user?.role !== "admin") {
-    return res.status(403).json({ error: "Solo admins pueden eliminar entradas" });
-  }
   const entry = db.prepare("SELECT user_id FROM journal_entries WHERE id = ?").get(id) as any;
   if (!entry) return res.status(404).json({ error: "Not found" });
+  const canDelete = req.user?.role === "admin" || (req.user?.role === "psicologo" && entry.user_id === req.user?.id);
+  if (!canDelete) {
+    return res.status(403).json({ error: "No tienes permiso para eliminar esta entrada" });
+  }
   db.prepare("DELETE FROM journal_entries WHERE id = ?").run(id);
   return res.json({ ok: true });
 });
@@ -478,8 +492,9 @@ app.put("/api/journal/:id", (req, res) => {
   }
   const entry = db.prepare("SELECT user_id FROM journal_entries WHERE id = ?").get(id) as any;
   if (!entry) return res.status(404).json({ error: "Not found" });
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ error: "Solo admins pueden editar entradas" });
+  const canEdit = req.user.role === "admin" || (req.user.role === "psicologo" && entry.user_id === req.user.id);
+  if (!canEdit) {
+    return res.status(403).json({ error: "No tienes permiso para editar esta entrada" });
   }
 
   // Backward compatibility
@@ -741,7 +756,6 @@ app.get("/api/journal/:id/embeddings", (req, res) => {
 
 app.get("/api/journal/stats/energy-valence", (req, res) => {
   const role = req.user?.role;
-  const isAdminOrPsicologo = role === "admin" || role === "psicologo";
   const userId = req.user?.id ?? null;
 
   let query = `SELECT id, fecha, tipo_practica, energy_pre, valence_pre, energy_post, valence_post, user_id
@@ -750,7 +764,11 @@ app.get("/api/journal/stats/energy-valence", (req, res) => {
          OR energy_post IS NOT NULL OR valence_post IS NOT NULL)`;
   const params: any[] = [];
 
-  if (!isAdminOrPsicologo) {
+  if (role === "admin") {
+  } else if (role === "psicologo") {
+    query += " AND (user_id = ? OR user_id IS NULL OR user_id IN (SELECT user_id FROM psicologo_users WHERE psicologo_id = ?))";
+    params.push(userId, userId);
+  } else {
     query += " AND (user_id = ? OR user_id IS NULL)";
     params.push(userId);
   }

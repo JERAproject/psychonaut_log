@@ -93,6 +93,12 @@ export default function JournalGrid({
   const currentUser = getCurrentUser();
   const isExternalUsers = externalUsers.length > 0;
   const canFilterUsers = externalCanFilterUsers || (currentUser?.role === "admin" || currentUser?.role === "psicologo");
+
+  function canEditEntry(entry) {
+    if (!currentUser) return false;
+    if (currentUser.role === "admin") return true;
+    return entry.user_id === currentUser.id;
+  }
   
   console.log("DEBUG JournalGrid - Props:", { 
     externalUsersCount: externalUsers.length, 
@@ -410,8 +416,12 @@ export default function JournalGrid({
               </div>
               <div className="entry-card-footer">
                 <button className="entry-btn view-btn" onClick={() => setSelectedEntry(entry)}>Ver</button>
-                <button className="entry-btn edit-btn" onClick={() => setEditEntry(entry)}>Editar</button>
-                <button className="entry-btn delete-btn" onClick={() => deleteEntry(entry.id)}>Eliminar</button>
+                {canEditEntry(entry) && (
+                  <>
+                    <button className="entry-btn edit-btn" onClick={() => setEditEntry(entry)}>Editar</button>
+                    <button className="entry-btn delete-btn" onClick={() => deleteEntry(entry.id)}>Eliminar</button>
+                  </>
+                )}
               </div>
             </div>
           ))}

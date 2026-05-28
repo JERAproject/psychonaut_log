@@ -36,6 +36,27 @@
 
 ---
 
+## 🚀 Deploy (Vercel)
+
+### ✅ Configuración lista
+- `vercel.json` - Configuración de build y rewrites
+- `.env.example` - Variables de entorno necesarias
+- `api/index.js` - Endpoint serverless para producción
+
+### ⚠️ Limitaciones
+- **Ollama**: No funciona en Vercel (necesita GPU/local). Usar servicio externo como OpenAI, Anthropic, o servidor Ollama propio.
+- **Python Flask (STT)**: No funciona en Vercel serverless. Desplegar por separado o usar API externa.
+- **SQLite**: Funciona en Vercel pero con limitaciones (Cold starts). Considerar alternativas para alta tráfico.
+
+### 🔧 Pasos para deploy
+1. Ejecutar `pnpm build` localmente para probar
+2. Conectar repo a Vercel
+3. Configurar variables de entorno en Vercel
+4. Desplegar servicios externos (Ollama, Flask STT) por separado
+5. Actualizar URLs en frontend para apuntar a servicios externos
+
+---
+
 ## ✅ Estado de Calidad
 
 ### Testing

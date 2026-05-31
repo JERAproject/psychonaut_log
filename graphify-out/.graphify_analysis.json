@@ -1,0 +1,611 @@
+{
+  "communities": {
+    "0": [
+      "components_networkgraph_initgraph",
+      "d3",
+      "package_json",
+      "psyconaut_log_package_dependencies",
+      "psyconaut_log_package_dependencies_animejs",
+      "psyconaut_log_package_dependencies_astrojs_react",
+      "psyconaut_log_package_dependencies_d3",
+      "psyconaut_log_package_dependencies_react",
+      "psyconaut_log_package_dependencies_react_dom",
+      "psyconaut_log_package_dependencies_react_three_drei",
+      "psyconaut_log_package_dependencies_react_three_fiber",
+      "psyconaut_log_package_dependencies_tailwindcss",
+      "psyconaut_log_package_dependencies_tailwindcss_vite",
+      "psyconaut_log_package_dependencies_three",
+      "psyconaut_log_package_dependencies_types_react",
+      "psyconaut_log_package_devdependencies",
+      "psyconaut_log_package_devdependencies_astrojs_check",
+      "psyconaut_log_package_devdependencies_concurrently",
+      "psyconaut_log_package_devdependencies_jsdom",
+      "psyconaut_log_package_devdependencies_types_d3",
+      "psyconaut_log_package_devdependencies_typescript",
+      "psyconaut_log_package_devdependencies_vitest",
+      "psyconaut_log_package_engines",
+      "psyconaut_log_package_engines_node",
+      "psyconaut_log_package_engines_pnpm",
+      "psyconaut_log_package_name",
+      "psyconaut_log_package_scripts",
+      "psyconaut_log_package_scripts_astro",
+      "psyconaut_log_package_scripts_build",
+      "psyconaut_log_package_scripts_dev",
+      "psyconaut_log_package_scripts_preview",
+      "psyconaut_log_package_scripts_test",
+      "psyconaut_log_package_scripts_test_watch",
+      "psyconaut_log_package_scripts_vercel_build",
+      "psyconaut_log_package_type",
+      "psyconaut_log_package_version",
+      "src_components_networkgraph_astro"
+    ],
+    "1": [
+      "api_index_app",
+      "api_index_js",
+      "backend_assign_psicologo_psicologoid",
+      "backend_assign_psicologo_ts",
+      "backend_assign_psicologo_userid",
+      "backend_create_user_existing",
+      "backend_create_user_ts",
+      "backend_db_colnames",
+      "backend_db_columns",
+      "backend_db_db",
+      "backend_db_dbpath",
+      "backend_db_habitcolnames",
+      "backend_db_habitcols",
+      "backend_db_journalcolnames",
+      "backend_db_journalcols",
+      "backend_db_logcolnames",
+      "backend_db_logcols",
+      "backend_db_practicetables",
+      "backend_db_psicologotables",
+      "backend_db_schema",
+      "backend_db_statecolnames",
+      "backend_db_statecolumns",
+      "backend_db_tablenames",
+      "backend_db_tables",
+      "backend_db_ts",
+      "backend_db_usertablenames",
+      "backend_db_usertables",
+      "backend_db_voicetables",
+      "backend_reset_pw_hash",
+      "backend_reset_pw_ts",
+      "backend_reset_pw_users",
+      "backend_test_api_test_ts",
+      "test_api_test_app"
+    ],
+    "2": [
+      "components_bottomnav_gettoken",
+      "components_bottomnav_getuser",
+      "components_bottomnav_navitems",
+      "components_bottomnav_updatemobilenav",
+      "components_header_changepassbtn",
+      "components_header_closepassbtn",
+      "components_header_openpassmodal",
+      "components_header_passerror",
+      "components_header_passform",
+      "components_header_passsuccess",
+      "components_header_sheetchangepass",
+      "components_successpopup_contentstyles",
+      "components_successpopup_iconstyles",
+      "components_successpopup_popupstyles",
+      "components_successpopup_subtitlestyles",
+      "components_successpopup_successpopup",
+      "components_successpopup_titlestyles",
+      "j_dev_psychonaut_log_psyconaut_log_src_assets_logo_png",
+      "j_dev_psychonaut_log_psyconaut_log_src_components_lorenzgraph_tsx",
+      "j_dev_psychonaut_log_psyconaut_log_src_components_successpopup_tsx",
+      "j_dev_psychonaut_log_psyconaut_log_src_styles_global_css",
+      "layouts_layout_canonicalurl",
+      "src_components_bottomnav_astro",
+      "src_components_footer_astro",
+      "src_components_header_astro",
+      "src_components_hero_astro",
+      "src_components_successpopup_jsx",
+      "src_layouts_layout_astro",
+      "src_pages_about_astro",
+      "src_pages_contact_astro",
+      "src_pages_index_astro",
+      "src_pages_inicio_astro",
+      "src_pages_practica_guiada_astro"
+    ],
+    "3": [
+      "scene",
+      "scripts_lorenz_graph_apply_projection",
+      "scripts_lorenz_graph_compute_connectivity",
+      "scripts_lorenz_graph_create_gold_cmap",
+      "scripts_lorenz_graph_create_lorenz_graph",
+      "scripts_lorenz_graph_generate_constellation_nodes",
+      "scripts_lorenz_graph_integrate_lorenz",
+      "scripts_lorenz_graph_lorenz_derivatives",
+      "scripts_lorenz_graph_node_sizes",
+      "scripts_lorenz_graph_py",
+      "scripts_lorenz_graph_rationale_120",
+      "scripts_lorenz_graph_rationale_146",
+      "scripts_lorenz_graph_rationale_162",
+      "scripts_lorenz_graph_rationale_177",
+      "scripts_lorenz_graph_rationale_191",
+      "scripts_lorenz_graph_rationale_53",
+      "scripts_lorenz_graph_rationale_61",
+      "scripts_lorenz_graph_rationale_85",
+      "scripts_lorenz_manim_compute_connectivity",
+      "scripts_lorenz_manim_generate_constellation_nodes",
+      "scripts_lorenz_manim_integrate_lorenz",
+      "scripts_lorenz_manim_lorenz_derivatives",
+      "scripts_lorenz_manim_lorenzgraph_construct",
+      "scripts_lorenz_manim_node_sizes",
+      "scripts_lorenz_manim_py",
+      "scripts_lorenz_manim_rationale_103",
+      "scripts_lorenz_manim_rationale_129",
+      "scripts_lorenz_manim_rationale_140",
+      "scripts_lorenz_manim_rationale_46",
+      "scripts_lorenz_manim_rationale_54",
+      "scripts_lorenz_manim_rationale_76"
+    ],
+    "4": [
+      "backend_package_dependencies",
+      "backend_package_dependencies_bcryptjs",
+      "backend_package_dependencies_better_sqlite3",
+      "backend_package_dependencies_cors",
+      "backend_package_dependencies_express",
+      "backend_package_dependencies_multer",
+      "backend_package_dependencies_types_multer",
+      "backend_package_dependencies_uuid",
+      "backend_package_devdependencies",
+      "backend_package_devdependencies_supertest",
+      "backend_package_devdependencies_tsx",
+      "backend_package_devdependencies_types_bcryptjs",
+      "backend_package_devdependencies_types_better_sqlite3",
+      "backend_package_devdependencies_types_cors",
+      "backend_package_devdependencies_types_express",
+      "backend_package_devdependencies_types_node",
+      "backend_package_devdependencies_types_supertest",
+      "backend_package_devdependencies_types_uuid",
+      "backend_package_devdependencies_typescript",
+      "backend_package_devdependencies_vitest",
+      "backend_package_json",
+      "backend_package_name",
+      "backend_package_scripts",
+      "backend_package_scripts_dev",
+      "backend_package_scripts_seed",
+      "backend_package_scripts_start",
+      "backend_package_scripts_test",
+      "backend_package_scripts_test_watch",
+      "backend_package_type",
+      "backend_package_version"
+    ],
+    "5": [
+      "components_chart3d_render3dchart",
+      "components_journalgrid_colors",
+      "components_journalgrid_getargdate",
+      "components_journalgrid_getpracticecolor",
+      "components_journalgrid_getweekdays",
+      "components_journalgrid_practice_colors",
+      "components_journallist_formatdate",
+      "components_journallist_getpracticelabel",
+      "components_journallist_loadpracticelabels",
+      "components_journallist_renderentries",
+      "components_journalpage_journalpage",
+      "j_dev_psychonaut_log_psyconaut_log_src_components_chart3d_tsx",
+      "j_dev_psychonaut_log_psyconaut_log_src_components_entrydashboard_tsx",
+      "j_dev_psychonaut_log_psyconaut_log_src_components_journalpage_tsx",
+      "pages_admin_openeditmodal",
+      "src_components_chart3d_jsx",
+      "src_components_journalgrid_jsx",
+      "src_components_journallist_astro",
+      "src_components_journalpage_jsx",
+      "src_pages_journal_astro"
+    ],
+    "6": [
+      "backend_server_app",
+      "backend_server_authmiddleware",
+      "backend_server_authuser",
+      "backend_server_callollama",
+      "backend_server_extractandstorestates",
+      "backend_server_generateandstoreembeddings",
+      "backend_server_getembedding",
+      "backend_server_parsejsonsafe",
+      "backend_server_request",
+      "backend_server_ts",
+      "backend_server_upload",
+      "backend_server_validateenergyvalence",
+      "src_test_pipeline_test_py",
+      "test_pipeline_test_extract_json",
+      "test_pipeline_test_run_llm",
+      "test_pipeline_test_safe_parse"
+    ],
+    "7": [
+      "components_calendarview_daynames",
+      "components_calendarview_if",
+      "components_calendarview_maxtotalperday",
+      "components_calendarview_monthnames",
+      "components_calendarview_today",
+      "components_habitgrid_dates",
+      "components_habitgrid_getmonthlabel",
+      "components_habitgrid_number",
+      "j_dev_psychonaut_log_psyconaut_log_src_lib_dates",
+      "j_dev_psychonaut_log_psyconaut_log_src_types_habit",
+      "lib_dates_getdatesarray",
+      "src_components_calendarview_astro",
+      "src_components_habitgrid_astro",
+      "src_components_statspanel_astro",
+      "src_lib_dates_test_ts",
+      "src_lib_dates_ts"
+    ],
+    "8": [
+      "backend_tsconfig_compileroptions",
+      "backend_tsconfig_compileroptions_declaration",
+      "backend_tsconfig_compileroptions_esmoduleinterop",
+      "backend_tsconfig_compileroptions_forceconsistentcasinginfilenames",
+      "backend_tsconfig_compileroptions_module",
+      "backend_tsconfig_compileroptions_moduleresolution",
+      "backend_tsconfig_compileroptions_outdir",
+      "backend_tsconfig_compileroptions_resolvejsonmodule",
+      "backend_tsconfig_compileroptions_rootdir",
+      "backend_tsconfig_compileroptions_skiplibcheck",
+      "backend_tsconfig_compileroptions_strict",
+      "backend_tsconfig_compileroptions_target",
+      "backend_tsconfig_exclude",
+      "backend_tsconfig_include",
+      "backend_tsconfig_json"
+    ],
+    "9": [
+      "psyconaut_log_skills_lock_seo_computedhash",
+      "psyconaut_log_skills_lock_seo_source",
+      "psyconaut_log_skills_lock_seo_sourcetype",
+      "psyconaut_log_skills_lock_skills",
+      "psyconaut_log_skills_lock_skills_accessibility",
+      "psyconaut_log_skills_lock_skills_astro",
+      "psyconaut_log_skills_lock_skills_frontend_design",
+      "psyconaut_log_skills_lock_skills_nodejs_backend_patterns",
+      "psyconaut_log_skills_lock_skills_nodejs_best_practices",
+      "psyconaut_log_skills_lock_skills_seo",
+      "psyconaut_log_skills_lock_skills_tailwind_css_patterns",
+      "psyconaut_log_skills_lock_skills_typescript_advanced_types",
+      "psyconaut_log_skills_lock_version",
+      "skills_lock_json"
+    ],
+    "10": [
+      "pages_practica_apifetch",
+      "pages_practica_applyalteredmode",
+      "pages_practica_cleardraft",
+      "pages_practica_getapibase",
+      "pages_practica_gettoken",
+      "pages_practica_loadpracticelist",
+      "pages_practica_loadpractices",
+      "pages_practica_openpracticemodal",
+      "pages_practica_resetformdefaults",
+      "pages_practica_restoredraft",
+      "pages_practica_savedraft",
+      "pages_practica_showtoast",
+      "src_pages_practica_astro"
+    ],
+    "11": [
+      "components_brain_brain",
+      "components_brain_braingraph",
+      "components_cognitiveclassifier_dimension_labels",
+      "components_cognitiveclassifier_value_colors",
+      "components_logentry_formatdate",
+      "components_logentry_formattime",
+      "j_dev_psychonaut_log_psyconaut_log_src_components_cognitiveclassifier_tsx",
+      "src_components_brain_tsx",
+      "src_components_cognitiveclassifier_jsx",
+      "src_components_logentry_jsx",
+      "src_pages_clasificador_astro"
+    ],
+    "12": [
+      "backend_seed_allusers",
+      "backend_seed_defaulthabits",
+      "backend_seed_entries",
+      "backend_seed_existingentries",
+      "backend_seed_habits",
+      "backend_seed_hash",
+      "backend_seed_seed",
+      "backend_seed_ts",
+      "backend_seed_userids",
+      "backend_seed_users"
+    ],
+    "13": [
+      "pages_admin_apifetch",
+      "pages_admin_attachevents",
+      "pages_admin_closeeditmodal",
+      "pages_admin_gettoken",
+      "pages_admin_getuser",
+      "pages_admin_handlecreate",
+      "pages_admin_handleedit",
+      "pages_admin_loadusers",
+      "pages_admin_render",
+      "src_pages_admin_astro"
+    ],
+    "14": [
+      "components_habittracker_colors",
+      "components_habittracker_getargdate",
+      "components_habittracker_getmonthdays",
+      "components_habittracker_getweekdays",
+      "components_habittracker_habittracker",
+      "j_dev_psychonaut_log_psyconaut_log_src_components_habittracker_tsx",
+      "src_components_habittracker_jsx",
+      "src_pages_habits_astro"
+    ],
+    "15": [
+      "psyconaut_log_vercel_buildcommand",
+      "psyconaut_log_vercel_env",
+      "psyconaut_log_vercel_env_node_env",
+      "psyconaut_log_vercel_framework",
+      "psyconaut_log_vercel_installcommand",
+      "psyconaut_log_vercel_outputdirectory",
+      "psyconaut_log_vercel_rewrites",
+      "vercel_json"
+    ],
+    "16": [
+      "backend_tests_api_test_ts",
+      "backend_tests_setup_ts",
+      "tests_api_test_createtestapp",
+      "tests_setup_cleanuptestdb",
+      "tests_setup_createtestdb",
+      "tests_setup_createtestsession",
+      "tests_setup_createtestuser",
+      "tests_setup_gettestdb"
+    ],
+    "17": [
+      "components_habitdashboard_formatdateargentina",
+      "components_habitdashboard_getauthheaders",
+      "components_habitdashboard_gettimeinargentina",
+      "components_habitdashboard_getweekdays",
+      "j_dev_psychonaut_log_psyconaut_log_src_components_habitdashboard_tsx",
+      "src_components_habitdashboard_jsx",
+      "src_pages_stats_astro"
+    ],
+    "18": [
+      "lib_api_apifetch",
+      "lib_api_apiget",
+      "lib_api_apipost",
+      "lib_api_getapibase",
+      "lib_api_getauthheaders",
+      "src_lib_api_test_ts",
+      "src_lib_api_ts"
+    ],
+    "19": [
+      "psyconaut_log_tsconfig_compileroptions",
+      "psyconaut_log_tsconfig_compileroptions_jsx",
+      "psyconaut_log_tsconfig_compileroptions_jsximportsource",
+      "psyconaut_log_tsconfig_exclude",
+      "psyconaut_log_tsconfig_extends",
+      "psyconaut_log_tsconfig_include",
+      "tsconfig_json"
+    ],
+    "20": [
+      "j_dev_psychonaut_log_psyconaut_log_src_assets_autohimnosis_png_url",
+      "j_dev_psychonaut_log_psyconaut_log_src_assets_escritura_reflexiva_png_url",
+      "j_dev_psychonaut_log_psyconaut_log_src_assets_mindfulness_png_url",
+      "j_dev_psychonaut_log_psyconaut_log_src_assets_shambavi_mudra_png_url",
+      "j_dev_psychonaut_log_psyconaut_log_src_assets_tracker_png_url",
+      "j_dev_psychonaut_log_psyconaut_log_src_assets_trataka_png_url",
+      "src_components_tecnicas_astro"
+    ],
+    "21": [
+      "backend_check_match",
+      "backend_check_match2",
+      "backend_check_newhash",
+      "backend_check_ts"
+    ],
+    "22": [
+      "components_welcome_screen",
+      "j_dev_psychonaut_log_psyconaut_log_src_assets_astro_svg",
+      "j_dev_psychonaut_log_psyconaut_log_src_assets_background_svg",
+      "src_components_welcome_astro"
+    ],
+    "23": [
+      "components_lorenz_initlorenzanimation",
+      "components_lorenz_initlorenzattractor",
+      "src_components_lorenz_js"
+    ],
+    "24": [
+      "components_text_to_voice_save_transcription",
+      "components_text_to_voice_transcribe_audio",
+      "src_components_text_to_voice_py"
+    ],
+    "25": [
+      "src_types_habit_ts",
+      "types_habit_habit",
+      "types_habit_habitlog"
+    ],
+    "26": [
+      "agents_skills_agent_skills_idea_refine_scripts_idea_refine_sh",
+      "j_dev_psychonaut_log_psyconaut_log_agents_skills_agent_skills_idea_refine_scripts_idea_refine_sh__entry"
+    ],
+    "27": [
+      "ci_ci",
+      "test_test"
+    ],
+    "28": [
+      "opencode_opencode_json",
+      "opencode_opencode_plugin"
+    ],
+    "29": [
+      "opencode_plugins_graphify_js",
+      "plugins_graphify_graphifyplugin"
+    ],
+    "30": [
+      "psychonaut_log_agents",
+      "psychonaut_log_design"
+    ],
+    "31": [
+      "favicon_svg_node",
+      "robots_txt_node"
+    ],
+    "32": [
+      "components_entrydashboard_renderentrydashboard",
+      "src_components_entrydashboard_jsx"
+    ],
+    "33": [
+      "components_habitcalendar_getargdate",
+      "src_components_habitcalendar_jsx"
+    ],
+    "34": [
+      "astro_config_mjs"
+    ],
+    "35": [
+      "vitest_config_ts"
+    ],
+    "36": [
+      "backend_vitest_config_ts"
+    ],
+    "37": [
+      "src_components_habitform_astro"
+    ]
+  },
+  "cohesion": {
+    "0": 0.05555555555555555,
+    "1": 0.06060606060606061,
+    "2": 0.06818181818181818,
+    "3": 0.09247311827956989,
+    "4": 0.06666666666666667,
+    "5": 0.12631578947368421,
+    "6": 0.16666666666666666,
+    "7": 0.14166666666666666,
+    "8": 0.13333333333333333,
+    "9": 0.37362637362637363,
+    "10": 0.23076923076923078,
+    "11": 0.18181818181818182,
+    "12": 0.2,
+    "13": 0.4444444444444444,
+    "14": 0.42857142857142855,
+    "15": 0.25,
+    "16": 0.39285714285714285,
+    "17": 0.3333333333333333,
+    "18": 0.6666666666666666,
+    "19": 0.2857142857142857,
+    "20": 0.2857142857142857,
+    "21": 0.5,
+    "22": 0.5,
+    "23": 0.6666666666666666,
+    "24": 1.0,
+    "25": 0.6666666666666666,
+    "26": 1.0,
+    "27": 1.0,
+    "28": 1.0,
+    "29": 1.0,
+    "30": 1.0,
+    "31": 1.0,
+    "32": 1.0,
+    "33": 1.0,
+    "34": 1.0,
+    "35": 1.0,
+    "36": 1.0,
+    "37": 1.0
+  },
+  "gods": [
+    {
+      "id": "backend_tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 12
+    },
+    {
+      "id": "psyconaut_log_skills_lock_skills",
+      "label": "skills",
+      "degree": 9
+    },
+    {
+      "id": "psyconaut_log_package_scripts",
+      "label": "scripts",
+      "degree": 8
+    },
+    {
+      "id": "psyconaut_log_skills_lock_seo_source",
+      "label": "source",
+      "degree": 8
+    },
+    {
+      "id": "psyconaut_log_skills_lock_seo_sourcetype",
+      "label": "sourceType",
+      "degree": 8
+    },
+    {
+      "id": "psyconaut_log_skills_lock_seo_computedhash",
+      "label": "computedHash",
+      "degree": 8
+    },
+    {
+      "id": "scripts_lorenz_graph_create_lorenz_graph",
+      "label": "create_lorenz_graph()",
+      "degree": 8
+    },
+    {
+      "id": "backend_package_scripts",
+      "label": "scripts",
+      "degree": 6
+    },
+    {
+      "id": "scripts_lorenz_graph_apply_projection",
+      "label": "apply_projection()",
+      "degree": 6
+    },
+    {
+      "id": "lib_api_apifetch",
+      "label": "apiFetch()",
+      "degree": 6
+    }
+  ],
+  "surprises": [
+    {
+      "source": "Robots Exclusion File",
+      "target": "Favicon SVG Icon",
+      "source_files": [
+        "public/robots.txt",
+        "public/favicon.svg"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "semantically_similar_to",
+      "why": "crosses file types (doc \u2194 image); semantically similar concepts with no structural link"
+    },
+    {
+      "source": "Psychonaut Log Agents",
+      "target": "Psychonaut Log Design",
+      "source_files": [
+        "AGENTS.md",
+        "DESIGN.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "conceptually_related_to",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "Proyecci\u00f3n 3D con rotaci\u00f3n para obtener silueta de mariposa.",
+      "target": "apply_projection()",
+      "source_files": [
+        "scripts/lorenz_manim.py",
+        "scripts/lorenz_graph.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "rationale_for",
+      "why": "peripheral node `Proyecci\u00f3n 3D con rotaci\u00f3n para obtener silueta de mariposa.` unexpectedly reaches hub `apply_projection()`"
+    },
+    {
+      "source": "renderEntries()",
+      "target": "openEditModal()",
+      "source_files": [
+        "src/components/JournalList.astro",
+        "src/pages/admin.astro"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source"
+    },
+    {
+      "source": "Calcula conexiones entre nodos basados en distancia euclidiana.     Retorna list",
+      "target": "compute_connectivity()",
+      "source_files": [
+        "scripts/lorenz_graph.py",
+        "scripts/lorenz_manim.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "rationale_for",
+      "why": "cross-file semantic connection"
+    }
+  ],
+  "tokens": {
+    "input": 111258,
+    "output": 11678
+  }
+}

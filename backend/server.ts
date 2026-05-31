@@ -779,6 +779,113 @@ app.get("/api/journal/stats/energy-valence", (req, res) => {
   res.json(entries);
 });
 
+// ── Journal Knowledge Graph ────────────────────────────
+
+app.get("/api/journal/graph", (req, res) => {
+  const role = req.user?.role;
+  const userId = req.user?.id ?? null;
+
+  let query = `SELECT j.id, j.fecha, j.tipo_practica, j.estado_previo, j.estado_post,
+    j.insight, j.fenomenologia_somatica, j.fenomenologia_cognitiva,
+    s.somatic, s.emotional, s.attention, s.cognition
+    FROM journal_entries j
+    LEFT JOIN inferred_states s ON j.id = s.entry_id
+    WHERE 1=1`;
+  const params: any[] = [];
+
+  if (role === "admin") {
+  } else if (role === "psicologo") {
+    query += " AND (j.user_id = ? OR j.user_id IS NULL OR j.user_id IN (SELECT user_id FROM psicologo_users WHERE psicologo_id = ?))";
+    params.push(userId, userId);
+  } else {
+    query += " AND (j.user_id = ? OR j.user_id IS NULL)";
+    params.push(userId);
+  }
+
+  query += " ORDER BY j.fecha DESC";
+
+  const entries = db.prepare(query).all(...params) as any[];
+
+  const nodes: any[] = [];
+  const links: any[] = [];
+  const stateNodeIds = new Set<string>();
+
+  for (const entry of entries) {
+    nodes.push({
+      id: `entry-${entry.id}`,
+      type: "entry",
+      label: `${entry.fecha} · ${entry.tipo_practica}`,
+      practice: entry.tipo_practica,
+      fecha: entry.fecha,
+      insight: entry.insight || "",
+      estado_previo: entry.estado_previo || "",
+      estado_post: entry.estado_post || "",
+    });
+
+    const stateFields = [
+      { key: "somatic", value: entry.somatic },
+      { key: "emotional", value: entry.emotional },
+      { key: "attention", value: entry.attention },
+      { key: "cognition", value: entry.cognition },
+    ];
+
+    for (const sf of stateFields) {
+      if (sf.value) {
+        const stateId = `${sf.key}::${sf.value}`;
+        if (!stateNodeIds.has(stateId)) {
+          stateNodeIds.add(stateId);
+          nodes.push({
+            id: stateId,
+            type: "state",
+            stateType: sf.key,
+            label: sf.value,
+          });
+        }
+        links.push({
+          source: `entry-${entry.id}`,
+          target: stateId,
+          weight: 0.7,
+          type: "has_state",
+        });
+      }
+    }
+  }
+
+  for (let i = 0; i < entries.length; i++) {
+    for (let j = i + 1; j < entries.length; j++) {
+      let weight = 0;
+      const reasons: string[] = [];
+
+      if (entries[i].tipo_practica === entries[j].tipo_practica) {
+        weight += 0.5;
+        reasons.push("same_practice");
+      }
+
+      const daysDiff = Math.abs(
+        (new Date(entries[i].fecha).getTime() - new Date(entries[j].fecha).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (daysDiff <= 30) {
+        const temporalWeight = Math.max(0, 1 - daysDiff / 30) * 0.3;
+        if (temporalWeight > 0) {
+          weight += temporalWeight;
+          reasons.push("temporal");
+        }
+      }
+
+      if (weight > 0) {
+        links.push({
+          source: `entry-${entries[i].id}`,
+          target: `entry-${entries[j].id}`,
+          weight: Math.min(weight, 1),
+          type: reasons,
+        });
+      }
+    }
+  }
+
+  res.json({ nodes, links });
+});
+
 // ── Admin: All Users ─────────────────────────────────────
 
 app.get("/api/admin/users", (req, res) => {

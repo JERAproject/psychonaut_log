@@ -40,6 +40,11 @@ Thumbs.db
 *.db-wal
 *.db-shm
 
+# Graphify (runtime artifacts)
+graphify-out/manifest.json
+graphify-out/cost.json
+graphify-out/cache/
+
 # Ignore the PFE component, which is a private file that contains sensitive information and should not be committed to version control.
 src/components/PFE.astro
 src/styles/PFE.css

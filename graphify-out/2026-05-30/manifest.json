@@ -1,0 +1,352 @@
+{
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\astro.config.mjs": {
+    "mtime": 1779224850.0161064,
+    "ast_hash": "06cec9ff04411d4b30b66e2525c40d0b",
+    "semantic_hash": "06cec9ff04411d4b30b66e2525c40d0b"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\package.json": {
+    "mtime": 1779226507.090351,
+    "ast_hash": "94e9586edf9dccdaaedd901f964d2d04",
+    "semantic_hash": "94e9586edf9dccdaaedd901f964d2d04"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\skills-lock.json": {
+    "mtime": 1777582380.7181973,
+    "ast_hash": "ebf89fd209772abc5fe9eee30112003a",
+    "semantic_hash": "ebf89fd209772abc5fe9eee30112003a"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\tsconfig.json": {
+    "mtime": 1777582380.831333,
+    "ast_hash": "0d2b08e1db16474ad37d3136777ee02f",
+    "semantic_hash": "0d2b08e1db16474ad37d3136777ee02f"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\vercel.json": {
+    "mtime": 1779226490.212926,
+    "ast_hash": "daaf8fbd151cc5f3929ea7ba9d3852cd",
+    "semantic_hash": "daaf8fbd151cc5f3929ea7ba9d3852cd"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\vitest.config.ts": {
+    "mtime": 1779218784.2487514,
+    "ast_hash": "289f9e0beaeecbcc63ea4af4bd4aff12",
+    "semantic_hash": "289f9e0beaeecbcc63ea4af4bd4aff12"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\.agents\\skills_agent_skills\\idea-refine\\scripts\\idea-refine.sh": {
+    "mtime": 1779214020.1796436,
+    "ast_hash": "a31fba73833373afec792641d2a8121a",
+    "semantic_hash": "a31fba73833373afec792641d2a8121a"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\.opencode\\opencode.json": {
+    "mtime": 1780189176.1404688,
+    "ast_hash": "f2ae21510d07365eb2bce8159272c7a0",
+    "semantic_hash": "f2ae21510d07365eb2bce8159272c7a0"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\.opencode\\plugins\\graphify.js": {
+    "mtime": 1780189176.1404688,
+    "ast_hash": "32b67963417a30cb80544e0b2a56a98d",
+    "semantic_hash": "32b67963417a30cb80544e0b2a56a98d"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\api\\index.js": {
+    "mtime": 1779226498.5289173,
+    "ast_hash": "05f1a5f40300d35799f16e80c19675a7",
+    "semantic_hash": "05f1a5f40300d35799f16e80c19675a7"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\assign_psicologo.ts": {
+    "mtime": 1778796216.9744422,
+    "ast_hash": "ba8947a7fa3edb56d14af753193b2541",
+    "semantic_hash": "ba8947a7fa3edb56d14af753193b2541"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\check.ts": {
+    "mtime": 1778789176.7663965,
+    "ast_hash": "b92daccc872347e11598e087660441fc",
+    "semantic_hash": "b92daccc872347e11598e087660441fc"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\create_user.ts": {
+    "mtime": 1778793029.0184002,
+    "ast_hash": "2491fcd9904107f20fb730b3f886f7c6",
+    "semantic_hash": "2491fcd9904107f20fb730b3f886f7c6"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\db.ts": {
+    "mtime": 1779070644.1777904,
+    "ast_hash": "ebd9e2be445a863001ac72fcb9175181",
+    "semantic_hash": "ebd9e2be445a863001ac72fcb9175181"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\package.json": {
+    "mtime": 1779218756.2987354,
+    "ast_hash": "eea461adfc4723a64baa8a1bba71052b",
+    "semantic_hash": "eea461adfc4723a64baa8a1bba71052b"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\reset_pw.ts": {
+    "mtime": 1778789188.1946225,
+    "ast_hash": "fb272620e8c476a8c3918dcf2191eb36",
+    "semantic_hash": "fb272620e8c476a8c3918dcf2191eb36"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\schema.sql": {
+    "mtime": 1778389770.0860653,
+    "ast_hash": "4040ffa5b374465b3a1c6e135daf1ece",
+    "semantic_hash": "4040ffa5b374465b3a1c6e135daf1ece"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\seed.sql": {
+    "mtime": 1777582380.7101004,
+    "ast_hash": "3f24a568f1b56917df4fd02ad5ae8aa1",
+    "semantic_hash": "3f24a568f1b56917df4fd02ad5ae8aa1"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\seed.ts": {
+    "mtime": 1778390112.083772,
+    "ast_hash": "7a748300f3e38ff0ed074de278a93e9f",
+    "semantic_hash": "7a748300f3e38ff0ed074de278a93e9f"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\server.ts": {
+    "mtime": 1779982628.633954,
+    "ast_hash": "7ddff7ca61b8f4a41bb054537d134f91",
+    "semantic_hash": "7ddff7ca61b8f4a41bb054537d134f91"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\tsconfig.json": {
+    "mtime": 1777582380.7121015,
+    "ast_hash": "7d3ee887a64b3c80bdfaf57fa4cb49ad",
+    "semantic_hash": "7d3ee887a64b3c80bdfaf57fa4cb49ad"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\vitest.config.ts": {
+    "mtime": 1779222708.337369,
+    "ast_hash": "5be31687db2a948fee70c0acd0f406c1",
+    "semantic_hash": "5be31687db2a948fee70c0acd0f406c1"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\test\\api.test.ts": {
+    "mtime": 1779222703.7740376,
+    "ast_hash": "d9126b57b0d3fd3004deb35c5af3a9dd",
+    "semantic_hash": "d9126b57b0d3fd3004deb35c5af3a9dd"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\tests\\api.test.ts": {
+    "mtime": 1779218957.265451,
+    "ast_hash": "6a14223488aecd7cb8c2de2f65738a33",
+    "semantic_hash": "6a14223488aecd7cb8c2de2f65738a33"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\backend\\tests\\setup.ts": {
+    "mtime": 1779218829.0480497,
+    "ast_hash": "26c7d8954721385213c519bb3cd7b1db",
+    "semantic_hash": "26c7d8954721385213c519bb3cd7b1db"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\scripts\\lorenz_graph.py": {
+    "mtime": 1778950072.3578985,
+    "ast_hash": "389e01d2466c403ed350a21ae1427dc9",
+    "semantic_hash": "389e01d2466c403ed350a21ae1427dc9"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\scripts\\lorenz_manim.py": {
+    "mtime": 1778953118.7187655,
+    "ast_hash": "86bc2491416e1ca97ca4271553d9757d",
+    "semantic_hash": "86bc2491416e1ca97ca4271553d9757d"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\BottomNav.astro": {
+    "mtime": 1779220250.1926038,
+    "ast_hash": "6441fddeadad3e5e97af8350b077f662",
+    "semantic_hash": "6441fddeadad3e5e97af8350b077f662"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\brain.tsx": {
+    "mtime": 1778795973.1723633,
+    "ast_hash": "6ff1ea30f337a1249b01f80dd57680d3",
+    "semantic_hash": "6ff1ea30f337a1249b01f80dd57680d3"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\CalendarView.astro": {
+    "mtime": 1778505739.2596262,
+    "ast_hash": "889fddc06bb6d810d57d74a49469b7ee",
+    "semantic_hash": "889fddc06bb6d810d57d74a49469b7ee"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\Chart3D.jsx": {
+    "mtime": 1779224134.3240547,
+    "ast_hash": "3c2c5f5d906df9d9ea326a3445ad62e9",
+    "semantic_hash": "3c2c5f5d906df9d9ea326a3445ad62e9"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\CognitiveClassifier.jsx": {
+    "mtime": 1779072343.6811159,
+    "ast_hash": "d62b04aa98515552d05c36cd638cdd72",
+    "semantic_hash": "d62b04aa98515552d05c36cd638cdd72"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\EntryDashboard.jsx": {
+    "mtime": 1779222409.1522987,
+    "ast_hash": "41b6fe10a6aca3f05a1d5a31d4a47258",
+    "semantic_hash": "41b6fe10a6aca3f05a1d5a31d4a47258"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\Footer.astro": {
+    "mtime": 1779740601.3885841,
+    "ast_hash": "f846251d2833497da2ef6eaecacc2509",
+    "semantic_hash": "f846251d2833497da2ef6eaecacc2509"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\HabitCalendar.jsx": {
+    "mtime": 1778392757.692242,
+    "ast_hash": "6e46611694d39c4b91da531fe0fce766",
+    "semantic_hash": "6e46611694d39c4b91da531fe0fce766"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\HabitDashboard.jsx": {
+    "mtime": 1778803096.3301105,
+    "ast_hash": "dc85ee9e59fcad4ff40471873061c161",
+    "semantic_hash": "dc85ee9e59fcad4ff40471873061c161"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\HabitForm.astro": {
+    "mtime": 1778392716.7952127,
+    "ast_hash": "7af954933b1f1bc33c2ddc75a40dda25",
+    "semantic_hash": "7af954933b1f1bc33c2ddc75a40dda25"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\HabitGrid.astro": {
+    "mtime": 1778392735.6015706,
+    "ast_hash": "8a5ade6cd30569cd95bad0efa019ed4f",
+    "semantic_hash": "8a5ade6cd30569cd95bad0efa019ed4f"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\HabitTracker.jsx": {
+    "mtime": 1779021927.938209,
+    "ast_hash": "fc8208fd33101d5188e8fd4adf286402",
+    "semantic_hash": "fc8208fd33101d5188e8fd4adf286402"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\Header.astro": {
+    "mtime": 1779220240.8519132,
+    "ast_hash": "fc232017097e9ffc97ad757a454dfede",
+    "semantic_hash": "fc232017097e9ffc97ad757a454dfede"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\Hero.astro": {
+    "mtime": 1777582380.8222885,
+    "ast_hash": "e030f52c5fc126186f257e58302f9a45",
+    "semantic_hash": "e030f52c5fc126186f257e58302f9a45"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\JournalGrid.jsx": {
+    "mtime": 1779983129.1620886,
+    "ast_hash": "b34a41f4245c0f8d39eff616dbfa1d51",
+    "semantic_hash": "b34a41f4245c0f8d39eff616dbfa1d51"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\JournalList.astro": {
+    "mtime": 1779983134.461381,
+    "ast_hash": "224c31ac8404da77d2caf4ad7f9c3887",
+    "semantic_hash": "224c31ac8404da77d2caf4ad7f9c3887"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\JournalPage.jsx": {
+    "mtime": 1778973340.6154988,
+    "ast_hash": "5f5d1cc1b1cd0b6f09efcf3c45985fa4",
+    "semantic_hash": "5f5d1cc1b1cd0b6f09efcf3c45985fa4"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\LogEntry.jsx": {
+    "mtime": 1778855118.1383488,
+    "ast_hash": "665cceddf86dfb4b964051fd83d772e4",
+    "semantic_hash": "665cceddf86dfb4b964051fd83d772e4"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\Lorenz.js": {
+    "mtime": 1779043417.6428223,
+    "ast_hash": "466173626359aa6cffef84ec07476faf",
+    "semantic_hash": "466173626359aa6cffef84ec07476faf"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\NetworkGraph.astro": {
+    "mtime": 1779224860.709805,
+    "ast_hash": "c8a00071b67f9860dd08daa02b3ee615",
+    "semantic_hash": "c8a00071b67f9860dd08daa02b3ee615"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\StatsPanel.astro": {
+    "mtime": 1777582380.8242888,
+    "ast_hash": "789ce3ca9426706fcc6aa10d7904c501",
+    "semantic_hash": "789ce3ca9426706fcc6aa10d7904c501"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\SuccessPopup.jsx": {
+    "mtime": 1778859447.3871832,
+    "ast_hash": "0a015e5f1aa99a7d60dd25f33471befc",
+    "semantic_hash": "0a015e5f1aa99a7d60dd25f33471befc"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\Tecnicas.astro": {
+    "mtime": 1777582380.8242888,
+    "ast_hash": "e91cc279799a8704f039fc07454c72cf",
+    "semantic_hash": "e91cc279799a8704f039fc07454c72cf"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\text_to_voice.py": {
+    "mtime": 1779133087.5018775,
+    "ast_hash": "0d4aa814ccc2444a7fd4ff042933b4cb",
+    "semantic_hash": "0d4aa814ccc2444a7fd4ff042933b4cb"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\components\\Welcome.astro": {
+    "mtime": 1777582380.8252792,
+    "ast_hash": "dcb6bd7d0d098e3c42ab556fa9566350",
+    "semantic_hash": "dcb6bd7d0d098e3c42ab556fa9566350"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\layouts\\Layout.astro": {
+    "mtime": 1778985495.962377,
+    "ast_hash": "7c3af862a5452633879e9326562cd062",
+    "semantic_hash": "7c3af862a5452633879e9326562cd062"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\lib\\api.test.ts": {
+    "mtime": 1779219022.7707798,
+    "ast_hash": "d211bca42f6a582dbea869fa0dafe39f",
+    "semantic_hash": "d211bca42f6a582dbea869fa0dafe39f"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\lib\\api.ts": {
+    "mtime": 1778390360.2116325,
+    "ast_hash": "cd80dd565a6bdf3485955a8800a29427",
+    "semantic_hash": "cd80dd565a6bdf3485955a8800a29427"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\lib\\dates.test.ts": {
+    "mtime": 1779218792.7180562,
+    "ast_hash": "4c3ff81cb2ed9cf37687baa7d0f1e76d",
+    "semantic_hash": "4c3ff81cb2ed9cf37687baa7d0f1e76d"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\lib\\dates.ts": {
+    "mtime": 1778097163.7681074,
+    "ast_hash": "7f67df3dce459ae156abd50caa47f464",
+    "semantic_hash": "7f67df3dce459ae156abd50caa47f464"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\about.astro": {
+    "mtime": 1778383170.5786011,
+    "ast_hash": "ab076da2231042ddccb8cd3d9111b103",
+    "semantic_hash": "ab076da2231042ddccb8cd3d9111b103"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\admin.astro": {
+    "mtime": 1779225480.318608,
+    "ast_hash": "ceec6db08a1e6484735f7ebc8da44ff0",
+    "semantic_hash": "ceec6db08a1e6484735f7ebc8da44ff0"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\clasificador.astro": {
+    "mtime": 1778795856.5989418,
+    "ast_hash": "fcd9088b296fbbbc2bd29e43eb021407",
+    "semantic_hash": "fcd9088b296fbbbc2bd29e43eb021407"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\contact.astro": {
+    "mtime": 1778382778.2190404,
+    "ast_hash": "963562b49ec58e28b6682e610d5b6d93",
+    "semantic_hash": "963562b49ec58e28b6682e610d5b6d93"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\habits.astro": {
+    "mtime": 1778965941.3489263,
+    "ast_hash": "03f042eb62319f428a6942462200ed4e",
+    "semantic_hash": "03f042eb62319f428a6942462200ed4e"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\index.astro": {
+    "mtime": 1779023288.0049286,
+    "ast_hash": "8c023fa3ff1c9256879194c423a2566b",
+    "semantic_hash": "8c023fa3ff1c9256879194c423a2566b"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\inicio.astro": {
+    "mtime": 1779462666.8045647,
+    "ast_hash": "7181c56032b9fe82cdc101fc75b4c3e3",
+    "semantic_hash": "7181c56032b9fe82cdc101fc75b4c3e3"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\journal.astro": {
+    "mtime": 1778972006.3448114,
+    "ast_hash": "f523f570840a855146ef8c4556fc1ae2",
+    "semantic_hash": "f523f570840a855146ef8c4556fc1ae2"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\practica.astro": {
+    "mtime": 1779220339.8947918,
+    "ast_hash": "35eaef9ffd1eeac18035d51e55328b91",
+    "semantic_hash": "35eaef9ffd1eeac18035d51e55328b91"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\practica_guiada.astro": {
+    "mtime": 1779022743.5938747,
+    "ast_hash": "83a59266ba58a34ddee6e377f28853d0",
+    "semantic_hash": "83a59266ba58a34ddee6e377f28853d0"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\pages\\stats.astro": {
+    "mtime": 1778801698.895471,
+    "ast_hash": "6771aa219b45e432247abf7c30237ccb",
+    "semantic_hash": "6771aa219b45e432247abf7c30237ccb"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\test\\pipeline_test.py": {
+    "mtime": 1778377473.251161,
+    "ast_hash": "be8f54c28af5498f01573000383d0be2",
+    "semantic_hash": "be8f54c28af5498f01573000383d0be2"
+  },
+  "J:\\Dev\\psychonaut_log\\psyconaut_log\\src\\types\\habit.ts": {
+    "mtime": 1777582380.831333,
+    "ast_hash": "185c6913e7dca8d13df3182d4a7c7dbd",
+    "semantic_hash": "185c6913e7dca8d13df3182d4a7c7dbd"
+  }
+}

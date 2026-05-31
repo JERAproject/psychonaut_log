@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { render3DChart } from "./Chart3D.jsx";
+import JournalGraph from "./JournalGraph.jsx";
 
 const API_BASE = "";
 
@@ -279,10 +280,21 @@ export default function JournalGrid({
             <span className="tab-icon">▩</span>
             Mensual
           </button>
+          <button className={`jg-tab ${view === "graph" ? "active" : ""}`} onClick={() => setView("graph")}>
+            <span className="tab-icon">◈</span>
+            Grafo
+          </button>
         </div>
       </div>
 
-      {entries.length === 0 ? (
+      {view === "graph" ? (
+        <JournalGraph
+          entries={entries}
+          practices={practices}
+          onSelectEntry={(entry) => setSelectedEntry(entry)}
+          userFilter={userFilter}
+        />
+      ) : entries.length === 0 ? (
         <div className="jg-empty">
           <div className="empty-icon">📓</div>
           <p>No hay entradas en la bitácora</p>
@@ -398,35 +410,37 @@ export default function JournalGrid({
         </div>
       )}
 
-      <div className="entries-section">
-        <h3 className="entries-title">Entradas Recientes</h3>
-        <div className="entries-list">
-          {entries.slice(0, 10).map((entry) => (
-            <div key={entry.id} className="entry-card" data-entry-id={entry.id}>
-              <div className="entry-card-header">
-                <span className="entry-type" style={{ backgroundColor: getPracticeColor(entry.tipo_practica) }}>
-                  {getPracticeLabel(entry.tipo_practica)}
-                </span>
-                <span className="entry-date">
-                  {formatDate(entry.fecha)} {entry.hora ? `· ${formatTime(entry.hora)}` : ""}
-                </span>
+      {view !== "graph" && (
+        <div className="entries-section">
+          <h3 className="entries-title">Entradas Recientes</h3>
+          <div className="entries-list">
+            {entries.slice(0, 10).map((entry) => (
+              <div key={entry.id} className="entry-card" data-entry-id={entry.id}>
+                <div className="entry-card-header">
+                  <span className="entry-type" style={{ backgroundColor: getPracticeColor(entry.tipo_practica) }}>
+                    {getPracticeLabel(entry.tipo_practica)}
+                  </span>
+                  <span className="entry-date">
+                    {formatDate(entry.fecha)} {entry.hora ? `· ${formatTime(entry.hora)}` : ""}
+                  </span>
+                </div>
+                <div className="entry-card-body">
+                  <span className="entry-insight">{entry.insight || "Sin insight registrado"}</span>
+                </div>
+                <div className="entry-card-footer">
+                  <button className="entry-btn view-btn" onClick={() => setSelectedEntry(entry)}>Ver</button>
+                  {canEditEntry(entry) && (
+                    <>
+                      <button className="entry-btn edit-btn" onClick={() => setEditEntry(entry)}>Editar</button>
+                      <button className="entry-btn delete-btn" onClick={() => deleteEntry(entry.id)}>Eliminar</button>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="entry-card-body">
-                <span className="entry-insight">{entry.insight || "Sin insight registrado"}</span>
-              </div>
-              <div className="entry-card-footer">
-                <button className="entry-btn view-btn" onClick={() => setSelectedEntry(entry)}>Ver</button>
-                {canEditEntry(entry) && (
-                  <>
-                    <button className="entry-btn edit-btn" onClick={() => setEditEntry(entry)}>Editar</button>
-                    <button className="entry-btn delete-btn" onClick={() => deleteEntry(entry.id)}>Eliminar</button>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {selectedEntry && (
         <div className="modal-overlay" onClick={() => setSelectedEntry(null)}>

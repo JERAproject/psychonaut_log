@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { render3DChart } from "./Chart3D.jsx";
 import JournalGraph from "./JournalGraph.jsx";
+import { renderWellbeingRadar, BIENESTAR_FIELDS, BIENESTAR_CATEGORIES } from "./WellBeenPlot.jsx";
 
 const API_BASE = "";
 
@@ -234,8 +235,33 @@ export default function JournalGrid({
 
   const entriesMap = getEntriesByDate();
 
+  const bienestarEntries = entries.filter(e => e.tipo_practica === 'diagrama_de_bienestar');
+
   return (
     <div className="journal-grid">
+      {bienestarEntries.length > 0 && (() => {
+        const overlayData = bienestarEntries.map(e => ({
+          values: BIENESTAR_FIELDS.map(f => {
+            const v = parseInt(e[f]);
+            return isNaN(v) ? null : v;
+          }),
+          date: e.fecha,
+        }));
+        return (
+          <div className="chart-section bienestar-chart-section" onClick={() => {
+            const newest = bienestarEntries.sort((a, b) => (b.fecha + ' ' + (b.hora || '')).localeCompare(a.fecha + ' ' + (a.hora || '')))[0];
+            setSelectedEntry(newest);
+          }}>
+            <div className="chart-header-row">
+              <div className="chart-title-group">
+                <h3 className="chart-title">Diagrama de Bienestar</h3>
+                <p className="chart-subtitle">{bienestarEntries.length} entrada{bienestarEntries.length !== 1 ? 's' : ''} — haz clic para ver la más reciente</p>
+              </div>
+            </div>
+            <div className="bienestar-radar-container" dangerouslySetInnerHTML={{ __html: renderWellbeingRadar(null, 400, overlayData) }} />
+          </div>
+        );
+      })()}
       <div className="chart-section">
         <div className="chart-header-row">
           <div className="chart-title-group">
@@ -498,6 +524,13 @@ export default function JournalGrid({
                   <p className="detail-text highlight">{selectedEntry.insight}</p>
                 </div>
               )}
+              {(() => {
+                const vals = BIENESTAR_FIELDS.map(f => parseInt(selectedEntry[f]));
+                if (vals.some(v => !isNaN(v))) {
+                  return <div dangerouslySetInnerHTML={{ __html: renderWellbeingRadar(vals.map(v => isNaN(v) ? null : v), 260) }} />;
+                }
+                return null;
+              })()}
             </div>
           </div>
         </div>
@@ -524,6 +557,11 @@ export default function JournalGrid({
                 fenomenologia_cognitiva: formData.get("cognitiva") || "",
                 cuerpo: formData.get("cuerpo") || "",
                 insight: formData.get("insight") || "",
+                bienestar_logros: formData.get("bienestar_logros") ? parseInt(formData.get("bienestar_logros")) : null,
+                bienestar_relaciones: formData.get("bienestar_relaciones") ? parseInt(formData.get("bienestar_relaciones")) : null,
+                bienestar_sentido: formData.get("bienestar_sentido") ? parseInt(formData.get("bienestar_sentido")) : null,
+                bienestar_emociones: formData.get("bienestar_emociones") ? parseInt(formData.get("bienestar_emociones")) : null,
+                bienestar_entrega: formData.get("bienestar_entrega") ? parseInt(formData.get("bienestar_entrega")) : null,
               };
               
               try {
@@ -586,6 +624,33 @@ export default function JournalGrid({
                 Insight
                 <input type="text" name="insight" defaultValue={editEntry.insight || ""} />
               </label>
+              <details className="bienestar-edit-details">
+                <summary className="bienestar-edit-summary">Diagrama de Bienestar</summary>
+                <div className="bienestar-edit-sliders">
+                  {BIENESTAR_CATEGORIES.map((cat, i) => {
+                    const field = BIENESTAR_FIELDS[i];
+                    return (
+                      <div key={field} className="bienestar-edit-slider">
+                        <div className="bienestar-edit-slider-header">
+                          <span className="bienestar-edit-slider-title">{cat}</span>
+                          <span className="slider-value" id={`edit-${field}-value`}>{editEntry[field] || "—"}</span>
+                        </div>
+                        <input type="range" name={field} min="1" max="5" step="1" className="slider bienestar-slider"
+                          defaultValue={editEntry[field] || 3}
+                          onChange={(e) => {
+                            const display = document.getElementById(`edit-${field}-value`);
+                            if (display) display.textContent = e.target.value;
+                          }}
+                        />
+                        <div className="slider-labels">
+                          <span>1 — Casi no tengo</span>
+                          <span>5 — Siento que soy fuerte</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </details>
               <div className="form-actions">
                 <button type="button" className="cancel-btn" onClick={() => setEditEntry(null)}>Cancelar</button>
                 <button type="submit" className="save-btn">Guardar</button>
@@ -677,6 +742,25 @@ export default function JournalGrid({
         .chart-section {
           padding: 1rem;
           border-bottom: 1px solid var(--border);
+        }
+
+        .bienestar-chart-section {
+          background: rgba(0,0,0,0.3);
+          border: 1px solid rgba(139,92,246,0.2);
+          border-radius: 12px;
+          margin-bottom: 0.5rem;
+          cursor: pointer;
+          transition: border-color 0.15s;
+        }
+
+        .bienestar-chart-section:hover {
+          border-color: rgba(139,92,246,0.5);
+        }
+
+        .bienestar-radar-container {
+          width: 100%;
+          max-width: 500px;
+          margin: 0 auto;
         }
 
         .chart-header-row {
@@ -1492,6 +1576,57 @@ export default function JournalGrid({
 
         .save-btn:hover {
           box-shadow: 0 0 15px rgba(139,92,246,0.4);
+        }
+
+        .bienestar-edit-details {
+          border: 1px solid rgba(139,92,246,0.2);
+          border-radius: 10px;
+          background: rgba(139,92,246,0.05);
+        }
+
+        .bienestar-edit-summary {
+          padding: 0.65rem 0.75rem;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #8b5cf6;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        .bienestar-edit-summary:hover {
+          color: #a78bfa;
+        }
+
+        .bienestar-edit-sliders {
+          padding: 0 0.75rem 0.75rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .bienestar-edit-slider {
+          margin-bottom: 0;
+        }
+
+        .bienestar-edit-slider-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.25rem;
+        }
+
+        .bienestar-edit-slider-title {
+          font-size: 0.75rem;
+          color: #d1d5db;
+          font-weight: 500;
+        }
+
+        .edit-modal .bienestar-slider::-webkit-slider-thumb {
+          background: #8b5cf6 !important;
+        }
+
+        .edit-modal .bienestar-slider::-moz-range-thumb {
+          background: #8b5cf6 !important;
         }
 
         @media (max-width: 640px) {

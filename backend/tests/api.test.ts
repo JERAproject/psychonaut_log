@@ -211,8 +211,11 @@ describe('API Tests', () => {
           fecha, hora, duracion, tipo_practica,
           estado_previo, fenomenologia_somatica, fenomenologia_cognitiva,
           cuerpo, insight, integracion, estado_post,
-          energy_pre, valence_pre, energy_post, valence_post, user_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          energy_pre, valence_pre, energy_post, valence_post,
+          bienestar_logros, bienestar_relaciones, bienestar_sentido,
+          bienestar_emociones, bienestar_entrega,
+          user_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         fecha,
         req.body.hora || '',
@@ -226,6 +229,7 @@ describe('API Tests', () => {
         req.body.integracion || null,
         estado_post,
         null, null, null, null,
+        null, null, null, null, null,
         userId
       );
 

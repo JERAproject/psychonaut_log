@@ -54,6 +54,11 @@ CREATE TABLE IF NOT EXISTS journal_entries(
   valence_pre INTEGER,
   energy_post INTEGER,
   valence_post INTEGER,
+  bienestar_logros INTEGER,
+  bienestar_relaciones INTEGER,
+  bienestar_sentido INTEGER,
+  bienestar_emociones INTEGER,
+  bienestar_entrega INTEGER,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   user_id INTEGER
 );

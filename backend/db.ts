@@ -134,6 +134,22 @@ if (!journalColNames.includes("user_id")) {
   db.prepare("ALTER TABLE journal_entries ADD COLUMN user_id INTEGER").run();
 }
 
+if (!journalColNames.includes("bienestar_logros")) {
+  db.prepare("ALTER TABLE journal_entries ADD COLUMN bienestar_logros INTEGER").run();
+}
+if (!journalColNames.includes("bienestar_relaciones")) {
+  db.prepare("ALTER TABLE journal_entries ADD COLUMN bienestar_relaciones INTEGER").run();
+}
+if (!journalColNames.includes("bienestar_sentido")) {
+  db.prepare("ALTER TABLE journal_entries ADD COLUMN bienestar_sentido INTEGER").run();
+}
+if (!journalColNames.includes("bienestar_emociones")) {
+  db.prepare("ALTER TABLE journal_entries ADD COLUMN bienestar_emociones INTEGER").run();
+}
+if (!journalColNames.includes("bienestar_entrega")) {
+  db.prepare("ALTER TABLE journal_entries ADD COLUMN bienestar_entrega INTEGER").run();
+}
+
 const practiceTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='practices'").all();
 if (practiceTables.length === 0) {
   db.exec(`

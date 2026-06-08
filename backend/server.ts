@@ -342,6 +342,8 @@ app.get("/api/journal", (req, res) => {
             j.estado_previo, j.fenomenologia_somatica, j.fenomenologia_cognitiva,
             j.cuerpo, j.insight, j.integracion, j.estado_post,
             j.energy_pre, j.valence_pre, j.energy_post, j.valence_post,
+            j.bienestar_logros, j.bienestar_relaciones, j.bienestar_sentido,
+            j.bienestar_emociones, j.bienestar_entrega,
             j.created_at, j.user_id, ${(isAdmin || isPsicologo) ? "u.username" : "NULL as username"}
       FROM journal_entries j ${(isAdmin || isPsicologo) ? "LEFT JOIN users u ON j.user_id = u.id" : ""} WHERE 1=1`;
   const params: any[] = [];
@@ -360,10 +362,18 @@ app.get("/api/journal", (req, res) => {
   query += " ORDER BY j.fecha DESC, j.hora DESC";
 
   const entries = db.prepare(query).all(...params);
+  const bienestarCount = (entries as any[]).filter((e: any) => e.tipo_practica === 'diagrama_de_bienestar').length;
+  console.log('[DEBUG GET] Total entries=' + entries.length + ', diagrama_de_bienestar=' + bienestarCount);
+  if (bienestarCount > 0) {
+    const sample = (entries as any[]).find((e: any) => e.tipo_practica === 'diagrama_de_bienestar');
+    console.log('[DEBUG GET] Sample bienestar entry:', JSON.stringify(sample));
+  }
   res.json(entries);
 });
 
 app.post("/api/journal", async (req, res) => {
+  console.log('[DEBUG POST] Body recibido:', JSON.stringify(req.body, null, 2));
+
   const {
     fecha,
     hora,
@@ -380,6 +390,11 @@ app.post("/api/journal", async (req, res) => {
     valence_pre,
     energy_post,
     valence_post,
+    bienestar_logros,
+    bienestar_relaciones,
+    bienestar_sentido,
+    bienestar_emociones,
+    bienestar_entrega,
   } = req.body;
 
   // Backward compatibility: accept old "fenomenologia" field
@@ -387,6 +402,7 @@ app.post("/api/journal", async (req, res) => {
   const cognitiva = fenomenologia_cognitiva || "";
 
   if (!fecha || !tipo_practica || !estado_previo || !somatica || !estado_post) {
+    console.log('[DEBUG POST] Campos faltantes:', { fecha, tipo_practica, estado_previo, somatica, estado_post });
     return res.status(400).json({ error: "Missing required fields" });
   }
   if (!req.user) {
@@ -399,6 +415,13 @@ app.post("/api/journal", async (req, res) => {
   const validatedEnergyPost = validateEnergyValence(energy_post);
   const validatedValencePost = validateEnergyValence(valence_post);
 
+  // Validate bienestar range (1-5) or null
+  const validatedBienestar1 = validateBienestarValue(bienestar_logros);
+  const validatedBienestar2 = validateBienestarValue(bienestar_relaciones);
+  const validatedBienestar3 = validateBienestarValue(bienestar_sentido);
+  const validatedBienestar4 = validateBienestarValue(bienestar_emociones);
+  const validatedBienestar5 = validateBienestarValue(bienestar_entrega);
+
   const userId = req.user?.id ?? null;
 
   try {
@@ -407,8 +430,11 @@ app.post("/api/journal", async (req, res) => {
         fecha, hora, duracion, tipo_practica,
         estado_previo, fenomenologia_somatica, fenomenologia_cognitiva,
         cuerpo, insight, integracion, estado_post,
-        energy_pre, valence_pre, energy_post, valence_post, user_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        energy_pre, valence_pre, energy_post, valence_post,
+        bienestar_logros, bienestar_relaciones, bienestar_sentido,
+        bienestar_emociones, bienestar_entrega,
+        user_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       fecha,
       hora || "",
@@ -425,10 +451,16 @@ app.post("/api/journal", async (req, res) => {
       validatedValencePre,
       validatedEnergyPost,
       validatedValencePost,
+      validatedBienestar1,
+      validatedBienestar2,
+      validatedBienestar3,
+      validatedBienestar4,
+      validatedBienestar5,
       userId
     );
 
     const entryId = result.lastInsertRowid;
+    console.log('[DEBUG POST] Insertado exitosamente id=' + entryId + ', bienestar_logros=' + validatedBienestar1 + ', bienestar_relaciones=' + validatedBienestar2 + ', bienestar_sentido=' + validatedBienestar3 + ', bienestar_emociones=' + validatedBienestar4 + ', bienestar_entrega=' + validatedBienestar5);
 
     extractAndStoreStates(entryId as number, somatica, cognitiva)
       .catch((err) => console.error("State extraction failed:", err));
@@ -446,6 +478,14 @@ function validateEnergyValence(value: any): number | null {
   const num = Number(value);
   if (isNaN(num)) return null;
   if (num < -5 || num > 5) return null;
+  return Math.round(num);
+}
+
+function validateBienestarValue(value: any): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const num = Number(value);
+  if (isNaN(num)) return null;
+  if (num < 1 || num > 5) return null;
   return Math.round(num);
 }
 
@@ -482,6 +522,11 @@ app.put("/api/journal/:id", (req, res) => {
     valence_pre,
     energy_post,
     valence_post,
+    bienestar_logros,
+    bienestar_relaciones,
+    bienestar_sentido,
+    bienestar_emociones,
+    bienestar_entrega,
   } = req.body;
 
   if (isNaN(id)) {
@@ -511,13 +556,22 @@ app.put("/api/journal/:id", (req, res) => {
   const validatedEnergyPost = validateEnergyValence(energy_post);
   const validatedValencePost = validateEnergyValence(valence_post);
 
+  // Validate bienestar
+  const validatedBienestar1 = validateBienestarValue(bienestar_logros);
+  const validatedBienestar2 = validateBienestarValue(bienestar_relaciones);
+  const validatedBienestar3 = validateBienestarValue(bienestar_sentido);
+  const validatedBienestar4 = validateBienestarValue(bienestar_emociones);
+  const validatedBienestar5 = validateBienestarValue(bienestar_entrega);
+
   try {
     db.prepare(
       `UPDATE journal_entries SET
         fecha = ?, hora = ?, duracion = ?, tipo_practica = ?,
         estado_previo = ?, fenomenologia_somatica = ?, fenomenologia_cognitiva = ?,
         cuerpo = ?, insight = ?, integracion = ?, estado_post = ?,
-        energy_pre = ?, valence_pre = ?, energy_post = ?, valence_post = ?
+        energy_pre = ?, valence_pre = ?, energy_post = ?, valence_post = ?,
+        bienestar_logros = ?, bienestar_relaciones = ?, bienestar_sentido = ?,
+        bienestar_emociones = ?, bienestar_entrega = ?
       WHERE id = ?`
     ).run(
       fecha,
@@ -535,6 +589,11 @@ app.put("/api/journal/:id", (req, res) => {
       validatedValencePre,
       validatedEnergyPost,
       validatedValencePost,
+      validatedBienestar1,
+      validatedBienestar2,
+      validatedBienestar3,
+      validatedBienestar4,
+      validatedBienestar5,
       id
     );
 

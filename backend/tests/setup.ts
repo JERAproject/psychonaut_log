@@ -60,6 +60,11 @@ export function createTestDb(): Database.Database {
       valence_pre INTEGER,
       energy_post INTEGER,
       valence_post INTEGER,
+      bienestar_logros INTEGER,
+      bienestar_relaciones INTEGER,
+      bienestar_sentido INTEGER,
+      bienestar_emociones INTEGER,
+      bienestar_entrega INTEGER,
       user_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );

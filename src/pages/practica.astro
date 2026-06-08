@@ -36,130 +36,250 @@ import Layout from '../layouts/Layout.astro';
       </div>
 
       <form id="journal-form" class="data-form" aria-label="Formulario de entrada de bitácora">
-        <fieldset>
-          <legend>Metadatos de la Sesión</legend>
-          <div class="grid">
-            <label>
-              Fecha
-              <input type="date" name="fecha" required aria-required="true" value={new Date().toISOString().split('T')[0]} />
-            </label>
-            <label>
-              Hora
-              <input type="time" name="hora" required aria-required="true" value={(() => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; })()} />
-            </label>
-            <label>
-              Duración (min)
-              <input type="number" name="duracion" min="1" placeholder="Ej: 20" required aria-required="true" />
-            </label>
-          </div>
 
-          <div class="tipo-practica-row">
+        <!-- ═══ STANDARD FORM FIELDS ═══ -->
+        <div id="standard-form-fields">
+          <fieldset>
+            <legend>Metadatos de la Sesión</legend>
+            <div class="grid">
+              <label>
+                Fecha
+                <input type="date" name="fecha" required aria-required="true" value={new Date().toISOString().split('T')[0]} />
+              </label>
+              <label>
+                Hora
+                <input type="time" name="hora" required aria-required="true" value={(() => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; })()} />
+              </label>
+              <label>
+                Duración (min)
+                <input type="number" name="duracion" min="1" placeholder="Ej: 20" required aria-required="true" />
+              </label>
+            </div>
+
+            <div class="tipo-practica-row">
+              <label>
+                Tipo de Práctica
+                <select name="tipo_practica" id="tipo-practica-select" required aria-required="true">
+                  <option value="">Cargando...</option>
+                </select>
+              </label>
+              <button type="button" id="manage-practices-btn" class="btn-icon-small" title="Gestionar prácticas" aria-label="Gestionar prácticas">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Fenomenología y Estado</legend>
             <label>
-              Tipo de Práctica
-              <select name="tipo_practica" id="tipo-practica-select" required aria-required="true">
-                <option value="">Cargando...</option>
-              </select>
+              Estado Previo a la Práctica
+              <input type="text" name="estado_previo" placeholder="Ej: Dispersión analítica, fatiga..." required aria-required="true" />
             </label>
-            <button type="button" id="manage-practices-btn" class="btn-icon-small" title="Gestionar prácticas" aria-label="Gestionar prácticas">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-            </button>
-          </div>
-        </fieldset>
 
-        <fieldset>
-          <legend>Fenomenología y Estado</legend>
-          <label>
-            Estado Previo a la Práctica
-            <input type="text" name="estado_previo" placeholder="Ej: Dispersión analítica, fatiga..." required aria-required="true" />
-          </label>
-
-          <div class="sliders-container">
-            <p class="sliders-hint">Opcional pero útil para seguir patrones</p>
-            
-            <div class="slider-group">
-              <div class="slider-header">
-                <span class="slider-title">ENERGY (Pre) <span class="info-icon" data-tooltip="energy" onclick="showTooltip('energy', event)" role="button" tabindex="0" aria-label="Información sobre ENERGY"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
-                <span class="slider-value" id="energy-pre-value">—</span>
+            <div class="sliders-container">
+              <p class="sliders-hint">Opcional pero útil para seguir patrones</p>
+              
+              <div class="slider-group">
+                <div class="slider-header">
+                  <span class="slider-title">ENERGY (Pre) <span class="info-icon" data-tooltip="energy" onclick="showTooltip('energy', event)" role="button" tabindex="0" aria-label="Información sobre ENERGY"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
+                  <span class="slider-value" id="energy-pre-value">—</span>
+                </div>
+                <input type="range" name="energy_pre" min="-5" max="5" step="1" class="slider" />
+                <div class="slider-labels">
+                  <span>bajo</span>
+                  <span>alto</span>
+                </div>
               </div>
-              <input type="range" name="energy_pre" min="-5" max="5" step="1" class="slider" />
-              <div class="slider-labels">
-                <span>bajo</span>
-                <span>alto</span>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <span class="slider-title">VALENCE (Pre) <span class="info-icon" data-tooltip="valence" onclick="showTooltip('valence', event)" role="button" tabindex="0" aria-label="Información sobre VALENCE"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
+                  <span class="slider-value" id="valence-pre-value">—</span>
+                </div>
+                <input type="range" name="valence_pre" min="-5" max="5" step="1" class="slider" />
+                <div class="slider-labels">
+                  <span>dolor</span>
+                  <span>placer</span>
+                </div>
               </div>
             </div>
 
-            <div class="slider-group">
-              <div class="slider-header">
-                <span class="slider-title">VALENCE (Pre) <span class="info-icon" data-tooltip="valence" onclick="showTooltip('valence', event)" role="button" tabindex="0" aria-label="Información sobre VALENCE"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
-                <span class="slider-value" id="valence-pre-value">—</span>
+            <label>
+              Fenomenología Somática (Sensaciones corporales)
+              <input type="text" name="fenomenologia_somatica" placeholder="Ej: Fosfenos, presión en entrecejo, tensión en hombros..." required aria-required="true" />
+              <span class="helper">Describe lo que observas, no por qué sucede</span>
+            </label>
+            <label>
+              Fenomenología Cognitiva (Pensamientos observados antes de la práctica)
+              <textarea name="fenomenologia_cognitiva" rows="4" placeholder="Describe los pensamientos que surgieron antes de la práctica..."></textarea>
+              <span class="helper">Describe lo que observas, no por qué sucede</span>
+            </label>
+            <label>
+              Descripción Detallada (lo que experimentaste durante la práctica)
+              <textarea name="cuerpo" rows="6" placeholder="Describe el flujo de la experiencia..."></textarea>
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Análisis e Integración</legend>
+            <label>
+              Hallazgo Principal
+              <input type="text" name="insight" placeholder="¿Qué descubriste hoy sobre mi mente?" />
+            </label>
+            <label>
+              Plan de Integración de los Hallazgos
+              <input type="text" name="integracion" placeholder="Acción concreta para el día siguiente puedo aplicar en mi vida diaria?" />
+            </label>
+            <label>
+              Estado Post-Práctica
+              <input type="text" name="estado_post" placeholder="Ej: Ecuanimidad, vitalidad..." required aria-required="true" />
+            </label>
+
+            <div class="sliders-container">
+              <p class="sliders-hint">Opcional pero útil para seguir patrones</p>
+              
+              <div class="slider-group">
+                <div class="slider-header">
+                  <span class="slider-title">ENERGY (Post) <span class="info-icon" data-tooltip="energy" onclick="showTooltip('energy', event)" role="button" tabindex="0" aria-label="Información sobre ENERGY"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
+                  <span class="slider-value" id="energy-post-value">—</span>
+                </div>
+                <input type="range" name="energy_post" min="-5" max="5" step="1" class="slider" />
+                <div class="slider-labels">
+                  <span>bajo</span>
+                  <span>alto</span>
+                </div>
               </div>
-              <input type="range" name="valence_pre" min="-5" max="5" step="1" class="slider" />
-              <div class="slider-labels">
-                <span>dolor</span>
-                <span>placer</span>
+
+              <div class="slider-group">
+                <div class="slider-header">
+                  <span class="slider-title">VALENCE (Post) <span class="info-icon" data-tooltip="valence" onclick="showTooltip('valence', event)" role="button" tabindex="0" aria-label="Información sobre VALENCE"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
+                  <span class="slider-value" id="valence-post-value">—</span>
+                </div>
+                <input type="range" name="valence_post" min="-5" max="5" step="1" class="slider" />
+                <div class="slider-labels">
+                  <span>dolor</span>
+                  <span>placer</span>
+                </div>
               </div>
             </div>
-          </div>
+          </fieldset>
+        </div>
 
-          <label>
-            Fenomenología Somática (Sensaciones corporales)
-            <input type="text" name="fenomenologia_somatica" placeholder="Ej: Fosfenos, presión en entrecejo, tensión en hombros..." required aria-required="true" />
-            <span class="helper">Describe lo que observas, no por qué sucede</span>
-          </label>
-          <label>
-            Fenomenología Cognitiva (Pensamientos observados antes de la práctica)
-            <textarea name="fenomenologia_cognitiva" rows="4" placeholder="Describe los pensamientos que surgieron antes de la práctica..."></textarea>
-            <span class="helper">Describe lo que observas, no por qué sucede</span>
-          </label>
-          <label>
-            Descripción Detallada (lo que experimentaste durante la práctica)
-            <textarea name="cuerpo" rows="6" placeholder="Describe el flujo de la experiencia..."></textarea>
-          </label>
-        </fieldset>
+        <!-- ═══ BIENESTAR VIEW (shown when tipo_practica = diagrama_de_bienestar) ═══ -->
+        <div id="bienestar-view" class="hidden">
+          <fieldset class="bienestar-fieldset">
+            <legend>Diagrama de Bienestar</legend>
+            <p class="bienestar-desc">Evalúa tu nivel de bienestar en las siguientes áreas. Cada dimensión tiene una escala del 1 al 5 con las siguientes referencias:</p>
 
-        <fieldset>
-          <legend>Análisis e Integración</legend>
-          <label>
-            Hallazgo Principal
-            <input type="text" name="insight" placeholder="¿Qué descubriste hoy sobre mi mente?" />
-          </label>
-          <label>
-            Plan de Integración de los Hallazgos
-            <input type="text" name="integracion" placeholder="Acción concreta para el día siguiente puedo aplicar en mi vida diaria?" />
-          </label>
-          <label>
-            Estado Post-Práctica
-            <input type="text" name="estado_post" placeholder="Ej: Ecuanimidad, vitalidad..." required aria-required="true" />
-          </label>
-
-          <div class="sliders-container">
-            <p class="sliders-hint">Opcional pero útil para seguir patrones</p>
-            
-            <div class="slider-group">
-              <div class="slider-header">
-                <span class="slider-title">ENERGY (Post) <span class="info-icon" data-tooltip="energy" onclick="showTooltip('energy', event)" role="button" tabindex="0" aria-label="Información sobre ENERGY"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
-                <span class="slider-value" id="energy-post-value">—</span>
+            <div class="bienestar-levels-guide">
+              <div class="level-card level-1">
+                <span class="level-num">1</span>
+                <span class="level-label">Casi no tengo en mi vida</span>
               </div>
-              <input type="range" name="energy_post" min="-5" max="5" step="1" class="slider" />
-              <div class="slider-labels">
-                <span>bajo</span>
-                <span>alto</span>
+              <div class="level-card level-2">
+                <span class="level-num">2</span>
+                <span class="level-label">Tengo poco</span>
+              </div>
+              <div class="level-card level-3">
+                <span class="level-num">3</span>
+                <span class="level-label">Tengo moderadamente</span>
+              </div>
+              <div class="level-card level-4">
+                <span class="level-num">4</span>
+                <span class="level-label">Estoy conforme con este aspecto</span>
+              </div>
+              <div class="level-card level-5">
+                <span class="level-num">5</span>
+                <span class="level-label">Siento que soy fuerte en este elemento</span>
               </div>
             </div>
 
-            <div class="slider-group">
-              <div class="slider-header">
-                <span class="slider-title">VALENCE (Post) <span class="info-icon" data-tooltip="valence" onclick="showTooltip('valence', event)" role="button" tabindex="0" aria-label="Información sobre VALENCE"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="15" font-family="sans-serif" font-size="12" font-weight="bold" fill="currentColor" text-anchor="middle">i</text></svg></span></span>
-                <span class="slider-value" id="valence-post-value">—</span>
+            <div id="bienestar-sliders">
+              <!-- Logros -->
+              <div class="slider-group bienestar-slider-group">
+                <div class="slider-header">
+                  <span class="slider-title bienestar-slider-title">
+                    <span class="bienestar-axis-icon">🏆</span>
+                    Logros
+                  </span>
+                  <span class="slider-value bienestar-slider-value" id="bienestar-logros-value">—</span>
+                </div>
+                <input type="range" name="bienestar_logros" min="1" max="5" step="1" class="slider bienestar-slider" />
+                <div class="bienestar-level-marks">
+                  <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                </div>
               </div>
-              <input type="range" name="valence_post" min="-5" max="5" step="1" class="slider" />
-              <div class="slider-labels">
-                <span>dolor</span>
-                <span>placer</span>
+
+              <!-- Relaciones interpersonales -->
+              <div class="slider-group bienestar-slider-group">
+                <div class="slider-header">
+                  <span class="slider-title bienestar-slider-title">
+                    <span class="bienestar-axis-icon">🤝</span>
+                    Relaciones interpersonales
+                  </span>
+                  <span class="slider-value bienestar-slider-value" id="bienestar-relaciones-value">—</span>
+                </div>
+                <input type="range" name="bienestar_relaciones" min="1" max="5" step="1" class="slider bienestar-slider" />
+                <div class="bienestar-level-marks">
+                  <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                </div>
+              </div>
+
+              <!-- Sentido vital -->
+              <div class="slider-group bienestar-slider-group">
+                <div class="slider-header">
+                  <span class="slider-title bienestar-slider-title">
+                    <span class="bienestar-axis-icon">🎯</span>
+                    Sentido vital
+                  </span>
+                  <span class="slider-value bienestar-slider-value" id="bienestar-sentido-value">—</span>
+                </div>
+                <input type="range" name="bienestar_sentido" min="1" max="5" step="1" class="slider bienestar-slider" />
+                <div class="bienestar-level-marks">
+                  <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                </div>
+              </div>
+
+              <!-- Emociones agradables -->
+              <div class="slider-group bienestar-slider-group">
+                <div class="slider-header">
+                  <span class="slider-title bienestar-slider-title">
+                    <span class="bienestar-axis-icon">😊</span>
+                    Emociones agradables
+                  </span>
+                  <span class="slider-value bienestar-slider-value" id="bienestar-emociones-value">—</span>
+                </div>
+                <input type="range" name="bienestar_emociones" min="1" max="5" step="1" class="slider bienestar-slider" />
+                <div class="bienestar-level-marks">
+                  <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                </div>
+              </div>
+
+              <!-- Entrega (flow) -->
+              <div class="slider-group bienestar-slider-group">
+                <div class="slider-header">
+                  <span class="slider-title bienestar-slider-title">
+                    <span class="bienestar-axis-icon">🌀</span>
+                    Entrega (flow)
+                  </span>
+                  <span class="slider-value bienestar-slider-value" id="bienestar-entrega-value">—</span>
+                </div>
+                <input type="range" name="bienestar_entrega" min="1" max="5" step="1" class="slider bienestar-slider" />
+                <div class="bienestar-level-marks">
+                  <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                </div>
               </div>
             </div>
-          </div>
-        </fieldset>
+
+            <div class="bienestar-legend">
+              <span class="bienestar-legend-item"><span class="bienestar-dot" style="background:#ef4444"></span>1 — Casi no tengo en mi vida</span>
+              <span class="bienestar-legend-item"><span class="bienestar-dot" style="background:#f59e0b"></span>2 — Tengo poco</span>
+              <span class="bienestar-legend-item"><span class="bienestar-dot" style="background:#eab308"></span>3 — Tengo moderadamente</span>
+              <span class="bienestar-legend-item"><span class="bienestar-dot" style="background:#22c55e"></span>4 — Estoy conforme con este aspecto de mi vida</span>
+              <span class="bienestar-legend-item"><span class="bienestar-dot" style="background:#8b5cf6"></span>5 — Siento que soy fuerte en este elemento</span>
+            </div>
+          </fieldset>
+        </div>
 
         <button type="submit" class="submit-btn">Guardar en Bitácora</button>
       </form>
@@ -372,6 +492,7 @@ import Layout from '../layouts/Layout.astro';
   const DRAFT_KEY = 'psy_journal_draft';
   const draftInputs = ['fecha', 'hora', 'duracion', 'tipo_practica', 'estado_previo', 'fenomenologia_somatica', 'fenomenologia_cognitiva', 'cuerpo', 'insight', 'integracion', 'estado_post'];
   const draftSliders = ['energy_pre', 'valence_pre', 'energy_post', 'valence_post'];
+  const draftBienestar = ['bienestar_logros', 'bienestar_relaciones', 'bienestar_sentido', 'bienestar_emociones', 'bienestar_entrega'];
 
   function saveDraft() {
     const data: Record<string, any> = {};
@@ -383,6 +504,12 @@ import Layout from '../layouts/Layout.astro';
       const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement;
       if (el) data[name] = el.value;
     });
+    draftBienestar.forEach(name => {
+      const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement;
+      if (el) data[name] = el.value;
+    });
+    const tipoSelect = document.getElementById('tipo-practica-select') as HTMLSelectElement;
+    if (tipoSelect) data.bienestar_enabled = tipoSelect.value === 'diagrama_de_bienestar';
     const stateRadio = document.querySelector('input[name="session_state"]:checked') as HTMLInputElement;
     if (stateRadio) data.session_state = stateRadio.value;
     if (currentSustancia) data.sustancia = currentSustancia;
@@ -407,6 +534,21 @@ import Layout from '../layouts/Layout.astro';
           if (valueDisplay) valueDisplay.textContent = data[name] !== '' ? data[name] : '—';
         }
       });
+      if (data.bienestar_enabled) {
+        const select = document.getElementById('tipo-practica-select') as HTMLSelectElement;
+        if (select && select.value !== 'diagrama_de_bienestar') {
+          select.value = 'diagrama_de_bienestar';
+          toggleBienestarView(true);
+        }
+        draftBienestar.forEach(name => {
+          const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement;
+          if (el && data[name]) {
+            el.value = data[name];
+            const valueDisplay = document.getElementById(`${name.replace(/_/g, '-')}-value`);
+            if (valueDisplay) valueDisplay.textContent = data[name] !== '' ? data[name] : '—';
+          }
+        });
+      }
       if (data.session_state === 'altered') {
         const alteredRadio = document.querySelector('input[name="session_state"][value="altered"]') as HTMLInputElement;
         if (alteredRadio) alteredRadio.checked = true;
@@ -438,6 +580,11 @@ import Layout from '../layouts/Layout.astro';
       const valueDisplay = document.getElementById(`${slider.name}-value`);
       if (valueDisplay) valueDisplay.textContent = '—';
     });
+    const select = document.getElementById('tipo-practica-select') as HTMLSelectElement;
+    if (select) {
+      select.value = '';
+      toggleBienestarView(false);
+    }
   }
 
   if (form) {
@@ -450,6 +597,46 @@ import Layout from '../layouts/Layout.astro';
   }
 
   restoreDraft();
+
+  // ── Bienestar view toggle (via tipo_practica select) ────
+  const bienestarRequiredFields = ['duracion', 'estado_previo', 'fenomenologia_somatica', 'estado_post'];
+
+  function toggleBienestarView(enabled: boolean) {
+    const standardFields = document.getElementById('standard-form-fields') as HTMLDivElement;
+    const bienestarView = document.getElementById('bienestar-view') as HTMLDivElement;
+    if (!standardFields || !bienestarView) return;
+    if (enabled) {
+      standardFields.classList.add('hidden');
+      bienestarView.classList.remove('hidden');
+      bienestarRequiredFields.forEach(name => {
+        const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement;
+        if (el) el.required = false;
+      });
+    } else {
+      standardFields.classList.remove('hidden');
+      bienestarView.classList.add('hidden');
+      bienestarRequiredFields.forEach(name => {
+        const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement;
+        if (el) el.required = true;
+      });
+    }
+  }
+
+  const tipoSelect = document.getElementById('tipo-practica-select') as HTMLSelectElement;
+  tipoSelect?.addEventListener('change', () => {
+    toggleBienestarView(tipoSelect.value === 'diagrama_de_bienestar');
+    saveDraft();
+  });
+
+  // ── Update bienestar slider values ──────────────────────
+  draftBienestar.forEach(name => {
+    const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement;
+    el?.addEventListener('input', () => {
+      const valueDisplay = document.getElementById(`${name.replace(/_/g, '-')}-value`);
+      if (valueDisplay) valueDisplay.textContent = el.value || '—';
+      saveDraft();
+    });
+  });
 
   // Estado alterado - mostrar modal y cambiar colores
   const stateRadios = document.querySelectorAll('input[name="session_state"]') as NodeListOf<HTMLInputElement>;
@@ -525,6 +712,7 @@ import Layout from '../layouts/Layout.astro';
     
     // Get slider values - convert empty to null
     const sliderNames = ["energy_pre", "valence_pre", "energy_post", "valence_post"];
+    const bienestarNames = ["bienestar_logros", "bienestar_relaciones", "bienestar_sentido", "bienestar_emociones", "bienestar_entrega"];
     const payload: Record<string, any> = {};
     
     formData.forEach((value, key) => {
@@ -534,6 +722,22 @@ import Layout from '../layouts/Layout.astro';
         payload[key] = value;
       }
     });
+
+    // Include bienestar fields if diagrama_de_bienestar selected
+    const tipoSelect = form?.querySelector('[name="tipo_practica"]') as HTMLSelectElement;
+    if (tipoSelect?.value === 'diagrama_de_bienestar') {
+      bienestarNames.forEach(name => {
+        const el = form?.querySelector(`[name="${name}"]`) as HTMLInputElement;
+        payload[name] = el?.value || null;
+      });
+      // Auto-fill required backend fields with sentinels
+      payload.estado_previo = '(auto) Diagrama de Bienestar';
+      payload.fenomenologia_somatica = '(auto) Diagrama de Bienestar';
+      payload.estado_post = '(auto) Diagrama de Bienestar';
+      payload.duracion = payload.duracion || '15';
+    }
+
+    console.log('[DEBUG] Submit payload:', JSON.stringify(payload, null, 2));
 
     // Agregar datos de estado alterado
     const stateRadio = document.querySelector('input[name="session_state"]:checked') as HTMLInputElement;
@@ -566,6 +770,7 @@ import Layout from '../layouts/Layout.astro';
         return;
       }
 
+      console.log('[DEBUG] Submit response:', res.status, JSON.stringify(data));
       if (res.ok && data?.ok) {
         showToast("Entrada guardada correctamente", "success");
         clearDraft();
@@ -1257,6 +1462,8 @@ import Layout from '../layouts/Layout.astro';
     }
   }
 
+  .hidden { display: none !important; }
+
   .modal-overlay.hidden {
     display: none;
   }
@@ -1524,5 +1731,151 @@ import Layout from '../layouts/Layout.astro';
   .btn-del-practice:hover {
     border-color: #f87171;
     color: #f87171;
+  }
+
+  .bienestar-fieldset {
+    border-color: #4a1a6b;
+    background: linear-gradient(145deg, #1a0d2e 0%, #1a1a2e 100%);
+  }
+
+  .bienestar-desc {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0 0 0.75rem;
+    font-style: italic;
+  }
+
+  .bienestar-levels-guide {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+
+  .level-card {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.55rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    border: 1px solid #1f2937;
+    background: rgba(255,255,255,0.03);
+    transition: all 0.15s;
+  }
+
+  .level-card:hover {
+    border-color: #4b5563;
+  }
+
+  .level-num {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .level-1 .level-num { background: #ef4444; }
+  .level-2 .level-num { background: #f59e0b; }
+  .level-3 .level-num { background: #eab308; }
+  .level-4 .level-num { background: #22c55e; }
+  .level-5 .level-num { background: #8b5cf6; }
+
+  .level-label {
+    color: #9ca3af;
+  }
+
+  .bienestar-sliders {
+    transition: all 0.3s ease;
+  }
+
+  .bienestar-sliders.hidden {
+    display: none;
+  }
+
+  .bienestar-slider-group {
+    background: rgba(139,92,246,0.04);
+    border: 1px solid #1f2937;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    transition: border-color 0.15s;
+  }
+
+  .bienestar-slider-group:hover {
+    border-color: #374151;
+  }
+
+  .bienestar-slider-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+  }
+
+  .bienestar-axis-icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .bienestar-slider-value {
+    font-weight: 700;
+    color: #8b5cf6;
+    min-width: 1.2rem;
+    text-align: center;
+  }
+
+  .bienestar-level-marks {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.1rem 0.2rem 0;
+    font-size: 0.6rem;
+    color: #4b5563;
+    letter-spacing: 0.5px;
+  }
+
+  .bienestar-level-marks span {
+    width: 1.2rem;
+    text-align: center;
+  }
+
+  .bienestar-slider::-webkit-slider-thumb {
+    background: #8b5cf6 !important;
+  }
+
+  .bienestar-slider::-moz-range-thumb {
+    background: #8b5cf6 !important;
+  }
+
+  .bienestar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #1f2937;
+  }
+
+  .bienestar-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.65rem;
+    color: #6b7280;
+    line-height: 1.4;
+  }
+
+  .bienestar-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
   }
 </style>

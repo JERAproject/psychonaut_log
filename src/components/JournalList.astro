@@ -6,6 +6,11 @@
     </select>
     <span id="entry-count" class="entry-count"></span>
   </div>
+  <div id="bienestar-chart-section" class="chart-section bienestar-chart-section">
+    <h3 class="chart-title">Diagrama de Bienestar</h3>
+    <p class="chart-subtitle" id="bienestar-subtitle">Radar de bienestar en tus entradas</p>
+    <div id="bienestar-radar-container" class="bienestar-radar-container"></div>
+  </div>
   <div class="chart-section">
     <h3 class="chart-title">Patrones Energy × Valence</h3>
     <p class="chart-subtitle">Evolución de tus sesiones</p>
@@ -130,6 +135,7 @@
 <script>
   import { renderEntryDashboard } from "./EntryDashboard.jsx";
   import { render3DChart } from "./Chart3D.jsx";
+  import { renderWellbeingRadar, BIENESTAR_FIELDS } from "./WellBeenPlot.jsx";
   interface JournalEntry {
     id: number;
     fecha: string;
@@ -147,6 +153,11 @@
     valence_pre: number | null;
     energy_post: number | null;
     valence_post: number | null;
+    bienestar_logros: number | null;
+    bienestar_relaciones: number | null;
+    bienestar_sentido: number | null;
+    bienestar_emociones: number | null;
+    bienestar_entrega: number | null;
     created_at: string;
     user_id: number | null;
     username?: string | null;
@@ -266,6 +277,14 @@
             <div id="entry-dashboard-container" class="entry-dashboard-container"></div>
           </div>
         ` : ''}
+        ${(() => {
+          const bienestarVals = BIENESTAR_FIELDS.map(f => parseInt(entry[f]));
+          return bienestarVals.some(v => !isNaN(v)) ? `
+            <div class="detail-section">
+              <div id="entry-bienestar-container" class="entry-dashboard-container"></div>
+            </div>
+          ` : '';
+        })()}
       </div>
     `;
 
@@ -280,6 +299,17 @@
         entry.valence_post,
         entry.fecha
       );
+    }
+
+    const bienestarContainer = document.getElementById("entry-bienestar-container");
+    if (bienestarContainer) {
+      const vals = BIENESTAR_FIELDS.map(f => {
+        const v = parseInt(entry[f]);
+        return isNaN(v) ? null : v;
+      });
+      if (vals.some(v => v != null)) {
+        bienestarContainer.innerHTML = renderWellbeingRadar(vals, 260);
+      }
     }
   }
 
@@ -462,6 +492,19 @@
         return;
       }
 
+      var bienestarEntries = entries.filter(function(e) { return e.tipo_practica === 'diagrama_de_bienestar'; });
+      console.log('[DEBUG] loadEntries: ' + entries.length + ' total, ' + bienestarEntries.length + ' diagrama_de_bienestar');
+      if (bienestarEntries.length > 0) {
+        console.log('[DEBUG] Sample entry keys:', Object.keys(bienestarEntries[0]));
+        console.log('[DEBUG] Sample bienestar fields:', {
+          logros: bienestarEntries[0].bienestar_logros,
+          relaciones: bienestarEntries[0].bienestar_relaciones,
+          sentido: bienestarEntries[0].bienestar_sentido,
+          emociones: bienestarEntries[0].bienestar_emociones,
+          entrega: bienestarEntries[0].bienestar_entrega
+        });
+      }
+
       if (entries.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>No hay entradas en tu bitácora aún.</p><a href="/practica" class="empty-link">Crear primera entrada →</a></div>';
         return;
@@ -598,14 +641,58 @@
         }
       }
 
+      function renderBienestarChart(filterUser) {
+        var keys = filterUser === "all"
+          ? Object.keys(grouped).sort()
+          : [filterUser];
+        var bienestarEntries: Array<JournalEntry> = [];
+        keys.forEach(function(user) {
+          grouped[user].forEach(function(e) {
+            if (e.tipo_practica === 'diagrama_de_bienestar') {
+              bienestarEntries.push(e);
+            }
+          });
+        });
+        var section = document.getElementById("bienestar-chart-section");
+        var container = document.getElementById("bienestar-radar-container");
+        if (!section || !container) return;
+        if (bienestarEntries.length === 0) {
+          section.style.display = 'none';
+          return;
+        }
+        section.style.display = '';
+        var subtitle = document.getElementById("bienestar-subtitle");
+        if (subtitle) {
+          subtitle.textContent = bienestarEntries.length + " entrada" + (bienestarEntries.length !== 1 ? "s" : "") + " — haz clic para ver la más reciente";
+        }
+        var overlayData = bienestarEntries.map(function(e) {
+          return {
+            values: BIENESTAR_FIELDS.map(function(f) {
+              var v = parseInt(e[f]);
+              return isNaN(v) ? null : v;
+            }),
+            date: e.fecha,
+          };
+        });
+        var newest = bienestarEntries.sort(function(a, b) {
+          return (b.fecha + (b.hora || "")).localeCompare(a.fecha + (a.hora || ""));
+        })[0];
+        container.innerHTML = renderWellbeingRadar(null, 400, overlayData);
+        container.onclick = function() {
+          openDetailModal(newest);
+        };
+      }
+
       if (filterSelect) {
         filterSelect.addEventListener("change", function() {
           renderEntries(filterSelect.value);
+          renderBienestarChart(filterSelect.value);
           renderChartData(filterSelect.value);
         });
       }
 
       renderEntries("all");
+      renderBienestarChart("all");
       renderChartData("all");
 
       var urlParams = new URLSearchParams(window.location.search);
@@ -780,6 +867,23 @@
       gap: 0.35rem;
       color: #9ca3af;
     }
+  }
+
+  .bienestar-chart-section {
+    border-color: #4a1a6b;
+    background: linear-gradient(145deg, #1a0d2e 0%, #1a1a2e 100%);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .bienestar-chart-section:hover {
+    border-color: #8b5cf6;
+  }
+
+  .bienestar-radar-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
   }
 
   .dot {

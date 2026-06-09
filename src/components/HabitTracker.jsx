@@ -19,15 +19,14 @@ function getARGDate() {
   return new Date(now.getTime() + offset);
 }
 
-function getWeekDays() {
+function getWeekDays(offset = 0) {
   const today = getARGDate();
-  const dayOfWeek = today.getDay();
   const monday = new Date(today);
-  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-  
+  monday.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1) + offset * 7);
+
   const days = [];
   const dayLabels = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
-  
+
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
@@ -49,7 +48,7 @@ function getMonthDays(year, month) {
   const days = [];
   const lastDay = new Date(year, month + 1, 0).getDate();
   const today = getARGDate();
-  
+
   for (let i = 1; i <= lastDay; i++) {
     const d = new Date(year, month, i);
     days.push({
@@ -71,14 +70,18 @@ export default function HabitTracker() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("weekly");
   const [newHabit, setNewHabit] = useState("");
+  const [newHabitMax, setNewHabitMax] = useState(1);
   const [habitColor, setHabitColor] = useState(COLORS.violet);
   const [saving, setSaving] = useState(null);
   const [userFilter, setUserFilter] = useState("all");
   const [users, setUsers] = useState([]);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [monthOffset, setMonthOffset] = useState(0);
 
-  const weekDays = getWeekDays();
+  const weekDays = getWeekDays(weekOffset);
   const today = getARGDate();
-  const monthDays = getMonthDays(today.getFullYear(), today.getMonth());
+  const monthDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+  const monthDays = getMonthDays(monthDate.getFullYear(), monthDate.getMonth());
 
   function getCurrentUser() {
     try {
@@ -146,7 +149,7 @@ export default function HabitTracker() {
       const habitsData = await habitsRes.json();
       const logsData = await logsRes.json();
       const usersData = canFilterUsers ? await usersRes.json() : [];
-      
+
       setAllHabits(habitsData);
       setHabits(habitsData);
       setAllLogs(logsData);
@@ -170,10 +173,11 @@ export default function HabitTracker() {
       const res = await fetch(`${API_BASE}/api/habits`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ name: newHabit, color: habitColor, maxPerDay: 1 }),
+        body: JSON.stringify({ name: newHabit, color: habitColor, maxPerDay: newHabitMax }),
       });
       if (res.ok) {
         setNewHabit("");
+        setNewHabitMax(1);
         loadData();
       }
     } catch (err) {
@@ -191,12 +195,12 @@ export default function HabitTracker() {
     }
   }
 
-  async function toggleHabit(habitId, dateStr) {
+  async function toggleHabit(habitId, dateStr, habit) {
     if (new Date(dateStr) > getARGDate()) return;
     setSaving(`${habitId}-${dateStr}`);
-    const isCompleted = logs[habitId]?.[dateStr] > 0;
+    const currentCount = logs[habitId]?.[dateStr] || 0;
     try {
-      if (isCompleted) {
+      if (currentCount >= habit.maxPerDay) {
         await fetch(`${API_BASE}/api/log`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json", ...getAuthHeaders() },
@@ -261,6 +265,21 @@ export default function HabitTracker() {
     return data;
   };
 
+  function goToPrevWeek() { setWeekOffset(w => w - 1); }
+  function goToNextWeek() { setWeekOffset(w => Math.min(w + 1, 0)); }
+  function goToPrevMonth() { setMonthOffset(m => m - 1); }
+  function goToNextMonth() { setMonthOffset(m => Math.min(m + 1, 0)); }
+
+  function goToWeekOf(dateStr) {
+    const d = new Date(dateStr + "T00:00:00");
+    const todayLocal = getARGDate();
+    const diffDays = Math.round((d - todayLocal) / (1000 * 60 * 60 * 24));
+    const offset = Math.floor((diffDays - (todayLocal.getDay() === 0 ? 6 : todayLocal.getDay() - 1)) / 7);
+    setMonthOffset(0);
+    setWeekOffset(offset);
+    setView("weekly");
+  }
+
   if (loading) {
     return (
       <div className="ht-loading">
@@ -278,9 +297,9 @@ export default function HabitTracker() {
       {canFilterUsers && (
         <div className="filter-bar">
           <label className="filter-label">Filtrar:</label>
-          <select 
-            className="user-filter-select" 
-            value={userFilter} 
+          <select
+            className="user-filter-select"
+            value={userFilter}
             onChange={(e) => setUserFilter(e.target.value)}
           >
             <option value="all">Todos</option>
@@ -305,6 +324,15 @@ export default function HabitTracker() {
         </div>
 
         <div className="ht-creator">
+          <input
+            type="number"
+            value={newHabitMax}
+            onChange={(e) => setNewHabitMax(Math.max(1, Math.min(99, parseInt(e.target.value) || 1)))}
+            className="ht-max-input"
+            min="1"
+            max="99"
+            title="Veces por día"
+          />
           <input
             type="text"
             value={newHabit}
@@ -334,9 +362,13 @@ export default function HabitTracker() {
       ) : view === "weekly" ? (
         <div className="ht-weekly">
           <div className="weekly-header">
-            <h2>Grilla de Hábitos</h2>
+            <div className="weekly-nav">
+              <button className="nav-btn" onClick={goToPrevWeek}>‹</button>
+              <h2>Grilla de Hábitos</h2>
+              <button className="nav-btn" onClick={goToNextWeek} disabled={weekOffset >= 0}>›</button>
+            </div>
             <span className="week-label">
-              Semana {today.getDate() - today.getDay() + 1}/{today.getMonth() + 1} — {new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay() + 7).getDate()}/{today.getMonth() + 1}
+              {weekDays[0].date.toLocaleDateString("es-ES", { day: "numeric", month: "long" })} — {weekDays[6].date.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}
             </span>
           </div>
 
@@ -378,22 +410,29 @@ export default function HabitTracker() {
                     <div className="row-habit">
                       <span className="habit-dot" style={{ backgroundColor: habit.color }}></span>
                       <span className="habit-name">{habit.name}</span>
+                      <span className="habit-max">{habit.maxPerDay}x/día</span>
                       <span className="habit-streak">{getStreak(habit.id)}🔥</span>
                       <button className="delete-btn" onClick={() => deleteHabit(habit.id)}>×</button>
                     </div>
                     {weekDays.map((day) => {
-                      const isCompleted = logs[habit.id]?.[day.dateStr] > 0;
+                      const count = logs[habit.id]?.[day.dateStr] || 0;
+                      const isCompleted = count > 0;
+                      const isFull = count >= habit.maxPerDay;
                       const isFuture = day.isFuture;
                       const isSaving = saving === `${habit.id}-${day.dateStr}`;
+                      const fillRatio = habit.maxPerDay > 1 ? Math.min(count / habit.maxPerDay, 1) : (isCompleted ? 1 : 0);
 
                       return (
                         <div
                           key={day.dateStr}
                           className={`grid-cell ${isCompleted ? "completed" : ""} ${isFuture ? "future" : ""} ${day.isSaturday || day.isSunday ? "weekend" : ""}`}
-                          style={isCompleted ? { backgroundColor: habit.color, boxShadow: `0 0 18px ${habit.color}80` } : {}}
-                          onClick={() => !isFuture && toggleHabit(habit.id, day.dateStr)}
+                          style={isCompleted ? { backgroundColor: habit.color, boxShadow: `0 0 ${6 + fillRatio * 12}px ${habit.color}${Math.round(50 + fillRatio * 50).toString(16).padStart(2, "0")}` } : {}}
+                          onClick={() => !isFuture && toggleHabit(habit.id, day.dateStr, habit)}
+                          title={isCompleted ? `${count}/${habit.maxPerDay} — haz clic para ${isFull ? "quitar" : "incrementar"}` : "Haz clic para registrar"}
                         >
-                          {isSaving ? <div className="cell-spinner"></div> : isCompleted && <span className="check-icon">✓</span>}
+                          {isSaving ? <div className="cell-spinner"></div> : isCompleted && (
+                            <span className={`check-icon ${isFull ? "full" : "partial"}`}>{count}</span>
+                          )}
                         </div>
                       );
                     })}
@@ -406,10 +445,11 @@ export default function HabitTracker() {
       ) : (
         <div className="ht-monthly">
           <div className="monthly-header">
-            <h2>Mensual</h2>
-            <span className="month-label">
-              {today.toLocaleDateString("es-ES", { month: "long", year: "numeric" }).charAt(0).toUpperCase() + today.toLocaleDateString("es-ES", { month: "long" }).slice(1)}
-            </span>
+            <div className="monthly-nav">
+              <button className="nav-btn" onClick={goToPrevMonth}>‹</button>
+              <h2>{monthDate.toLocaleDateString("es-ES", { month: "long", year: "numeric" }).charAt(0).toUpperCase() + monthDate.toLocaleDateString("es-ES", { month: "long" }).slice(1)}</h2>
+              <button className="nav-btn" onClick={goToNextMonth} disabled={monthOffset >= 0}>›</button>
+            </div>
           </div>
 
           <div className="monthly-chart">
@@ -421,14 +461,14 @@ export default function HabitTracker() {
                 </linearGradient>
               </defs>
               <path
-                d={`M ${monthlyData.map((d, i) => `${(i / (monthlyData.length - 1)) * 100} ${40 - (d.rate / 100) * 35}`).join(" L ")}`}
+                d={`M ${monthlyData.length > 1 ? monthlyData.map((d, i) => `${(i / (monthlyData.length - 1)) * 100} ${40 - (d.rate / 100) * 35}`).join(" L ") : "0 40 L 100 40"}`}
                 fill="none"
                 stroke="#8b5cf6"
                 strokeWidth="2"
                 className="chart-line"
               />
               <path
-                d={`M ${monthlyData.map((d, i) => `${(i / (monthlyData.length - 1)) * 100} ${40 - (d.rate / 100) * 35}`).join(" L ")} L 100 40 L 0 40 Z`}
+                d={`M ${monthlyData.length > 1 ? monthlyData.map((d, i) => `${(i / (monthlyData.length - 1)) * 100} ${40 - (d.rate / 100) * 35}`).join(" L ") : "0 40"} L 100 40 L 0 40 Z`}
                 fill="url(#lineGradient)"
                 className="chart-fill"
               />
@@ -436,26 +476,42 @@ export default function HabitTracker() {
           </div>
 
           <div className="heatmap-container">
+            <div className="month-days-header">
+              {["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"].map(l => (
+                <span key={l} className="month-day-label">{l}</span>
+              ))}
+            </div>
             <div className="heatmap-grid">
-              {monthDays.map((day) => {
-                const dayData = monthlyData.find((d) => d.day === day.dayNum);
-                const completion = dayData?.completed || 0;
-                const intensity = habits.length > 0 ? completion / habits.length : 0;
+              {(() => {
+                const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getDay();
+                const padding = firstDay === 0 ? 6 : firstDay - 1;
+                const cells = [];
+                for (let p = 0; p < padding; p++) {
+                  cells.push(<div key={`pad-${p}`} className="heat-cell pad" />);
+                }
+                monthDays.map((day) => {
+                  const dayData = monthlyData.find((d) => d.day === day.dayNum);
+                  const completion = dayData?.completed || 0;
+                  const intensity = habits.length > 0 ? completion / habits.length : 0;
 
-                return (
-                  <div
-                    key={day.dateStr}
-                    className={`heat-cell ${day.isToday ? "today" : ""} ${day.isFuture ? "future" : ""}`}
-                    style={{
-                      backgroundColor: completion > 0 ? `rgba(139, 92, 246, ${0.3 + intensity * 0.7})` : "#090909",
-                      boxShadow: completion > 0 ? `0 0 8px rgba(139, 92, 246, ${intensity})` : "none",
-                    }}
-                    title={`${day.dayNum}: ${completion}/${habits.length}`}
-                  >
-                    <span className="cell-num">{day.dayNum}</span>
-                  </div>
-                );
-              })}
+                  cells.push(
+                    <div
+                      key={day.dateStr}
+                      className={`heat-cell ${day.isToday ? "today" : ""} ${day.isFuture ? "future" : ""}`}
+                      style={{
+                        backgroundColor: completion > 0 ? `rgba(139, 92, 246, ${0.2 + intensity * 0.8})` : "#090909",
+                        boxShadow: completion > 0 ? `0 0 8px rgba(139, 92, 246, ${intensity * 0.6})` : "none",
+                        cursor: day.isFuture ? "default" : "pointer",
+                      }}
+                      title={`${day.dayNum}: ${completion}/${habits.length}`}
+                      onClick={() => !day.isFuture && goToWeekOf(day.dateStr)}
+                    >
+                      <span className="cell-num">{day.dayNum}</span>
+                    </div>
+                  );
+                });
+                return cells;
+              })()}
             </div>
           </div>
 
@@ -485,7 +541,7 @@ export default function HabitTracker() {
           --neon-cyan: #00E5FF;
           --neon-green: #32FF7E;
           --neon-purple: #A855F7;
-          
+
           width: 100%;
           background: var(--surface);
           border-radius: 16px;
@@ -602,8 +658,24 @@ export default function HabitTracker() {
 
         .ht-creator {
           display: flex;
-          gap: 0.5rem;
+          gap: 0.4rem;
           align-items: center;
+        }
+
+        .ht-max-input {
+          width: 36px;
+          padding: 0.4rem 0.25rem;
+          background: var(--surface-secondary);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          color: var(--text-primary);
+          font-size: 0.75rem;
+          text-align: center;
+        }
+
+        .ht-max-input:focus {
+          outline: none;
+          border-color: var(--neon-violet);
         }
 
         .ht-input {
@@ -690,22 +762,58 @@ export default function HabitTracker() {
 
         .weekly-header {
           display: flex;
-          justify-content: space-between;
-          align-items: center;
+          flex-direction: column;
+          gap: 0.5rem;
           margin-bottom: 1rem;
         }
 
-        .weekly-header h2 {
+        .weekly-nav {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+        }
+
+        .weekly-nav h2 {
           font-size: 1.25rem;
           font-weight: 700;
           color: var(--text-primary);
           margin: 0;
+          min-width: 200px;
+          text-align: center;
+        }
+
+        .nav-btn {
+          background: var(--surface-secondary);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--text-primary);
+          font-size: 1.5rem;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+          line-height: 1;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+          background: rgba(139,92,246,0.2);
+          border-color: var(--neon-violet);
+        }
+
+        .nav-btn:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
         }
 
         .week-label {
           font-size: 0.75rem;
           color: var(--text-secondary);
           letter-spacing: 0.05em;
+          text-align: center;
         }
 
         .weekly-stats {
@@ -912,6 +1020,14 @@ export default function HabitTracker() {
           flex: 0 0 auto;
         }
 
+        .habit-max {
+          font-size: 0.5rem;
+          color: var(--text-secondary);
+          flex: 0 0 auto;
+          padding: 0 0.125rem;
+          opacity: 0.6;
+        }
+
         .habit-streak {
           font-size: 0.6rem;
           color: var(--text-secondary);
@@ -989,13 +1105,19 @@ export default function HabitTracker() {
 
         .check-icon {
           color: white;
-          font-size: 0.9rem;
-          font-weight: bold;
+          font-size: 0.8rem;
+          font-weight: 700;
           max-width: 100%;
           max-height: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .check-icon.partial {
+          opacity: 0.75;
+          font-size: 0.7rem;
         }
 
         .cell-spinner {
@@ -1014,21 +1136,23 @@ export default function HabitTracker() {
 
         .monthly-header {
           display: flex;
-          justify-content: space-between;
-          align-items: center;
+          justify-content: center;
           margin-bottom: 1rem;
         }
 
-        .monthly-header h2 {
+        .monthly-nav {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .monthly-nav h2 {
           font-size: 1.25rem;
           font-weight: 700;
           color: var(--text-primary);
           margin: 0;
-        }
-
-        .month-label {
-          font-size: 0.8rem;
-          color: var(--text-secondary);
+          min-width: 200px;
+          text-align: center;
         }
 
         .monthly-chart {
@@ -1057,6 +1181,22 @@ export default function HabitTracker() {
           margin-bottom: 1rem;
         }
 
+        .month-days-header {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 5px;
+          margin-bottom: 5px;
+        }
+
+        .month-day-label {
+          text-align: center;
+          font-size: 0.6rem;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          padding: 0.25rem 0;
+        }
+
         .heatmap-grid {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
@@ -1071,6 +1211,17 @@ export default function HabitTracker() {
           justify-content: center;
           border: 1px solid var(--border);
           position: relative;
+          transition: all 0.15s;
+        }
+
+        .heat-cell:not(.pad):not(.future):hover {
+          transform: scale(1.08);
+          border-color: var(--neon-violet);
+        }
+
+        .heat-cell.pad {
+          border: none;
+          background: transparent;
         }
 
         .heat-cell.today {
@@ -1086,6 +1237,7 @@ export default function HabitTracker() {
           font-size: 0.65rem;
           color: var(--text-secondary);
           font-weight: 500;
+          pointer-events: none;
         }
 
         .heat-cell.today .cell-num {
@@ -1205,8 +1357,16 @@ export default function HabitTracker() {
             white-space: nowrap;
           }
 
+          .habit-max {
+            font-size: 0.4rem;
+          }
+
           .check-icon {
-            font-size: 0.9rem;
+            font-size: 0.65rem;
+          }
+
+          .check-icon.partial {
+            font-size: 0.55rem;
           }
 
           .grid-cell.weekend.completed {
@@ -1214,6 +1374,10 @@ export default function HabitTracker() {
           }
 
           .heatmap-grid {
+            gap: 0.125rem;
+          }
+
+          .month-days-header {
             gap: 0.125rem;
           }
 
@@ -1268,7 +1432,7 @@ export default function HabitTracker() {
           }
 
           .check-icon {
-            font-size: 1.2rem;
+            font-size: 1rem;
           }
         }
       `}</style>
